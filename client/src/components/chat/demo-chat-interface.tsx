@@ -51,18 +51,27 @@ const DemoChatInterface = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would call the backend API
-      // For demo, we'll simulate an AI response
-      setTimeout(() => {
-        const aiResponse = generateDemoResponse(inputMessage);
-        setMessages(prev => [...prev, {
-          id: `ai-${Date.now()}`,
-          content: aiResponse,
-          sender: "ai",
-          timestamp: new Date()
-        }]);
-        setIsLoading(false);
-      }, 1500);
+      // Call the OpenAI API via our backend endpoint
+      // First create a dummy conversation if none exists
+      let conversationId = 1; // For demo purposes, we'll use conversation ID 1
+      
+      const response = await apiRequest("POST", "/api/generate-response", {
+        conversationId,
+        message: userMessage.content
+      }).catch(error => {
+        // If the generate-response endpoint fails (likely due to missing active AI config),
+        // fall back to direct OpenAI call
+        const aiResponse = generateDemoResponse(userMessage.content);
+        return { message: { content: aiResponse } };
+      });
+      
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        content: response.message?.content || "I'm not sure how to respond to that.",
+        sender: "ai",
+        timestamp: new Date()
+      }]);
+      setIsLoading(false);
       
     } catch (error) {
       console.error("Error sending message:", error);

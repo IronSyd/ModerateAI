@@ -29,6 +29,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health", (req, res) => {
     res.status(200).json({ status: "ok" });
   });
+  
+  // Direct OpenAI chat completion for the demo interface
+  app.post("/api/openai-demo", async (req, res) => {
+    try {
+      const { message } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+      
+      const response = await generateAIResponse(
+        message,
+        [], // No conversation history
+        "You are a helpful customer support assistant for ModerateAI.", // System prompt
+        75, // Friendly tone
+        50  // Moderate length
+      );
+      
+      res.status(200).json({ content: response });
+    } catch (error) {
+      console.error("Error with direct OpenAI call:", error);
+      res.status(500).json({ message: "Error generating AI response" });
+    }
+  });
 
   // Dashboard stats
   app.get("/api/dashboard/stats", authMiddleware, async (req, res) => {
