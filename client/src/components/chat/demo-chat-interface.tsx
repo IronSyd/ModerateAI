@@ -55,22 +55,37 @@ const DemoChatInterface = () => {
       // First create a dummy conversation if none exists
       let conversationId = 1; // For demo purposes, we'll use conversation ID 1
       
-      const response = await apiRequest("POST", "/api/generate-response", {
-        conversationId,
-        message: userMessage.content
-      }).catch(error => {
-        // If the generate-response endpoint fails (likely due to missing active AI config),
-        // fall back to direct OpenAI call
+      // Try the fallback first, which doesn't require authentication
+      try {
+        console.log("Sending to OpenAI demo endpoint...");
+        // Cast response to unknown first, then to our expected type to avoid TypeScript errors
+        const response = await apiRequest("POST", "/api/openai-demo", {
+          message: userMessage.content
+        });
+        
+        const directResponse = response as unknown as { content: string };
+        const aiContent = directResponse?.content || 
+                         "I'm sorry, I couldn't generate a response at this time.";
+                         
+        setMessages(prev => [...prev, {
+          id: `ai-${Date.now()}`,
+          content: aiContent,
+          sender: "ai",
+          timestamp: new Date()
+        }]);
+      } catch (error) {
+        console.error("OpenAI demo failed:", error);
+        
+        // If the API call fails, use the demo response generator
         const aiResponse = generateDemoResponse(userMessage.content);
-        return { message: { content: aiResponse } };
-      });
-      
-      setMessages(prev => [...prev, {
-        id: `ai-${Date.now()}`,
-        content: response.message?.content || "I'm not sure how to respond to that.",
-        sender: "ai",
-        timestamp: new Date()
-      }]);
+        
+        setMessages(prev => [...prev, {
+          id: `ai-${Date.now()}`,
+          content: aiResponse,
+          sender: "ai",
+          timestamp: new Date()
+        }]);
+      }
       setIsLoading(false);
       
     } catch (error) {

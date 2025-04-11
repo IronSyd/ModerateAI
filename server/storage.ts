@@ -128,7 +128,7 @@ export class MemStorage implements IStorage {
       moderationStrictness: 50, // Balanced
       isActive: true,
       model: "gpt-4o",
-      systemPrompt: "You are a helpful customer support assistant. Be concise and professional."
+      systemPrompt: "You are a helpful customer support assistant for ModerateAI. ModerateAI is a SaaS platform that provides AI-powered chat support and community moderation across websites, Telegram, and Discord. Be friendly, helpful, and professional when answering questions."
     };
     this.createAiConfiguration(aiConfig);
 
