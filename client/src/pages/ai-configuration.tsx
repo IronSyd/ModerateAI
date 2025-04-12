@@ -154,8 +154,7 @@ const AIConfiguration = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">AI Configuration</h1>
+      <div className="flex items-center justify-end mb-6">
         <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending}>
           {saveMutation.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
