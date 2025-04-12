@@ -243,7 +243,7 @@ const DiscordIntegration = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Discord Integration</h1>
-          <p className="text-gray-500">Connect your AI assistant to Discord servers and channels</p>
+          <p className="text-muted-foreground">Connect your AI assistant to Discord servers and channels</p>
         </div>
         <Badge 
           variant={
@@ -327,23 +327,23 @@ const DiscordIntegration = () => {
                       <h3 className="text-lg font-medium mb-3">Bot Information</h3>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Bot Name:</span>
+                          <span className="text-sm text-muted-foreground">Bot Name:</span>
                           <span className="text-sm font-medium">ModerateAI</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Server:</span>
+                          <span className="text-sm text-muted-foreground">Server:</span>
                           <span className="text-sm font-medium">Your Community Server</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Server ID:</span>
-                          <span className="text-sm font-mono text-gray-600">{platform?.config?.serverId || "123456789"}</span>
+                          <span className="text-sm text-muted-foreground">Server ID:</span>
+                          <span className="text-sm font-mono text-muted-foreground">{platform?.config?.serverId || "123456789"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Status:</span>
+                          <span className="text-sm text-muted-foreground">Status:</span>
                           <Badge variant="success">Active</Badge>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Active Channels:</span>
+                          <span className="text-sm text-muted-foreground">Active Channels:</span>
                           <span className="text-sm font-medium">2 channels</span>
                         </div>
                       </div>
@@ -354,8 +354,8 @@ const DiscordIntegration = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="text-sm text-gray-600">Members</span>
+                            <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Members</span>
                           </div>
                           <span className="text-sm font-medium">127</span>
                         </div>
