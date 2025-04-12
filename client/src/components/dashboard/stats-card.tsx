@@ -24,12 +24,12 @@ const StatsCard = ({
   const isPositive = changeValue >= 0;
   
   return (
-    <Card className="border border-gray-200">
+    <Card className="border border-border">
       <CardContent className="p-6">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <p className="text-2xl font-semibold text-gray-800 mt-1">{value}</p>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-semibold text-foreground mt-1">{value}</p>
           </div>
           <div className={`rounded-full p-3 ${iconBgColor} ${iconColor}`}>
             {icon}
@@ -45,7 +45,7 @@ const StatsCard = ({
             )}
             {Math.abs(changeValue)}%
           </span>
-          <span className="text-gray-500 text-sm ml-2">{changeText}</span>
+          <span className="text-muted-foreground text-sm ml-2">{changeText}</span>
         </div>
       </CardContent>
     </Card>

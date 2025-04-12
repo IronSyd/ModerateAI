@@ -70,8 +70,8 @@ const Dashboard = () => {
           title: "Total Conversations",
           value: "-",
           icon: <MessagesSquare className="h-6 w-6" />,
-          iconBgColor: "bg-blue-50",
-          iconColor: "text-primary-500",
+          iconBgColor: "bg-primary/20",
+          iconColor: "text-primary",
           changeValue: 0,
           changeText: "vs last week"
         },
@@ -79,7 +79,7 @@ const Dashboard = () => {
           title: "AI Responses",
           value: "-",
           icon: <MonitorSmartphone className="h-6 w-6" />,
-          iconBgColor: "bg-indigo-50",
+          iconBgColor: "bg-secondary/20",
           iconColor: "text-secondary",
           changeValue: 0,
           changeText: "vs last week"
@@ -88,7 +88,7 @@ const Dashboard = () => {
           title: "Moderation Actions",
           value: "-",
           icon: <ShieldAlert className="h-6 w-6" />,
-          iconBgColor: "bg-purple-50",
+          iconBgColor: "bg-accent/20",
           iconColor: "text-accent",
           changeValue: 0,
           changeText: "vs last week"
@@ -253,22 +253,22 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Platform Integrations */}
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Platform Integrations</h2>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Platform Integrations</h2>
+          <div className="bg-card rounded-lg shadow-sm border border-border">
             {isLoadingPlatforms ? (
               // Loading skeleton
               <>
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="border-b border-gray-200 p-6 last:border-b-0">
+                  <div key={i} className="border-b border-border p-6 last:border-b-0">
                     <div className="animate-pulse flex items-start justify-between">
                       <div className="flex items-center">
-                        <div className="rounded-lg bg-gray-200 p-3 mr-4 h-12 w-12"></div>
+                        <div className="rounded-lg bg-muted p-3 mr-4 h-12 w-12"></div>
                         <div>
-                          <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-40"></div>
+                          <div className="h-4 bg-muted rounded w-24 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-40"></div>
                         </div>
                       </div>
-                      <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                      <div className="h-6 bg-muted rounded-full w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -296,7 +296,7 @@ const Dashboard = () => {
         
         {/* Recent Activity */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
           <RecentActivityList 
             activities={processActivityData()} 
             isLoading={isLoadingActivity} 
@@ -308,7 +308,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* AI Configuration Preview */}
         <div className="lg:col-span-1">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">AI Configuration</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">AI Configuration</h2>
           <AIConfigurationPreview 
             config={getAiConfigForDisplay()}
             knowledgeBase={getKnowledgeBaseForDisplay()}
@@ -318,7 +318,7 @@ const Dashboard = () => {
         
         {/* Demo Chat Interface */}
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Demo Chat Interface</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Demo Chat Interface</h2>
           <DemoChatInterface />
         </div>
       </div>
