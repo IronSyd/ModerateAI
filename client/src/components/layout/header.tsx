@@ -39,25 +39,25 @@ const Header = () => {
   };
   
   return (
-    <div className="border-b bg-white sticky top-0 z-30">
+    <div className="border-b bg-background sticky top-0 z-30">
       <div className="px-4 md:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center">
           {isMobile && (
             <button 
               onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="md:hidden mr-4 text-gray-500 hover:text-gray-700"
+              className="md:hidden mr-4 text-muted-foreground hover:text-foreground"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-6 w-6" />
             </button>
           )}
-          <h1 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h1>
+          <h1 className="text-xl font-semibold text-foreground">{getPageTitle()}</h1>
         </div>
         
         <div className="flex items-center space-x-4">
           <div className="relative">
             <button 
-              className="text-gray-500 hover:text-gray-700 relative" 
+              className="text-muted-foreground hover:text-foreground relative" 
               aria-label="Notifications"
               onClick={handleOpenNotification}
             >
@@ -72,7 +72,7 @@ const Header = () => {
           </div>
           <div className="relative">
             <button 
-              className="text-gray-500 hover:text-gray-700" 
+              className="text-muted-foreground hover:text-foreground" 
               aria-label="Help"
               onClick={handleOpenHelp}
             >

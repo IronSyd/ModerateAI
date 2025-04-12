@@ -160,7 +160,7 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
   return (
     <div className="relative z-50">
       <div className="fixed inset-0" onClick={onClose}></div>
-      <div className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200 max-h-[80vh] flex flex-col">
+      <div className="absolute right-0 mt-2 w-96 bg-card rounded-md shadow-lg overflow-hidden border border-border max-h-[80vh] flex flex-col">
         <div className="p-3 border-b">
           <h3 className="text-lg font-semibold mb-2">Help Center</h3>
           <div className="relative">
@@ -178,19 +178,19 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
         <div className="border-b">
           <div className="flex">
             <button 
-              className={`flex-1 py-2 text-sm font-medium ${activeTab === 'popular' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
+              className={`flex-1 py-2 text-sm font-medium ${activeTab === 'popular' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
               onClick={() => setActiveTab('popular')}
             >
               Popular
             </button>
             <button 
-              className={`flex-1 py-2 text-sm font-medium ${activeTab === 'categories' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
+              className={`flex-1 py-2 text-sm font-medium ${activeTab === 'categories' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
               onClick={() => setActiveTab('categories')}
             >
               Categories
             </button>
             <button 
-              className={`flex-1 py-2 text-sm font-medium ${activeTab === 'new' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
+              className={`flex-1 py-2 text-sm font-medium ${activeTab === 'new' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
               onClick={() => setActiveTab('new')}
             >
               New
