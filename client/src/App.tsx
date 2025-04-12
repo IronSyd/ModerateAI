@@ -17,7 +17,7 @@ import Header from "@/components/layout/header";
 
 function Router() {
   return (
-    <div className="min-h-screen flex bg-gray-50 font-sans">
+    <div className="min-h-screen flex bg-background font-sans">
       {/* Sidebar */}
       <Sidebar />
       
