@@ -296,16 +296,16 @@ const DiscordIntegration = () => {
                 </div>
               ) : platform?.status === "active" ? (
                 <div className="space-y-6">
-                  <div className="rounded-lg bg-green-50 p-4 border border-green-100">
+                  <div className="rounded-lg bg-emerald-900/20 p-4 border border-emerald-600/30">
                     <div className="flex">
-                      <div className="rounded-full bg-green-500 p-1 mr-3 flex-shrink-0">
+                      <div className="rounded-full bg-emerald-600 p-1 mr-3 flex-shrink-0">
                         <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-green-800">Connected Successfully</h3>
-                        <p className="mt-1 text-sm text-green-700">
+                        <h3 className="text-sm font-medium text-emerald-400">Connected Successfully</h3>
+                        <p className="mt-1 text-sm text-emerald-300/90">
                           Your Discord bot is active and moderating your server.
                         </p>
                         <div className="mt-3">
@@ -422,16 +422,16 @@ const DiscordIntegration = () => {
                 </div>
               ) : platform?.status === "setup_required" ? (
                 <div className="space-y-6">
-                  <div className="rounded-lg bg-yellow-50 p-4 border border-yellow-100">
+                  <div className="rounded-lg bg-amber-900/20 p-4 border border-amber-600/30">
                     <div className="flex">
-                      <div className="rounded-full bg-yellow-500 p-1 mr-3 flex-shrink-0">
+                      <div className="rounded-full bg-amber-500 p-1 mr-3 flex-shrink-0">
                         <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-yellow-800">Setup Required</h3>
-                        <p className="mt-1 text-sm text-yellow-700">
+                        <h3 className="text-sm font-medium text-amber-400">Setup Required</h3>
+                        <p className="mt-1 text-sm text-amber-300/90">
                           Your Discord bot needs additional configuration to be fully activated.
                         </p>
                       </div>
@@ -468,14 +468,14 @@ const DiscordIntegration = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="rounded-lg bg-blue-50 p-4 border border-blue-100">
+                  <div className="rounded-lg bg-blue-900/20 p-4 border border-blue-600/30">
                     <div className="flex">
-                      <div className="h-8 w-8 rounded-full text-white bg-primary-500 mr-3 flex items-center justify-center flex-shrink-0">
+                      <div className="h-8 w-8 rounded-full text-white bg-primary mr-3 flex items-center justify-center flex-shrink-0">
                         <SiDiscord className="h-4 w-4" />
                       </div>
                       <div>
-                        <h3 className="text-base font-medium text-blue-800">Connect to Discord</h3>
-                        <p className="mt-1 text-sm text-blue-700">
+                        <h3 className="text-base font-medium text-blue-400">Connect to Discord</h3>
+                        <p className="mt-1 text-sm text-blue-300/90">
                           Add our AI-powered bot to your Discord server for automated moderation and support.
                         </p>
                       </div>
