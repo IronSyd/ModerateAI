@@ -57,6 +57,7 @@ import {
   Languages,
   MoonStar,
   Sun,
+  Plus,
 } from "lucide-react";
 
 const Settings = () => {
