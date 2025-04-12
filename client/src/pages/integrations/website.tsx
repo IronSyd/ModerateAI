@@ -511,7 +511,7 @@ const WebsiteIntegration = () => {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Time-based trigger</Label>
-                        <p className="text-xs text-gray-500">Open after time on page</p>
+                        <p className="text-xs text-muted-foreground">Open after time on page</p>
                       </div>
                       <Switch />
                     </div>
@@ -533,9 +533,9 @@ const WebsiteIntegration = () => {
             <CardContent>
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <MonitorSmartphone className="mx-auto h-12 w-12 text-gray-300" />
+                  <MonitorSmartphone className="mx-auto h-12 w-12 text-muted-foreground/30" />
                   <h3 className="mt-4 text-lg font-medium">Analytics Coming Soon</h3>
-                  <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
+                  <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                     We're building detailed analytics for your website chat widget.
                     Check back soon to see conversation volume, response times, and user satisfaction metrics.
                   </p>
