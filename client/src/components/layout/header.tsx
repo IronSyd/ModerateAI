@@ -4,12 +4,14 @@ import { Menu, Bell, HelpCircle } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
+import { HelpMenu } from "../help/help-menu";
 
 const Header = () => {
   const isMobile = useMobile();
   const [location] = useLocation();
   const [, setIsSidebarOpen] = useState(!isMobile);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   
   // Get page title based on current route
   const getPageTitle = () => {
@@ -23,6 +25,17 @@ const Header = () => {
     if (location === "/team") return "Team";
     if (location === "/settings") return "Settings";
     return "ModerateAI";
+  };
+  
+  // Close other menus when opening one
+  const handleOpenNotification = () => {
+    setHelpOpen(false);
+    setNotificationOpen(!notificationOpen);
+  };
+  
+  const handleOpenHelp = () => {
+    setNotificationOpen(false);
+    setHelpOpen(!helpOpen);
   };
   
   return (
@@ -46,7 +59,7 @@ const Header = () => {
             <button 
               className="text-gray-500 hover:text-gray-700 relative" 
               aria-label="Notifications"
-              onClick={() => setNotificationOpen(!notificationOpen)}
+              onClick={handleOpenNotification}
             >
               <Bell className="h-6 w-6" />
               <Badge className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] min-w-[18px] h-[18px] flex items-center justify-center">
@@ -57,9 +70,18 @@ const Header = () => {
               <NotificationMenu onClose={() => setNotificationOpen(false)} />
             )}
           </div>
-          <button className="text-gray-500 hover:text-gray-700" aria-label="Help">
-            <HelpCircle className="h-6 w-6" />
-          </button>
+          <div className="relative">
+            <button 
+              className="text-gray-500 hover:text-gray-700" 
+              aria-label="Help"
+              onClick={handleOpenHelp}
+            >
+              <HelpCircle className="h-6 w-6" />
+            </button>
+            {helpOpen && (
+              <HelpMenu onClose={() => setHelpOpen(false)} />
+            )}
+          </div>
         </div>
       </div>
     </div>
