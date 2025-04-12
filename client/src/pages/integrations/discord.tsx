@@ -565,7 +565,7 @@ const DiscordIntegration = () => {
                       <TableRow key={channel.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center">
-                            <Hash className="h-4 w-4 mr-2 text-gray-500" />
+                            <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
                             {channel.name}
                           </div>
                         </TableCell>
