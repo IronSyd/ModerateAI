@@ -22,11 +22,11 @@ const PlatformIntegrationCard = ({
   const getPlatformIcon = () => {
     switch (type) {
       case "website":
-        return <Globe className="h-6 w-6 text-primary-500" />;
+        return <Globe className="h-6 w-6 text-primary" />;
       case "telegram":
-        return <Send className="h-6 w-6 text-primary-500" />;
+        return <Send className="h-6 w-6 text-primary" />;
       case "discord":
-        return <MessageSquareMore className="h-6 w-6 text-primary-500" />;
+        return <MessageSquareMore className="h-6 w-6 text-primary" />;
     }
   };
   
@@ -34,11 +34,11 @@ const PlatformIntegrationCard = ({
   const getStatusBadgeClass = () => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-600/20 text-green-500";
       case "not_connected":
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted/80 text-muted-foreground";
       case "setup_required":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-600/20 text-yellow-500";
     }
   };
   
@@ -61,13 +61,13 @@ const PlatformIntegrationCard = ({
         return (
           <div className="mt-4 flex items-center">
             <Link href={`/integrations/${type}`}>
-              <Button variant="link" className="text-sm text-primary-600 font-medium hover:text-primary-700 p-0">
+              <Button variant="link" className="text-sm font-medium p-0">
                 Configure
               </Button>
             </Link>
-            <span className="mx-2 text-gray-300">|</span>
+            <span className="mx-2 text-muted-foreground/40">|</span>
             <Link href={`/integrations/${type}/analytics`}>
-              <Button variant="link" className="text-sm text-gray-600 font-medium hover:text-gray-700 p-0">
+              <Button variant="link" className="text-sm text-muted-foreground font-medium p-0">
                 View Analytics
               </Button>
             </Link>
@@ -77,7 +77,7 @@ const PlatformIntegrationCard = ({
         return (
           <div className="mt-4">
             <Link href={`/integrations/${type}`}>
-              <Button className="px-4 py-2 bg-primary-500 text-white rounded-md text-sm font-medium hover:bg-primary-600">
+              <Button>
                 Connect {name.split(" ")[0]}
               </Button>
             </Link>
@@ -87,7 +87,7 @@ const PlatformIntegrationCard = ({
         return (
           <div className="mt-4">
             <Link href={`/integrations/${type}`}>
-              <Button className="px-4 py-2 bg-primary-500 text-white rounded-md text-sm font-medium hover:bg-primary-600">
+              <Button>
                 Complete Setup
               </Button>
             </Link>
@@ -97,15 +97,15 @@ const PlatformIntegrationCard = ({
   };
   
   return (
-    <div className="border-b border-gray-200 p-6 last:border-b-0">
+    <div className="border-b border-border p-6 last:border-b-0">
       <div className="flex items-start justify-between">
         <div className="flex items-center">
-          <div className="rounded-lg bg-blue-100 p-3 mr-4">
+          <div className="rounded-lg bg-primary/10 p-3 mr-4">
             {getPlatformIcon()}
           </div>
           <div>
-            <h3 className="font-medium text-gray-800">{name}</h3>
-            <p className="text-sm text-gray-500 mt-1">{description}</p>
+            <h3 className="font-medium text-foreground">{name}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{description}</p>
           </div>
         </div>
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass()}`}>
