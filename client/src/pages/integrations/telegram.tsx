@@ -506,7 +506,7 @@ const TelegramIntegration = () => {
                   onChange={(e) => updateBotConfig({ welcomeMessage: e.target.value })}
                   rows={3}
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   This message is sent when someone starts a conversation with your bot
                 </p>
               </div>
@@ -519,7 +519,7 @@ const TelegramIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Group Mode</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Respond to messages in group chats
                     </p>
                   </div>
@@ -532,7 +532,7 @@ const TelegramIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Private Chat Mode</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Respond to direct messages
                     </p>
                   </div>
@@ -542,7 +542,7 @@ const TelegramIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Mention Only</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Only respond when mentioned in groups
                     </p>
                   </div>
@@ -554,7 +554,7 @@ const TelegramIntegration = () => {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Commands</h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Configure the commands your bot responds to in Telegram
                 </p>
                 
@@ -564,10 +564,10 @@ const TelegramIntegration = () => {
                     { command: "about", description: "About this bot" }
                   ]).map((cmd, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <code className="bg-gray-100 px-2 py-1 rounded text-sm">/
+                      <code className="bg-accent px-2 py-1 rounded text-sm">/
                         {cmd.command}
                       </code>
-                      <span className="text-sm text-gray-500">-</span>
+                      <span className="text-sm text-muted-foreground">-</span>
                       <span className="text-sm">{cmd.description}</span>
                     </div>
                   ))}
@@ -587,7 +587,7 @@ const TelegramIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Content Filtering</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Moderate inappropriate content
                     </p>
                   </div>
@@ -597,7 +597,7 @@ const TelegramIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Spam Protection</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Detect and filter spam messages
                     </p>
                   </div>
@@ -632,7 +632,7 @@ const TelegramIntegration = () => {
                 <div className="text-center">
                   <PieChart className="mx-auto h-12 w-12 text-gray-300" />
                   <h3 className="mt-4 text-lg font-medium">Analytics Coming Soon</h3>
-                  <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
+                  <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                     We're building detailed analytics for your Telegram bot.
                     Check back soon to see conversation metrics, response times, and usage statistics.
                   </p>
