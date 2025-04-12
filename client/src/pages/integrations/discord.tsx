@@ -742,7 +742,7 @@ const DiscordIntegration = () => {
             <CardContent>
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <BarChart3 className="mx-auto h-12 w-12 text-gray-300" />
+                  <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground opacity-40" />
                   <h3 className="mt-4 text-lg font-medium">Analytics Coming Soon</h3>
                   <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                     We're building detailed analytics for your Discord bot.
