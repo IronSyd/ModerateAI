@@ -388,7 +388,7 @@ const DiscordIntegration = () => {
                     <h3 className="text-lg font-medium mb-3">Next Steps</h3>
                     <div className="space-y-4">
                       <div className="flex">
-                        <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                        <div className="h-6 w-6 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center mr-3 flex-shrink-0">
                           1
                         </div>
                         <div>
@@ -398,7 +398,7 @@ const DiscordIntegration = () => {
                         </div>
                       </div>
                       <div className="flex">
-                        <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                        <div className="h-6 w-6 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center mr-3 flex-shrink-0">
                           2
                         </div>
                         <div>
@@ -408,7 +408,7 @@ const DiscordIntegration = () => {
                         </div>
                       </div>
                       <div className="flex">
-                        <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 flex-shrink-0">
+                        <div className="h-6 w-6 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center mr-3 flex-shrink-0">
                           3
                         </div>
                         <div>
@@ -485,38 +485,38 @@ const DiscordIntegration = () => {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">What you'll get:</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex p-4 border rounded-lg">
-                        <MessagesSquare className="h-5 w-5 mr-3 text-primary-500" />
+                      <div className="flex p-4 border rounded-lg bg-card">
+                        <MessagesSquare className="h-5 w-5 mr-3 text-primary" />
                         <div>
                           <h4 className="text-sm font-medium">AI Responses</h4>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Bot responds to user questions automatically
                           </p>
                         </div>
                       </div>
-                      <div className="flex p-4 border rounded-lg">
-                        <Shield className="h-5 w-5 mr-3 text-primary-500" />
+                      <div className="flex p-4 border rounded-lg bg-card">
+                        <Shield className="h-5 w-5 mr-3 text-primary" />
                         <div>
                           <h4 className="text-sm font-medium">Content Moderation</h4>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Filter inappropriate content and spam
                           </p>
                         </div>
                       </div>
-                      <div className="flex p-4 border rounded-lg">
-                        <Users className="h-5 w-5 mr-3 text-primary-500" />
+                      <div className="flex p-4 border rounded-lg bg-card">
+                        <Users className="h-5 w-5 mr-3 text-primary" />
                         <div>
                           <h4 className="text-sm font-medium">User Management</h4>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Handle warning and timeouts for rule breakers
                           </p>
                         </div>
                       </div>
-                      <div className="flex p-4 border rounded-lg">
-                        <BarChart3 className="h-5 w-5 mr-3 text-primary-500" />
+                      <div className="flex p-4 border rounded-lg bg-card">
+                        <BarChart3 className="h-5 w-5 mr-3 text-primary" />
                         <div>
                           <h4 className="text-sm font-medium">Analytics</h4>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Track engagement and moderation actions
                           </p>
                         </div>
@@ -524,7 +524,7 @@ const DiscordIntegration = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border p-4">
+                  <div className="rounded-lg border p-4 bg-card">
                     <h3 className="text-lg font-medium mb-4">Get Started</h3>
                     <p className="text-sm text-muted-foreground mb-6">
                       Click the button below to add ModerateAI to your Discord server. You'll need to be a server admin to complete this process.
