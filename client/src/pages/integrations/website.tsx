@@ -181,7 +181,7 @@ const WebsiteIntegration = () => {
           </div>
           
           {/* Chat body */}
-          <div className="bg-white p-4 h-[200px] overflow-y-auto">
+          <div className="bg-background p-4 h-[200px] overflow-y-auto">
             <div className="flex mb-3">
               {configFormData.showAgentAvatar && (
                 <Avatar className="h-8 w-8 mr-2 flex-shrink-0">
@@ -191,7 +191,7 @@ const WebsiteIntegration = () => {
                   </AvatarFallback>
                 </Avatar>
               )}
-              <div className="bg-gray-100 rounded-lg py-2 px-3 ml-2 max-w-[80%]">
+              <div className="bg-accent rounded-lg py-2 px-3 ml-2 max-w-[80%]">
                 <p className="text-sm">{configFormData.welcomeMessage}</p>
               </div>
             </div>
@@ -204,7 +204,7 @@ const WebsiteIntegration = () => {
           </div>
           
           {/* Input area */}
-          <div className="bg-gray-50 border-t px-4 py-3">
+          <div className="bg-accent border-t px-4 py-3">
             <div className="flex">
               <Input className="mr-2" placeholder="Type a message..." disabled />
               <Button variant="ghost" size="sm" className="px-2">
@@ -238,7 +238,7 @@ const WebsiteIntegration = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Website Integration</h1>
-          <p className="text-gray-500">Configure and deploy your website chat widget</p>
+          <p className="text-muted-foreground">Configure and deploy your website chat widget</p>
         </div>
         <Badge variant={platform?.status === "active" ? "success" : "outline"} className="capitalize">
           {platform?.status === "active" ? "Active" : platform?.status?.replace("_", " ")}
@@ -280,11 +280,11 @@ const WebsiteIntegration = () => {
                     <>
                       <div className="space-y-3">
                         <h3 className="text-lg font-medium">1. Copy the widget code</h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Add this code to your website's HTML, just before the closing &lt;/body&gt; tag:
                         </p>
                         <div className="relative">
-                          <div className="bg-gray-50 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                          <div className="bg-accent p-4 rounded-lg font-mono text-sm overflow-x-auto">
                             <pre>{widgetCode}</pre>
                           </div>
                           <Button
