@@ -730,7 +730,7 @@ const Settings = () => {
                     <p className="text-xl font-bold">45,230 / 100,000</p>
                   </div>
                   <div className="border rounded-md p-3">
-                    <p className="text-sm text-gray-500">Active Integrations</p>
+                    <p className="text-sm text-muted-foreground">Active Integrations</p>
                     <p className="text-xl font-bold">2 / 5</p>
                   </div>
                 </div>
@@ -749,7 +749,7 @@ const Settings = () => {
                       </div>
                       <div>
                         <p className="font-medium">•••• •••• •••• 4242</p>
-                        <p className="text-sm text-gray-500">Expires 12/24</p>
+                        <p className="text-sm text-muted-foreground">Expires 12/24</p>
                       </div>
                     </div>
                     <div className="flex items-center">
@@ -773,28 +773,28 @@ const Settings = () => {
                 <div className="border rounded-md">
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-accent">
                         <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Date
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Description
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Amount
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Status
                           </th>
-                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Invoice
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="divide-y divide-border">
                         <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             Jun 12, 2023
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -815,7 +815,7 @@ const Settings = () => {
                           </td>
                         </tr>
                         <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             May 12, 2023
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -836,7 +836,7 @@ const Settings = () => {
                           </td>
                         </tr>
                         <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             Apr 12, 2023
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
