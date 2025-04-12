@@ -304,7 +304,7 @@ const WebsiteIntegration = () => {
 
                       <div className="space-y-3">
                         <h3 className="text-lg font-medium">2. Verify installation</h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           After adding the code, refresh your website to see the chat widget in action.
                           The widget will appear as a chat button in the bottom corner of your site.
                         </p>
@@ -312,7 +312,7 @@ const WebsiteIntegration = () => {
 
                       <div className="space-y-3">
                         <h3 className="text-lg font-medium">3. Test your widget</h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Try sending a test message to ensure your widget is properly connected
                           to the ModerateAI platform.
                         </p>
@@ -372,7 +372,7 @@ const WebsiteIntegration = () => {
                             value={configFormData.widgetTitle}
                             onChange={handleInputChange}
                           />
-                          <p className="text-sm text-gray-500">The title displayed at the top of the chat widget</p>
+                          <p className="text-sm text-muted-foreground">The title displayed at the top of the chat widget</p>
                         </div>
 
                         <div className="space-y-3">
@@ -391,7 +391,7 @@ const WebsiteIntegration = () => {
                               onChange={handleInputChange}
                             />
                           </div>
-                          <p className="text-sm text-gray-500">Brand color for your chat widget</p>
+                          <p className="text-sm text-muted-foreground">Brand color for your chat widget</p>
                         </div>
                       </div>
 
@@ -404,7 +404,7 @@ const WebsiteIntegration = () => {
                           value={configFormData.welcomeMessage}
                           onChange={handleInputChange}
                         />
-                        <p className="text-sm text-gray-500">Initial message shown when a user opens the chat</p>
+                        <p className="text-sm text-muted-foreground">Initial message shown when a user opens the chat</p>
                       </div>
 
                       <Separator />
@@ -424,14 +424,14 @@ const WebsiteIntegration = () => {
                               <SelectItem value="left">Bottom Left</SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-sm text-gray-500">Where to place the chat button on your website</p>
+                          <p className="text-sm text-muted-foreground">Where to place the chat button on your website</p>
                         </div>
 
                         <div className="space-y-5">
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <Label htmlFor="autoOpen">Auto Open</Label>
-                              <p className="text-sm text-gray-500">Automatically open chat after page load</p>
+                              <p className="text-sm text-muted-foreground">Automatically open chat after page load</p>
                             </div>
                             <Switch
                               id="autoOpen"
@@ -443,7 +443,7 @@ const WebsiteIntegration = () => {
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <Label htmlFor="showAgentAvatar">Show Agent Avatar</Label>
-                              <p className="text-sm text-gray-500">Display AI assistant profile image</p>
+                              <p className="text-sm text-muted-foreground">Display AI assistant profile image</p>
                             </div>
                             <Switch
                               id="showAgentAvatar"
@@ -495,7 +495,7 @@ const WebsiteIntegration = () => {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Show on all pages</Label>
-                        <p className="text-xs text-gray-500">Widget appears on every page</p>
+                        <p className="text-xs text-muted-foreground">Widget appears on every page</p>
                       </div>
                       <Switch defaultChecked />
                     </div>
@@ -503,7 +503,7 @@ const WebsiteIntegration = () => {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Exit intent popup</Label>
-                        <p className="text-xs text-gray-500">Open when user tries to leave</p>
+                        <p className="text-xs text-muted-foreground">Open when user tries to leave</p>
                       </div>
                       <Switch />
                     </div>
