@@ -772,7 +772,7 @@ const Settings = () => {
                 <h3 className="text-lg font-medium">Billing History</h3>
                 <div className="border rounded-md">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-full divide-y divide-border">
                       <thead className="bg-accent">
                         <tr>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -797,14 +797,14 @@ const Settings = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             Jun 12, 2023
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             ModerateAI Pro Plan
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             $79.00
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
                               Paid
                             </span>
                           </td>
@@ -818,14 +818,14 @@ const Settings = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             May 12, 2023
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             ModerateAI Pro Plan
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             $79.00
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
                               Paid
                             </span>
                           </td>
@@ -839,14 +839,14 @@ const Settings = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             Apr 12, 2023
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             ModerateAI Pro Plan
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                             $79.00
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
                               Paid
                             </span>
                           </td>
@@ -867,7 +867,7 @@ const Settings = () => {
                 <Download className="mr-2 h-4 w-4" />
                 Download All Invoices
               </Button>
-              <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
+              <Button variant="outline" className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 border-red-200 dark:border-red-800">
                 Cancel Subscription
               </Button>
             </CardFooter>
@@ -892,7 +892,7 @@ const Settings = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800"
             >
               {deleteAccountMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
