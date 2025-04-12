@@ -205,7 +205,7 @@ const TelegramIntegration = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Telegram Integration</h1>
-          <p className="text-gray-500">Connect your AI assistant to Telegram groups and chats</p>
+          <p className="text-muted-foreground">Connect your AI assistant to Telegram groups and chats</p>
         </div>
         <Badge 
           variant={
@@ -258,12 +258,12 @@ const TelegramIntegration = () => {
                 </div>
               ) : platform?.status === "active" ? (
                 <div className="space-y-6">
-                  <div className="rounded-lg bg-green-50 p-4 border border-green-100">
+                  <div className="rounded-lg bg-accent p-4 border">
                     <div className="flex">
                       <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
                       <div>
-                        <h3 className="text-sm font-medium text-green-800">Connected Successfully</h3>
-                        <p className="mt-1 text-sm text-green-700">
+                        <h3 className="text-sm font-medium text-primary">Connected Successfully</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
                           Your Telegram bot is active and ready to respond to messages.
                         </p>
                         <div className="mt-3">
@@ -285,19 +285,19 @@ const TelegramIntegration = () => {
                       <h3 className="text-lg font-medium mb-3">Bot Information</h3>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Bot Name:</span>
+                          <span className="text-sm text-muted-foreground">Bot Name:</span>
                           <span className="text-sm font-medium">ModerateAI Assistant</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Username:</span>
+                          <span className="text-sm text-muted-foreground">Username:</span>
                           <span className="text-sm font-medium">@ModerateAI_Bot</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Status:</span>
+                          <span className="text-sm text-muted-foreground">Status:</span>
                           <Badge variant="success">Active</Badge>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Groups:</span>
+                          <span className="text-sm text-muted-foreground">Groups:</span>
                           <span className="text-sm font-medium">{telegramGroups.length}</span>
                         </div>
                       </div>
