@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -10,7 +11,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
   role: text("role").notNull().default("user"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -27,10 +28,10 @@ export const platforms = pgTable("platforms", {
   type: text("type").notNull(), // "website", "telegram", "discord"
   name: text("name").notNull(),
   status: text("status").notNull(), // "active", "inactive", "setup_required", "not_connected"
-  userId: integer("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   config: jsonb("config"), // Platform-specific configuration
   authToken: text("auth_token"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertPlatformSchema = createInsertSchema(platforms).pick({
@@ -45,12 +46,12 @@ export const insertPlatformSchema = createInsertSchema(platforms).pick({
 // Conversations table
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),
-  platformId: integer("platform_id").notNull(),
+  platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
   externalUserId: text("external_user_id").notNull(), // User ID from the external platform
   externalUsername: text("external_username"), // Username from the external platform
   status: text("status").notNull().default("active"), // "active", "closed", "archived"
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertConversationSchema = createInsertSchema(conversations).pick({
@@ -63,10 +64,10 @@ export const insertConversationSchema = createInsertSchema(conversations).pick({
 // Messages table
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  conversationId: integer("conversation_id").notNull(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   sender: text("sender").notNull(), // "user", "ai", "system"
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   metadata: jsonb("metadata"), // Additional message metadata
 });
 
