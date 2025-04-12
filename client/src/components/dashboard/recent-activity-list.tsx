@@ -31,13 +31,13 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
   const getPlatformBadgeClass = (platform: string) => {
     switch (platform) {
       case "website":
-        return "text-primary-600";
+        return "text-primary";
       case "discord":
-        return "text-indigo-600";
+        return "text-indigo-400";
       case "telegram":
-        return "text-blue-600";
+        return "text-blue-400";
       default:
-        return "text-gray-600";
+        return "text-muted-foreground";
     }
   };
   
@@ -45,28 +45,28 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
   const getPlatformDotClass = (platform: string) => {
     switch (platform) {
       case "website":
-        return "text-primary-500";
+        return "text-primary";
       case "discord":
-        return "text-indigo-500";
+        return "text-indigo-400";
       case "telegram":
-        return "text-blue-500";
+        return "text-blue-400";
       default:
-        return "text-gray-500";
+        return "text-muted-foreground";
     }
   };
   
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+      <div className="bg-card rounded-lg shadow-sm p-4 border border-border">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-start space-x-3">
-              <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+              <div className="rounded-full bg-muted h-10 w-10"></div>
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-4 bg-muted rounded w-1/4"></div>
+                <div className="h-3 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-1/3"></div>
               </div>
             </div>
           ))}
@@ -76,9 +76,9 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
   }
   
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+    <div className="bg-card rounded-lg shadow-sm p-4 border border-border">
       <div className="flow-root">
-        <ul className="-my-5 divide-y divide-gray-200">
+        <ul className="-my-5 divide-y divide-border">
           {activities.map((activity, index) => (
             <li key={activity.id} className="py-4">
               <div className="flex items-start">
@@ -92,8 +92,8 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
                   </Avatar>
                 </div>
                 <div className="ml-3 min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.user.name}</p>
-                  <p className="text-sm text-gray-500">{activity.action}</p>
+                  <p className="text-sm font-medium text-foreground">{activity.user.name}</p>
+                  <p className="text-sm text-muted-foreground">{activity.action}</p>
                   <div className="mt-1 flex items-center">
                     <span className={`inline-flex items-center text-xs font-medium ${getPlatformBadgeClass(activity.platform)}`}>
                       <svg className={`mr-1.5 h-3 w-3 ${getPlatformDotClass(activity.platform)}`} fill="currentColor" viewBox="0 0 8 8">
@@ -101,8 +101,8 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
                       </svg>
                       {activity.platform.charAt(0).toUpperCase() + activity.platform.slice(1)}
                     </span>
-                    <span className="text-xs text-gray-500 mx-2">•</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground mx-2">•</span>
+                    <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(activity.time, { addSuffix: true })}
                     </span>
                   </div>
