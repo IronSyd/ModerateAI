@@ -312,7 +312,7 @@ const TelegramIntegration = () => {
                         <Input 
                           value="https://t.me/ModerateAI_Bot" 
                           readOnly 
-                          className="bg-gray-50"
+                          className="bg-card"
                         />
                         <Button variant="outline" onClick={() => {
                           navigator.clipboard.writeText("https://t.me/ModerateAI_Bot");
@@ -365,7 +365,7 @@ const TelegramIntegration = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="rounded-lg bg-gray-50 p-4 border">
+                  <div className="rounded-lg bg-card p-4 border">
                     <h3 className="text-lg font-medium mb-3">Create a Telegram Bot</h3>
                     <div className="space-y-4">
                       <div className="flex">
@@ -373,7 +373,7 @@ const TelegramIntegration = () => {
                           1
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Open Telegram</span> and search for the "BotFather" (@BotFather)
                           </p>
                         </div>
@@ -383,7 +383,7 @@ const TelegramIntegration = () => {
                           2
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Start a chat with BotFather</span> and send the command <code>/newbot</code>
                           </p>
                         </div>
@@ -393,7 +393,7 @@ const TelegramIntegration = () => {
                           3
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Follow the instructions</span> to create your bot (name and username)
                           </p>
                         </div>
@@ -403,7 +403,7 @@ const TelegramIntegration = () => {
                           4
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Copy the API token</span> that BotFather provides
                           </p>
                         </div>
@@ -411,9 +411,9 @@ const TelegramIntegration = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-gray-50 p-4 border">
+                  <div className="rounded-lg bg-card p-4 border">
                     <h3 className="text-lg font-medium mb-3">Connect Your Bot</h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       Paste the API token from BotFather to connect your Telegram bot to ModerateAI:
                     </p>
                     <Button onClick={() => setIsTokenDialogOpen(true)}>
@@ -661,7 +661,7 @@ const TelegramIntegration = () => {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
               />
-              <p className="text-sm text-gray-500 flex items-center">
+              <p className="text-sm text-muted-foreground flex items-center">
                 <Lock className="h-3 w-3 mr-1" />
                 Your token is securely stored and encrypted
               </p>
