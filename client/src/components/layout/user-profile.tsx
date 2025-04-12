@@ -18,20 +18,20 @@ const UserProfile = () => {
   });
   
   return (
-    <div className="p-4 border-t flex items-center">
+    <div className="p-4 border-t border-border flex items-center">
       <Avatar>
         <AvatarImage src={user.imageUrl} alt={user.name} />
         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
       </Avatar>
       
       <div className="ml-3">
-        <p className="text-sm font-medium text-gray-800">{user.name}</p>
-        <p className="text-xs text-gray-500">{user.role}</p>
+        <p className="text-sm font-medium text-foreground">{user.name}</p>
+        <p className="text-xs text-muted-foreground">{user.role}</p>
       </div>
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="ml-auto text-gray-400 hover:text-gray-500">
+          <button className="ml-auto text-muted-foreground hover:text-foreground">
             <MoreVertical className="h-5 w-5" />
           </button>
         </DropdownMenuTrigger>

@@ -97,14 +97,14 @@ const Sidebar = () => {
     return (
       <Link href={item.path}>
         <a 
-          className={`flex items-center px-4 py-3 hover:bg-gray-50 ${
+          className={`flex items-center px-4 py-3 hover:bg-accent ${
             isActive 
-              ? "text-gray-800 bg-gray-100 border-r-4 border-primary-500" 
-              : "text-gray-600"
+              ? "text-foreground bg-accent/60 border-r-4 border-primary" 
+              : "text-muted-foreground"
           }`}
         >
           {React.cloneElement(item.icon as React.ReactElement, { 
-            className: `h-5 w-5 mr-3 ${isActive ? "text-primary-500" : "text-gray-500"}`
+            className: `h-5 w-5 mr-3 ${isActive ? "text-primary" : "text-muted-foreground"}`
           })}
           {item.label}
         </a>
@@ -115,7 +115,7 @@ const Sidebar = () => {
   const SidebarSection = ({ title, items }: { title: string; items: SidebarItem[] }) => {
     return (
       <>
-        <div className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {title}
         </div>
         {items.map((item) => (
@@ -125,7 +125,7 @@ const Sidebar = () => {
     );
   };
   
-  const sidebarClasses = `fixed md:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
+  const sidebarClasses = `fixed md:static inset-y-0 left-0 z-50 w-64 bg-background shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
     isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
   }`;
   
@@ -134,7 +134,7 @@ const Sidebar = () => {
       {/* Overlay */}
       {isOpen && isMobile && (
         <div 
-          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -142,12 +142,12 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div className={sidebarClasses}>
         {/* Logo */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center">
-            <div className="rounded-lg bg-primary-500 p-2 mr-2">
-              <MessagesSquare className="h-6 w-6 text-white" />
+            <div className="rounded-lg bg-primary p-2 mr-2">
+              <MessagesSquare className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold text-gray-800">ModerateAI</span>
+            <span className="text-xl font-semibold text-foreground">ModerateAI</span>
           </div>
         </div>
         
