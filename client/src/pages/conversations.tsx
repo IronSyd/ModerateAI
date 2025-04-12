@@ -60,8 +60,7 @@ const Conversations = () => {
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Conversations</h1>
-        <div className="mt-4 md:mt-0 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
+        <div className="mt-4 md:mt-0 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row md:ml-auto">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             New Conversation
@@ -89,7 +88,7 @@ const Conversations = () => {
               
               <div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Search by name..."
@@ -139,9 +138,9 @@ const Conversations = () => {
     if (isLoading) {
       return (
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-full mb-4"></div>
+          <div className="h-8 bg-accent rounded w-full mb-4"></div>
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-12 bg-gray-200 rounded w-full mb-2"></div>
+            <div key={i} className="h-12 bg-accent rounded w-full mb-2"></div>
           ))}
         </div>
       );
@@ -150,7 +149,7 @@ const Conversations = () => {
     if (!conversations || conversations.length === 0) {
       return (
         <div className="py-12 text-center">
-          <p className="text-gray-500 mb-4">No conversations found</p>
+          <p className="text-muted-foreground mb-4">No conversations found</p>
           <Button>Start a conversation</Button>
         </div>
       );
