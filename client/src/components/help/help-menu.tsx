@@ -162,13 +162,13 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
       <div className="fixed inset-0" onClick={onClose}></div>
       <div className="absolute right-0 mt-2 w-96 bg-card rounded-md shadow-lg overflow-hidden border border-border max-h-[80vh] flex flex-col">
         <div className="p-3 border-b">
-          <h3 className="text-lg font-semibold mb-2">Help Center</h3>
+          <h3 className="text-lg font-semibold mb-2 text-foreground">Help Center</h3>
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search help articles..."
-              className="pl-8"
+              className="pl-8 bg-muted/40"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -201,20 +201,20 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
         <div className="overflow-y-auto flex-grow">
           {activeTab === 'popular' && (
             <div className="p-3 space-y-3">
-              <h4 className="text-sm font-medium text-gray-500">POPULAR ARTICLES</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">POPULAR ARTICLES</h4>
               {popularArticles.map((article) => (
                 <button 
                   key={article.id}
-                  className="w-full text-left p-3 hover:bg-gray-50 rounded-md cursor-pointer flex items-start"
+                  className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-start"
                   onClick={() => {
                     // Would open article in a real app
                     onClose();
                   }}
                 >
-                  <BookOpen className="h-5 w-5 text-gray-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <BookOpen className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <h5 className="font-medium text-gray-900">{article.title}</h5>
-                    <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{article.preview}</p>
+                    <h5 className="font-medium text-foreground">{article.title}</h5>
+                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{article.preview}</p>
                   </div>
                 </button>
               ))}
@@ -223,11 +223,11 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
           
           {activeTab === 'categories' && (
             <div className="p-3 space-y-3">
-              <h4 className="text-sm font-medium text-gray-500">BROWSE BY CATEGORY</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">BROWSE BY CATEGORY</h4>
               {helpCategories.map((category) => (
                 <button 
                   key={category.id}
-                  className="w-full text-left p-3 hover:bg-gray-50 rounded-md cursor-pointer flex items-center"
+                  className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-center"
                   onClick={() => {
                     // Would open category in a real app
                     onClose();
@@ -237,10 +237,10 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
                     {category.icon}
                   </div>
                   <div className="min-w-0 flex-grow">
-                    <h5 className="font-medium text-gray-900">{category.title}</h5>
-                    <p className="text-sm text-gray-600">{category.description}</p>
+                    <h5 className="font-medium text-foreground">{category.title}</h5>
+                    <p className="text-sm text-muted-foreground">{category.description}</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </button>
               ))}
             </div>
@@ -248,23 +248,23 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
           
           {activeTab === 'new' && (
             <div className="p-3 space-y-3">
-              <h4 className="text-sm font-medium text-gray-500">NEWLY ADDED</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">NEWLY ADDED</h4>
               {newArticles.map((article) => (
                 <button 
                   key={article.id}
-                  className="w-full text-left p-3 hover:bg-gray-50 rounded-md cursor-pointer flex items-start"
+                  className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-start"
                   onClick={() => {
                     // Would open article in a real app
                     onClose();
                   }}
                 >
-                  <BookOpen className="h-5 w-5 text-gray-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <BookOpen className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
                     <div className="flex items-center">
-                      <h5 className="font-medium text-gray-900">{article.title}</h5>
-                      <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100">New</Badge>
+                      <h5 className="font-medium text-foreground">{article.title}</h5>
+                      <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">New</Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{article.preview}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{article.preview}</p>
                   </div>
                 </button>
               ))}
@@ -272,9 +272,9 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
           )}
         </div>
         
-        <div className="border-t p-3 bg-gray-50">
+        <div className="border-t p-3 bg-muted/30">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium">Need more help?</h4>
+            <h4 className="text-sm font-medium text-foreground">Need more help?</h4>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" className="text-sm" onClick={onClose}>
