@@ -8,6 +8,8 @@ import {
   ModerationAction, InsertModerationAction,
   users, platforms, conversations, messages, aiConfigurations, knowledgeBases, moderationActions
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -495,4 +497,304 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+import { db } from "./db";
+import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
+
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  // Platform operations
+  async getPlatform(id: number): Promise<Platform | undefined> {
+    const [platform] = await db.select().from(platforms).where(eq(platforms.id, id));
+    return platform;
+  }
+
+  async getPlatformsByUserId(userId: number): Promise<Platform[]> {
+    return await db.select().from(platforms).where(eq(platforms.userId, userId));
+  }
+
+  async getPlatformsByType(type: string): Promise<Platform[]> {
+    return await db.select().from(platforms).where(eq(platforms.type, type));
+  }
+
+  async createPlatform(platform: InsertPlatform): Promise<Platform> {
+    const [newPlatform] = await db.insert(platforms).values(platform).returning();
+    return newPlatform;
+  }
+
+  async updatePlatform(id: number, updates: Partial<Platform>): Promise<Platform | undefined> {
+    const [updatedPlatform] = await db
+      .update(platforms)
+      .set(updates)
+      .where(eq(platforms.id, id))
+      .returning();
+    return updatedPlatform;
+  }
+
+  async deletePlatform(id: number): Promise<boolean> {
+    const result = await db.delete(platforms).where(eq(platforms.id, id));
+    return result.count > 0;
+  }
+
+  // Conversation operations
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return conversation;
+  }
+
+  async getConversationsByPlatformId(platformId: number): Promise<Conversation[]> {
+    return await db.select().from(conversations).where(eq(conversations.platformId, platformId));
+  }
+
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const now = new Date();
+    const [newConversation] = await db.insert(conversations)
+      .values({
+        ...conversation,
+        updatedAt: now
+      })
+      .returning();
+    return newConversation;
+  }
+
+  async updateConversation(id: number, updates: Partial<Conversation>): Promise<Conversation | undefined> {
+    const [updatedConversation] = await db
+      .update(conversations)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(conversations.id, id))
+      .returning();
+    return updatedConversation;
+  }
+
+  async closeConversation(id: number): Promise<Conversation | undefined> {
+    return this.updateConversation(id, { status: "closed" });
+  }
+
+  // Message operations
+  async getMessage(id: number): Promise<Message | undefined> {
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+    return message;
+  }
+
+  async getMessagesByConversationId(conversationId: number): Promise<Message[]> {
+    return await db.select().from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(asc(messages.createdAt));
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+    
+    // Update the conversation's updatedAt timestamp
+    await db.update(conversations)
+      .set({ updatedAt: new Date() })
+      .where(eq(conversations.id, message.conversationId));
+      
+    return newMessage;
+  }
+
+  // AI Configuration operations
+  async getAiConfiguration(id: number): Promise<AiConfiguration | undefined> {
+    const [config] = await db.select().from(aiConfigurations).where(eq(aiConfigurations.id, id));
+    return config;
+  }
+
+  async getAiConfigurationsByUserId(userId: number): Promise<AiConfiguration[]> {
+    return await db.select().from(aiConfigurations).where(eq(aiConfigurations.userId, userId));
+  }
+
+  async getActiveAiConfiguration(userId: number): Promise<AiConfiguration | undefined> {
+    const [config] = await db.select().from(aiConfigurations)
+      .where(and(
+        eq(aiConfigurations.userId, userId),
+        eq(aiConfigurations.isActive, true)
+      ));
+    return config;
+  }
+
+  async createAiConfiguration(config: InsertAiConfiguration): Promise<AiConfiguration> {
+    // If this configuration is active, deactivate all other configurations for this user
+    if (config.isActive) {
+      await db.update(aiConfigurations)
+        .set({ isActive: false })
+        .where(eq(aiConfigurations.userId, config.userId));
+    }
+    
+    const [newConfig] = await db.insert(aiConfigurations)
+      .values({
+        ...config,
+        updatedAt: new Date()
+      })
+      .returning();
+    return newConfig;
+  }
+
+  async updateAiConfiguration(id: number, updates: Partial<AiConfiguration>): Promise<AiConfiguration | undefined> {
+    // If this configuration is being set to active, deactivate all other configurations for this user
+    if (updates.isActive) {
+      const [config] = await db.select().from(aiConfigurations).where(eq(aiConfigurations.id, id));
+      if (config) {
+        await db.update(aiConfigurations)
+          .set({ isActive: false })
+          .where(and(
+            eq(aiConfigurations.userId, config.userId),
+            ne(aiConfigurations.id, id)
+          ));
+      }
+    }
+    
+    const [updatedConfig] = await db.update(aiConfigurations)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(aiConfigurations.id, id))
+      .returning();
+    return updatedConfig;
+  }
+
+  // Knowledge Base operations
+  async getKnowledgeBase(id: number): Promise<KnowledgeBase | undefined> {
+    const [kb] = await db.select().from(knowledgeBases).where(eq(knowledgeBases.id, id));
+    return kb;
+  }
+
+  async getKnowledgeBasesByUserId(userId: number): Promise<KnowledgeBase[]> {
+    return await db.select().from(knowledgeBases).where(eq(knowledgeBases.userId, userId));
+  }
+
+  async getActiveKnowledgeBase(userId: number): Promise<KnowledgeBase | undefined> {
+    const [kb] = await db.select().from(knowledgeBases)
+      .where(and(
+        eq(knowledgeBases.userId, userId),
+        eq(knowledgeBases.isActive, true)
+      ));
+    return kb;
+  }
+
+  async createKnowledgeBase(kb: InsertKnowledgeBase): Promise<KnowledgeBase> {
+    // If this knowledge base is active, deactivate all other knowledge bases for this user
+    if (kb.isActive) {
+      await db.update(knowledgeBases)
+        .set({ isActive: false })
+        .where(eq(knowledgeBases.userId, kb.userId));
+    }
+    
+    const [newKb] = await db.insert(knowledgeBases).values(kb).returning();
+    return newKb;
+  }
+
+  async updateKnowledgeBase(id: number, updates: Partial<KnowledgeBase>): Promise<KnowledgeBase | undefined> {
+    // If this knowledge base is being set to active, deactivate all other knowledge bases for this user
+    if (updates.isActive) {
+      const [kb] = await db.select().from(knowledgeBases).where(eq(knowledgeBases.id, id));
+      if (kb) {
+        await db.update(knowledgeBases)
+          .set({ isActive: false })
+          .where(and(
+            eq(knowledgeBases.userId, kb.userId),
+            ne(knowledgeBases.id, id)
+          ));
+      }
+    }
+    
+    const [updatedKb] = await db.update(knowledgeBases)
+      .set(updates)
+      .where(eq(knowledgeBases.id, id))
+      .returning();
+    return updatedKb;
+  }
+
+  // Moderation Action operations
+  async getModerationAction(id: number): Promise<ModerationAction | undefined> {
+    const [action] = await db.select().from(moderationActions).where(eq(moderationActions.id, id));
+    return action;
+  }
+
+  async getModerationActionsByPlatformId(platformId: number): Promise<ModerationAction[]> {
+    return await db.select().from(moderationActions).where(eq(moderationActions.platformId, platformId));
+  }
+
+  async getModerationActionsByConversationId(conversationId: number): Promise<ModerationAction[]> {
+    return await db.select().from(moderationActions).where(eq(moderationActions.conversationId, conversationId));
+  }
+
+  async createModerationAction(action: InsertModerationAction): Promise<ModerationAction> {
+    const [newAction] = await db.insert(moderationActions).values(action).returning();
+    return newAction;
+  }
+
+  // Analytics operations
+  async getConversationCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(conversations);
+    return result[0].count;
+  }
+
+  async getMessageCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(messages);
+    return result[0].count;
+  }
+
+  async getModerationActionCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(moderationActions);
+    return result[0].count;
+  }
+
+  async getResponseRate(): Promise<number> {
+    const totalMessagesResult = await db.select({ count: count() }).from(messages);
+    const totalMessages = totalMessagesResult[0].count;
+    
+    const aiMessagesResult = await db.select({ count: count() })
+      .from(messages)
+      .where(eq(messages.sender, "ai"));
+    const aiMessages = aiMessagesResult[0].count;
+    
+    return totalMessages > 0 ? (aiMessages / totalMessages) * 100 : 0;
+  }
+
+  async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
+    // Get the most recent messages 
+    const recentMessages = await db.select({
+      user: messages.sender,
+      action: sql<string>`'message'`,
+      platform: platforms.type,
+      time: messages.createdAt,
+    })
+    .from(messages)
+    .innerJoin(conversations, eq(messages.conversationId, conversations.id))
+    .innerJoin(platforms, eq(conversations.platformId, platforms.id))
+    .orderBy(desc(messages.createdAt))
+    .limit(limit);
+
+    return recentMessages;
+  }
+}
+
+export const storage = new DatabaseStorage();

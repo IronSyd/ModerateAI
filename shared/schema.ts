@@ -81,7 +81,7 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
 // AI Configurations table
 export const aiConfigurations = pgTable("ai_configurations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   responseStyle: integer("response_style").notNull().default(75), // 0-100 scale
   responseLength: integer("response_length").notNull().default(40), // 0-100 scale
@@ -89,8 +89,8 @@ export const aiConfigurations = pgTable("ai_configurations", {
   isActive: boolean("is_active").notNull().default(true),
   model: text("model").notNull().default("gpt-4o"),
   systemPrompt: text("system_prompt"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertAiConfigurationSchema = createInsertSchema(aiConfigurations).pick({
@@ -107,12 +107,12 @@ export const insertAiConfigurationSchema = createInsertSchema(aiConfigurations).
 // Knowledge Base table
 export const knowledgeBases = pgTable("knowledge_bases", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
   documentCount: integer("document_count").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBases).pick({
@@ -126,13 +126,13 @@ export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBases).pick
 // Moderation Actions table
 export const moderationActions = pgTable("moderation_actions", {
   id: serial("id").primaryKey(),
-  platformId: integer("platform_id").notNull(),
-  conversationId: integer("conversation_id"),
-  messageId: integer("message_id"),
+  platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
+  conversationId: integer("conversation_id").references(() => conversations.id, { onDelete: "set null" }),
+  messageId: integer("message_id").references(() => messages.id, { onDelete: "set null" }),
   action: text("action").notNull(), // "delete", "warn", "ban", "flag", etc.
   reason: text("reason"),
   automatic: boolean("automatic").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertModerationActionSchema = createInsertSchema(moderationActions).pick({
@@ -143,6 +143,69 @@ export const insertModerationActionSchema = createInsertSchema(moderationActions
   reason: true,
   automatic: true,
 });
+
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  platforms: many(platforms),
+  aiConfigurations: many(aiConfigurations),
+  knowledgeBases: many(knowledgeBases)
+}));
+
+export const platformsRelations = relations(platforms, ({ one, many }) => ({
+  user: one(users, {
+    fields: [platforms.userId],
+    references: [users.id]
+  }),
+  conversations: many(conversations),
+  moderationActions: many(moderationActions)
+}));
+
+export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  platform: one(platforms, {
+    fields: [conversations.platformId],
+    references: [platforms.id]
+  }),
+  messages: many(messages),
+  moderationActions: many(moderationActions)
+}));
+
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id]
+  }),
+  moderationActions: many(moderationActions, { relationName: "message_moderation" })
+}));
+
+export const aiConfigurationsRelations = relations(aiConfigurations, ({ one }) => ({
+  user: one(users, {
+    fields: [aiConfigurations.userId],
+    references: [users.id]
+  })
+}));
+
+export const knowledgeBasesRelations = relations(knowledgeBases, ({ one }) => ({
+  user: one(users, {
+    fields: [knowledgeBases.userId],
+    references: [users.id]
+  })
+}));
+
+export const moderationActionsRelations = relations(moderationActions, ({ one }) => ({
+  platform: one(platforms, {
+    fields: [moderationActions.platformId],
+    references: [platforms.id]
+  }),
+  conversation: one(conversations, {
+    fields: [moderationActions.conversationId],
+    references: [conversations.id]
+  }),
+  message: one(messages, {
+    fields: [moderationActions.messageId],
+    references: [messages.id],
+    relationName: "message_moderation"
+  })
+}));
 
 // Types
 export type User = typeof users.$inferSelect;
