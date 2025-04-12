@@ -264,20 +264,14 @@ const Dashboard = () => {
   
   return (
     <div>
-      {/* Welcome Banner */}
+      {/* Welcome Banner with Setup Steps */}
       <WelcomeBanner
         completedSteps={completedSteps}
         totalSteps={totalSetupSteps}
         title="Welcome to ModerateAI"
         description="Set up your integrations to start moderating your communities."
+        setupProgress={setupProgress}
       />
-      
-      {/* Setup Steps - Only show if not all steps are completed */}
-      {completedSteps < totalSetupSteps && (
-        <div className="mb-6">
-          <SetupSteps completedSteps={setupProgress} />
-        </div>
-      )}
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">

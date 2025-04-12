@@ -1,18 +1,31 @@
+import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import SetupSteps from "./setup-steps";
 
 type WelcomeBannerProps = {
   completedSteps: number;
   totalSteps: number;
   title: string;
   description: string;
+  setupProgress: {
+    aiConfig: boolean;
+    websiteIntegration: boolean;
+    telegramIntegration: boolean;
+    discordIntegration: boolean;
+    knowledgeBase: boolean;
+  };
 };
 
 const WelcomeBanner = ({ 
   completedSteps, 
   totalSteps, 
   title, 
-  description 
+  description,
+  setupProgress
 }: WelcomeBannerProps) => {
+  const [showSetupSteps, setShowSetupSteps] = useState(false);
   const percentage = (completedSteps / totalSteps) * 100;
   
   return (
@@ -23,14 +36,30 @@ const WelcomeBanner = ({
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
         <div className="mt-4 md:mt-0 flex-shrink-0">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-600/20 text-yellow-500">
+          <Button 
+            variant="ghost" 
+            className="px-3 py-1 h-auto rounded-full bg-yellow-600/20 hover:bg-yellow-600/30 text-sm font-medium text-yellow-500 flex items-center gap-1"
+            onClick={() => setShowSetupSteps(!showSetupSteps)}
+          >
             {completedSteps}/{totalSteps} Setup Steps Completed
-          </span>
+            {showSetupSteps ? (
+              <ChevronUp className="h-4 w-4 ml-1" />
+            ) : (
+              <ChevronDown className="h-4 w-4 ml-1" />
+            )}
+          </Button>
         </div>
       </div>
       
       {/* Progress Bar */}
       <Progress value={percentage} className="h-2 rounded-none bg-border border-t-0" />
+      
+      {/* Setup Steps */}
+      {showSetupSteps && completedSteps < totalSteps && (
+        <div className="border-t border-border">
+          <SetupSteps completedSteps={setupProgress} />
+        </div>
+      )}
     </div>
   );
 };

@@ -67,23 +67,17 @@ const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
       id: 'knowledge-base',
       title: 'Knowledge Base',
       description: 'Upload documents to help the AI answer questions accurately',
-      link: '/knowledge-base',
+      link: '/ai-configuration',
       icon: <Database className="h-5 w-5" />,
       completed: completedSteps.knowledgeBase
     }
   ];
 
   return (
-    <div className="bg-card rounded-lg shadow-sm border border-border">
-      <div className="p-6 border-b border-border">
-        <h3 className="font-medium text-lg">Setup Steps</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Complete these steps to get your AI assistant up and running
-        </p>
-      </div>
+    <div>
       <div className="divide-y divide-border">
         {setupSteps.map((step) => (
-          <div key={step.id} className="p-6 flex items-start">
+          <div key={step.id} className="p-4 flex items-start">
             <div className={`rounded-full p-2 mr-4 flex-shrink-0 ${
               step.completed 
                 ? 'bg-green-600/20 text-green-500 dark:text-green-400' 
@@ -108,7 +102,7 @@ const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
                     size="sm" 
                     className="mt-3"
                   >
-                    {step.completed ? 'Configure' : 'Set Up Now'}
+                    Set Up Now
                   </Button>
                 </Link>
               )}
