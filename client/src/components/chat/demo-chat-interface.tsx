@@ -126,15 +126,15 @@ const DemoChatInterface = () => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col h-[500px]">
+    <div className="bg-card rounded-lg shadow-sm border border-border flex flex-col h-[500px]">
       {/* Chat Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center">
+      <div className="px-6 py-4 border-b border-border flex items-center">
         <div className="flex-1">
-          <h3 className="text-base font-medium text-gray-800">Website Chat Widget Preview</h3>
-          <p className="text-xs text-gray-500">Test your AI responses before deploying</p>
+          <h3 className="text-base font-medium text-foreground">Website Chat Widget Preview</h3>
+          <p className="text-xs text-muted-foreground">Test your AI responses before deploying</p>
         </div>
         <div>
-          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-500 p-1">
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground p-1">
             <MoreVertical className="h-5 w-5" />
           </Button>
         </div>
@@ -151,9 +151,9 @@ const DemoChatInterface = () => {
               <div className="flex-shrink-0">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src="" />
-                  <AvatarFallback className="bg-primary-100">
-                    <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <AvatarFallback className="bg-primary/20">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
@@ -164,7 +164,7 @@ const DemoChatInterface = () => {
             
             <div 
               className={`
-                ${message.sender === "user" ? "bg-primary-500 text-white" : "bg-gray-100 text-gray-800"}
+                ${message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/30 text-foreground"}
                 ${message.sender === "user" ? "" : "ml-3"}
                 rounded-lg px-4 py-3 max-w-[80%]
               `}
@@ -180,20 +180,20 @@ const DemoChatInterface = () => {
             <div className="flex-shrink-0">
               <Avatar className="h-10 w-10">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-primary-100">
-                  <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <AvatarFallback className="bg-primary/20">
+                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div className="ml-3 bg-gray-100 rounded-lg px-4 py-3">
+            <div className="ml-3 bg-secondary/30 rounded-lg px-4 py-3">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"></div>
+                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.4s" }}></div>
               </div>
             </div>
           </div>
@@ -204,7 +204,7 @@ const DemoChatInterface = () => {
       </div>
       
       {/* Chat Input */}
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-border p-4">
         <div className="flex items-center">
           <Textarea
             value={inputMessage}
@@ -223,7 +223,7 @@ const DemoChatInterface = () => {
             Send
           </Button>
         </div>
-        <div className="mt-2 flex items-center text-xs text-gray-500">
+        <div className="mt-2 flex items-center text-xs text-muted-foreground">
           <Info className="h-4 w-4 mr-1" />
           This is a demo environment. Changes won't affect your live chat.
         </div>
