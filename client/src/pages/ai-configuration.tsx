@@ -423,24 +423,24 @@ const AIConfiguration = () => {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md mb-3">
+                  <div className="flex items-center justify-between p-3 bg-card rounded-md mb-3">
                     <div className="flex items-center">
-                      <FileBadge className="h-5 w-5 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-700">
+                      <FileBadge className="h-5 w-5 text-muted-foreground mr-2" />
+                      <span className="text-sm text-foreground">
                         {knowledgeBases?.[0]?.name || "Product Documentation"}
                       </span>
                     </div>
-                    <Badge variant="outline" className="text-xs text-gray-500">
+                    <Badge variant="outline" className="text-xs text-foreground">
                       Active
                     </Badge>
                   </div>
 
                   <div className="flex flex-col space-y-3 mb-6">
                     {(knowledgeBases || []).slice(1, 3).map((kb, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                      <div key={index} className="flex items-center justify-between p-3 bg-card rounded-md">
                         <div className="flex items-center">
-                          <FileBadge className="h-5 w-5 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-700">{kb.name}</span>
+                          <FileBadge className="h-5 w-5 text-muted-foreground mr-2" />
+                          <span className="text-sm text-foreground">{kb.name}</span>
                         </div>
                         <Button variant="ghost" size="sm" className="h-8 px-2">
                           Activate
@@ -471,10 +471,10 @@ const AIConfiguration = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Bot className="h-5 w-5 text-gray-500 mr-3" />
+                    <Bot className="h-5 w-5 text-muted-foreground mr-3" />
                     <div>
-                      <h4 className="text-sm font-medium">Proactive Responses</h4>
-                      <p className="text-xs text-gray-500">
+                      <h4 className="text-sm font-medium text-foreground">Proactive Responses</h4>
+                      <p className="text-xs text-muted-foreground">
                         AI responds without triggers
                       </p>
                     </div>
@@ -484,10 +484,10 @@ const AIConfiguration = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <MessageSquare className="h-5 w-5 text-gray-500 mr-3" />
+                    <MessageSquare className="h-5 w-5 text-muted-foreground mr-3" />
                     <div>
-                      <h4 className="text-sm font-medium">Conversation Memory</h4>
-                      <p className="text-xs text-gray-500">
+                      <h4 className="text-sm font-medium text-foreground">Conversation Memory</h4>
+                      <p className="text-xs text-muted-foreground">
                         Remember past interactions
                       </p>
                     </div>
@@ -497,10 +497,10 @@ const AIConfiguration = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <bot className="h-5 w-5 text-gray-500 mr-3" />
+                    <Bot className="h-5 w-5 text-muted-foreground mr-3" />
                     <div>
-                      <h4 className="text-sm font-medium">Sentiment Analysis</h4>
-                      <p className="text-xs text-gray-500">
+                      <h4 className="text-sm font-medium text-foreground">Sentiment Analysis</h4>
+                      <p className="text-xs text-muted-foreground">
                         Detect user emotions
                       </p>
                     </div>
