@@ -390,20 +390,20 @@ const Settings = () => {
             </CardFooter>
           </Card>
 
-          <Card className="border-red-100">
+          <Card className="border-red-900/20">
             <CardHeader>
-              <CardTitle className="text-red-600">Danger Zone</CardTitle>
+              <CardTitle className="text-red-500">Danger Zone</CardTitle>
               <CardDescription>
                 Irreversible actions that affect your account
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border border-red-200 bg-red-50 p-4">
+              <div className="rounded-md border border-red-900/30 bg-red-900/10 p-4">
                 <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-red-600 mr-3 flex-shrink-0" />
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-medium text-red-800">Delete Account</h3>
-                    <div className="mt-2 text-sm text-red-700">
+                    <h3 className="text-sm font-medium text-red-400">Delete Account</h3>
+                    <div className="mt-2 text-sm text-red-400/90">
                       <p>
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
@@ -411,7 +411,7 @@ const Settings = () => {
                     <div className="mt-4">
                       <Button 
                         variant="outline" 
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20"
                         onClick={() => setIsDeleteAccountDialogOpen(true)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -440,7 +440,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="emailNotifications">Email Notifications</Label>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Receive notifications via email
                       </p>
                     </div>
@@ -454,7 +454,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="marketingEmails">Marketing Emails</Label>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Receive product updates and announcements
                       </p>
                     </div>
@@ -468,7 +468,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="weeklyDigest">Weekly Digest</Label>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Weekly summary of activity and stats
                       </p>
                     </div>
@@ -489,7 +489,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="inAppNotifications">In-App Notifications</Label>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Show notifications within the app
                       </p>
                     </div>
