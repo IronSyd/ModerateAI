@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
+import { db } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -36,7 +38,56 @@ app.use((req, res, next) => {
   next();
 });
 
+// Initialize database with demo data
+async function initializeDemoData() {
+  try {
+    // Check if demo user exists
+    let demoUser = await storage.getUserByUsername("demo");
+    if (!demoUser) {
+      log("Creating demo user");
+      demoUser = await storage.createUser({
+        username: "demo",
+        password: "demo123",
+        email: "demo@example.com",
+        fullName: "Demo User",
+        role: "admin"
+      });
+      
+      // Create default AI configuration
+      await storage.createAiConfiguration({
+        name: "Default Configuration",
+        userId: demoUser.id,
+        responseStyle: 75,
+        responseLength: 40,
+        moderationStrictness: 50,
+        isActive: true,
+        model: "gpt-4o",
+        systemPrompt: "You are a helpful customer support assistant. Be concise and professional."
+      });
+      
+      // Create default platform
+      await storage.createPlatform({
+        name: "Website Chat",
+        type: "website",
+        status: "active",
+        userId: demoUser.id,
+        config: {},
+        authToken: null
+      });
+      
+      log("Demo data initialized successfully");
+    } else {
+      log("Demo user already exists");
+    }
+  } catch (error) {
+    log(`Error initializing demo data: ${error.message}`);
+  }
+}
+
 (async () => {
+  // Initialize demo data before registering routes
+  await initializeDemoData();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
