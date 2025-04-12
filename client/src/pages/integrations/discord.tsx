@@ -623,7 +623,7 @@ const DiscordIntegration = () => {
                   onChange={(e) => updateBotConfigMutation.mutate({ welcomeMessage: e.target.value })}
                   rows={3}
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Message shown when the bot is first added to a server
                 </p>
               </div>
@@ -636,7 +636,7 @@ const DiscordIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Respond to Commands</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Bot responds to slash commands
                     </p>
                   </div>
@@ -646,7 +646,7 @@ const DiscordIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Respond to Mentions</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Bot responds when mentioned
                     </p>
                   </div>
@@ -656,7 +656,7 @@ const DiscordIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Private Responses</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Send sensitive responses as DMs
                     </p>
                   </div>
@@ -672,7 +672,7 @@ const DiscordIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Content Filtering</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Filter inappropriate content
                     </p>
                   </div>
@@ -682,7 +682,7 @@ const DiscordIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Automatic Warnings</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Warn users who violate rules
                     </p>
                   </div>
@@ -692,7 +692,7 @@ const DiscordIntegration = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Log Moderation Actions</Label>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Keep a record of all moderation
                     </p>
                   </div>
@@ -711,7 +711,7 @@ const DiscordIntegration = () => {
                       <SelectItem value="admin">admin</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Channel where moderation actions are logged
                   </p>
                 </div>
@@ -744,7 +744,7 @@ const DiscordIntegration = () => {
                 <div className="text-center">
                   <BarChart3 className="mx-auto h-12 w-12 text-gray-300" />
                   <h3 className="mt-4 text-lg font-medium">Analytics Coming Soon</h3>
-                  <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
+                  <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
                     We're building detailed analytics for your Discord bot.
                     Check back soon to see message volume, moderation actions, and user engagement metrics.
                   </p>
@@ -773,7 +773,7 @@ const DiscordIntegration = () => {
                 value={authCode}
                 onChange={(e) => setAuthCode(e.target.value)}
               />
-              <p className="text-sm text-gray-500 flex items-center">
+              <p className="text-sm text-muted-foreground flex items-center">
                 <Lock className="h-3 w-3 mr-1" />
                 Your code is securely stored and encrypted
               </p>
