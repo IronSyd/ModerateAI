@@ -361,22 +361,22 @@ const DiscordIntegration = () => {
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
-                            <Hash className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="text-sm text-gray-600">Text Channels</span>
+                            <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Text Channels</span>
                           </div>
                           <span className="text-sm font-medium">6</span>
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
-                            <MessagesSquare className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="text-sm text-gray-600">Today's Messages</span>
+                            <MessagesSquare className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Today's Messages</span>
                           </div>
                           <span className="text-sm font-medium">134</span>
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
-                            <Shield className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="text-sm text-gray-600">Moderation Actions</span>
+                            <Shield className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Moderation Actions</span>
                           </div>
                           <span className="text-sm font-medium">12</span>
                         </div>
@@ -392,7 +392,7 @@ const DiscordIntegration = () => {
                           1
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground/80">
                             <span className="font-medium">Configure channels</span> - Choose which channels the bot should moderate
                           </p>
                         </div>
@@ -402,7 +402,7 @@ const DiscordIntegration = () => {
                           2
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground/80">
                             <span className="font-medium">Customize moderation rules</span> - Set up your moderation preferences
                           </p>
                         </div>
@@ -412,7 +412,7 @@ const DiscordIntegration = () => {
                           3
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground/80">
                             <span className="font-medium">Invite your team</span> - Add team members to help with moderation
                           </p>
                         </div>
@@ -440,7 +440,7 @@ const DiscordIntegration = () => {
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Complete Bot Setup</h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       To finish setting up your Discord bot, we need the authorization code from Discord:
                     </p>
                     <Button onClick={() => setIsCompleteSetupDialogOpen(true)}>
@@ -450,10 +450,10 @@ const DiscordIntegration = () => {
 
                   <div className="rounded-lg border p-4 mt-6">
                     <h3 className="text-lg font-medium mb-3">Having Trouble?</h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       If you're experiencing issues with the Discord bot setup:
                     </p>
-                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-2">
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-2">
                       <li>Make sure you have admin permissions on your Discord server</li>
                       <li>Check that you've authorized the bot with the correct permissions</li>
                       <li>Try refreshing the authorization page and starting over</li>
@@ -526,7 +526,7 @@ const DiscordIntegration = () => {
 
                   <div className="rounded-lg border p-4">
                     <h3 className="text-lg font-medium mb-4">Get Started</h3>
-                    <p className="text-sm text-gray-600 mb-6">
+                    <p className="text-sm text-muted-foreground mb-6">
                       Click the button below to add ModerateAI to your Discord server. You'll need to be a server admin to complete this process.
                     </p>
                     <Button onClick={handleStartSetup}>
