@@ -503,7 +503,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="alertNotifications">Critical Alerts</Label>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Notifications for important moderation events
                       </p>
                     </div>
@@ -565,7 +565,7 @@ const Settings = () => {
                       )}
                     </Button>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Use this API key to authenticate requests to the ModerateAI API
                   </p>
                 </div>
@@ -594,7 +594,7 @@ const Settings = () => {
                       onChange={(e) => setApiSettings(prev => ({ ...prev, webhookUrl: e.target.value }))}
                       disabled={!apiSettings.enableWebhooks}
                     />
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       We'll send POST requests to this URL when events occur
                     </p>
                   </div>
@@ -639,7 +639,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="enableLogging">Request Logging</Label>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Log API requests for debugging
                       </p>
                     </div>
@@ -703,12 +703,12 @@ const Settings = () => {
               <div className="rounded-md border p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-base font-medium text-gray-900">Current Plan</h3>
+                    <h3 className="text-base font-medium">Current Plan</h3>
                     <div className="mt-1 flex items-center">
-                      <span className="text-2xl font-bold text-gray-900">Pro</span>
+                      <span className="text-2xl font-bold">Pro</span>
                       <Badge className="ml-2 bg-green-100 text-green-800">Active</Badge>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Billed monthly • Renews on July 12, 2023
                     </p>
                   </div>
@@ -718,15 +718,15 @@ const Settings = () => {
                 </div>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                   <div className="border rounded-md p-3">
-                    <p className="text-sm text-gray-500">Monthly Price</p>
+                    <p className="text-sm text-muted-foreground">Monthly Price</p>
                     <p className="text-xl font-bold">$79</p>
                   </div>
                   <div className="border rounded-md p-3">
-                    <p className="text-sm text-gray-500">Next Payment</p>
+                    <p className="text-sm text-muted-foreground">Next Payment</p>
                     <p className="text-xl font-bold">Jul 12, 2023</p>
                   </div>
                   <div className="border rounded-md p-3">
-                    <p className="text-sm text-gray-500">AI Requests</p>
+                    <p className="text-sm text-muted-foreground">AI Requests</p>
                     <p className="text-xl font-bold">45,230 / 100,000</p>
                   </div>
                   <div className="border rounded-md p-3">
