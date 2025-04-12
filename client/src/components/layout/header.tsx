@@ -39,7 +39,7 @@ const Header = () => {
   };
   
   return (
-    <div className="border-b bg-background sticky top-0 z-30">
+    <div className="border-b border-border bg-background sticky top-0 z-30">
       <div className="px-4 md:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center">
           {isMobile && (
