@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
+import SetupSteps from "@/components/dashboard/setup-steps";
 import StatsCard from "@/components/dashboard/stats-card";
 import PlatformIntegrationCard from "@/components/dashboard/platform-integration-card";
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
@@ -42,25 +43,63 @@ const Dashboard = () => {
   // Setup progress tracker
   const totalSetupSteps = 5;
   const [completedSteps, setCompletedSteps] = useState(0);
+  const [setupProgress, setSetupProgress] = useState({
+    aiConfig: false,
+    websiteIntegration: false,
+    telegramIntegration: false,
+    discordIntegration: false,
+    knowledgeBase: false,
+  });
   
   // Update completed steps based on data
   useEffect(() => {
-    if (platforms) {
+    if (platforms && aiConfig) {
       let completed = 0;
+      const progress = {
+        aiConfig: false,
+        websiteIntegration: false,
+        telegramIntegration: false,
+        discordIntegration: false,
+        knowledgeBase: false,
+      };
       
-      // Check if there's at least one active platform
-      if (platforms.some(p => p.status === "active")) {
-        completed += 1;
-      }
-      
-      // Check if AI configuration exists
+      // Check AI configuration
       if (aiConfig) {
         completed += 1;
+        progress.aiConfig = true;
+      }
+      
+      // Check platform integrations
+      if (platforms) {
+        const websitePlatform = platforms.find(p => p.type === "website");
+        if (websitePlatform && websitePlatform.status === "active") {
+          completed += 1;
+          progress.websiteIntegration = true;
+        }
+        
+        const telegramPlatform = platforms.find(p => p.type === "telegram");
+        if (telegramPlatform && telegramPlatform.status === "active") {
+          completed += 1;
+          progress.telegramIntegration = true;
+        }
+        
+        const discordPlatform = platforms.find(p => p.type === "discord");
+        if (discordPlatform && discordPlatform.status === "active") {
+          completed += 1;
+          progress.discordIntegration = true;
+        }
+      }
+      
+      // Check knowledge base
+      if (knowledgeBase) {
+        completed += 1;
+        progress.knowledgeBase = true;
       }
       
       setCompletedSteps(completed);
+      setSetupProgress(progress);
     }
-  }, [platforms, aiConfig]);
+  }, [platforms, aiConfig, knowledgeBase]);
   
   // Format stats for display
   const getStatsForDisplay = () => {
