@@ -30,7 +30,7 @@ const WelcomeBanner = ({
       </div>
       
       {/* Progress Bar */}
-      <Progress value={percentage} className="h-2 rounded-none" />
+      <Progress value={percentage} className="h-2 rounded-none bg-border border-t-0" />
     </div>
   );
 };
