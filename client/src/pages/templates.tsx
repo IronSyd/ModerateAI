@@ -211,7 +211,7 @@ const Templates = () => {
         <CardContent>
           <div className="flex items-center mb-6">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search templates..."
@@ -368,9 +368,9 @@ const Templates = () => {
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="border rounded-lg p-4 space-y-3">
-              <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-200 rounded w-full"></div>
+              <div className="h-5 bg-accent rounded w-1/3"></div>
+              <div className="h-4 bg-accent rounded w-1/4"></div>
+              <div className="h-10 bg-accent rounded w-full"></div>
             </div>
           ))}
         </div>
@@ -380,9 +380,9 @@ const Templates = () => {
     if (!templates || templates.length === 0) {
       return (
         <div className="text-center py-12 border rounded-lg">
-          <MessageSquare className="mx-auto h-12 w-12 text-gray-300" />
+          <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/40" />
           <h3 className="mt-4 text-lg font-medium">No templates found</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             Create your first template to get started.
           </p>
           <Button className="mt-6" onClick={handleCreateClick}>
@@ -399,7 +399,7 @@ const Templates = () => {
           <div key={template.id} className="border rounded-lg p-5 space-y-3">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium text-gray-900">{template.name}</h3>
+                <h3 className="font-medium text-foreground">{template.name}</h3>
                 <div className="flex mt-1 items-center space-x-2">
                   <Badge variant="secondary" className="text-xs">
                     {template.category.charAt(0).toUpperCase() + template.category.slice(1)}
@@ -416,11 +416,11 @@ const Templates = () => {
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(template)}>
-                  <Trash2 className="h-4 w-4 text-red-500" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-md p-3 text-sm text-gray-600 whitespace-pre-line">
+            <div className="bg-accent rounded-md p-3 text-sm text-foreground/80 whitespace-pre-line">
               {template.content}
             </div>
           </div>
