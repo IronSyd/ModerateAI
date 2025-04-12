@@ -97,7 +97,7 @@ const Dashboard = () => {
           title: "Response Rate",
           value: "-",
           icon: <CheckCircle className="h-6 w-6" />,
-          iconBgColor: "bg-green-50",
+          iconBgColor: "bg-green-600/20",
           iconColor: "text-green-500",
           changeValue: 0,
           changeText: "vs last week"
@@ -110,8 +110,8 @@ const Dashboard = () => {
         title: "Total Conversations",
         value: stats.totalConversations.toLocaleString(),
         icon: <MessagesSquare className="h-6 w-6" />,
-        iconBgColor: "bg-blue-50",
-        iconColor: "text-primary-500",
+        iconBgColor: "bg-primary/20",
+        iconColor: "text-primary",
         changeValue: 12.5,
         changeText: "vs last week"
       },
@@ -119,7 +119,7 @@ const Dashboard = () => {
         title: "AI Responses",
         value: stats.aiResponses.toLocaleString(),
         icon: <MonitorSmartphone className="h-6 w-6" />,
-        iconBgColor: "bg-indigo-50",
+        iconBgColor: "bg-secondary/20",
         iconColor: "text-secondary",
         changeValue: 8.2,
         changeText: "vs last week"
@@ -128,7 +128,7 @@ const Dashboard = () => {
         title: "Moderation Actions",
         value: stats.moderationActions.toLocaleString(),
         icon: <ShieldAlert className="h-6 w-6" />,
-        iconBgColor: "bg-purple-50",
+        iconBgColor: "bg-accent/20",
         iconColor: "text-accent",
         changeValue: -3.1,
         changeText: "vs last week"
@@ -137,7 +137,7 @@ const Dashboard = () => {
         title: "Response Rate",
         value: `${stats.responseRate.toFixed(1)}%`,
         icon: <CheckCircle className="h-6 w-6" />,
-        iconBgColor: "bg-green-50",
+        iconBgColor: "bg-green-600/20",
         iconColor: "text-green-500",
         changeValue: 0.5,
         changeText: "vs last week"
