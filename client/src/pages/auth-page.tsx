@@ -190,6 +190,22 @@ const AuthPage = () => {
                       />
                       <FormField
                         control={registerForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your full name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
                         name="password"
                         render={({ field }) => (
                           <FormItem>
