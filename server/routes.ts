@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateAIResponse, moderateContent } from "./lib/openai";
+import { setupAuth } from "./auth";
 import { 
   insertPlatformSchema, 
   insertConversationSchema, 
@@ -13,15 +14,14 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware (simplified for demo)
-  const authMiddleware = async (req: Request, res: Response, next: Function) => {
-    // In a real app, this would validate JWT/session
-    // For MVP, we'll use the demo user
-    const user = await storage.getUserByUsername("demo");
-    if (!user) {
+  // Set up authentication with Passport.js
+  setupAuth(app);
+  
+  // Auth middleware to check if the user is authenticated
+  const authMiddleware = (req: Request, res: Response, next: Function) => {
+    if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    req.user = user;
     next();
   };
 
