@@ -11,6 +11,7 @@ import {
   SendHorizontal,
   MessageSquareMore
 } from "lucide-react";
+import { Logo } from "@/components/logo";
 import ChatWidget from "@/components/chat/chat-widget";
 
 const LandingPage = () => {
@@ -22,12 +23,7 @@ const LandingPage = () => {
       <header className="py-4 px-6 md:px-8 border-b border-border">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center">
-            <div className="rounded-lg bg-primary p-2 mr-2">
-              <MessagesSquare className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">ModerateAI</span>
-          </div>
+          <Logo />
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center space-x-8">

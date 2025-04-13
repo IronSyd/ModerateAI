@@ -12,6 +12,7 @@ import {
   Users,
   Settings as SettingsCog
 } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { useMobile } from "@/hooks/use-mobile";
 
 type SidebarItem = {
@@ -143,14 +144,7 @@ const Sidebar = () => {
       <div className={sidebarClasses}>
         {/* Logo - Clickable and links to homepage */}
         <div className="p-4 border-b border-border">
-          <Link href="/">
-            <a className="flex items-center cursor-pointer hover:opacity-90 transition-opacity">
-              <div className="rounded-lg bg-primary p-2 mr-2">
-                <MessagesSquare className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-semibold text-foreground">ModerateAI</span>
-            </a>
-          </Link>
+          <Logo size="md" className="hover:opacity-90 transition-opacity" />
         </div>
         
         {/* Navigation Links */}
