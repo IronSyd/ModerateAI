@@ -15,7 +15,7 @@ const Header = () => {
   
   // Get page title based on current route
   const getPageTitle = () => {
-    if (location === "/") return "Dashboard";
+    if (location === "/dashboard") return "Dashboard";
     if (location === "/conversations") return "Conversations";
     if (location === "/ai-configuration") return "AI Configuration";
     if (location === "/templates") return "Templates";

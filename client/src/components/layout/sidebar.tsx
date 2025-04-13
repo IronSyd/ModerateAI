@@ -24,7 +24,7 @@ const mainItems: SidebarItem[] = [
   {
     icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
     label: "Dashboard",
-    path: "/"
+    path: "/dashboard"
   },
   {
     icon: <MessagesSquare className="h-5 w-5 mr-3" />,
