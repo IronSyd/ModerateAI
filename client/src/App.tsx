@@ -13,8 +13,11 @@ import DiscordIntegration from "@/pages/integrations/discord";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import LandingPage from "@/pages/landing";
+import AuthPage from "@/pages/auth-page";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 // Dashboard layout with sidebar and header
 function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -38,31 +41,33 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 function Router() {
   const [location] = useLocation();
   
-  // Check if current path is the landing page or requires the dashboard layout
-  const isLandingPage = location === "/";
+  // Check if current path is the landing page, auth page, or requires the dashboard layout
+  const isPublicPage = location === "/" || location === "/auth";
   
-  // If it's the landing page, render without dashboard layout
-  if (isLandingPage) {
+  // If it's a public page, render without dashboard layout
+  if (isPublicPage) {
     return (
       <Switch>
         <Route path="/" component={LandingPage} />
+        <Route path="/auth" component={AuthPage} />
+        <Route component={NotFound} />
       </Switch>
     );
   }
   
-  // For all other routes, use the dashboard layout
+  // For all other routes, use the dashboard layout with protected routes
   return (
     <DashboardLayout>
       <Switch>
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/conversations" component={Conversations} />
-        <Route path="/ai-configuration" component={AiConfiguration} />
-        <Route path="/templates" component={Templates} />
-        <Route path="/integrations/website" component={WebsiteIntegration} />
-        <Route path="/integrations/telegram" component={TelegramIntegration} />
-        <Route path="/integrations/discord" component={DiscordIntegration} />
-        <Route path="/team" component={Team} />
-        <Route path="/settings" component={Settings} />
+        <ProtectedRoute path="/dashboard" component={Dashboard} />
+        <ProtectedRoute path="/conversations" component={Conversations} />
+        <ProtectedRoute path="/ai-configuration" component={AiConfiguration} />
+        <ProtectedRoute path="/templates" component={Templates} />
+        <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
+        <ProtectedRoute path="/integrations/telegram" component={TelegramIntegration} />
+        <ProtectedRoute path="/integrations/discord" component={DiscordIntegration} />
+        <ProtectedRoute path="/team" component={Team} />
+        <ProtectedRoute path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
@@ -72,8 +77,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
