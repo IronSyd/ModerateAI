@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { MessagesSquare } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Logo } from "@/components/logo";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -84,11 +85,8 @@ const AuthPage = () => {
         <div className="grid gap-8 md:grid-cols-2 items-center">
           {/* Auth Form */}
           <div>
-            <div className="flex items-center mb-8">
-              <div className="rounded-lg bg-primary p-2 mr-2">
-                <MessagesSquare className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="text-2xl font-bold">ModerateAI</span>
+            <div className="mb-8">
+              <Logo />
             </div>
 
             <Card className="w-full max-w-md mx-auto">
