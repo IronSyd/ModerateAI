@@ -142,12 +142,10 @@ const ChatWidget = () => {
     }
   };
   
-  if (!isOpen) return null;
-  
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col shadow-xl">
-      {/* Chat Widget Body */}
-      {!isMinimized && (
+      {/* Chat Widget Body - visible when open and not minimized */}
+      {isOpen && !isMinimized && (
         <div className="w-80 sm:w-96 bg-card border border-border rounded-t-lg flex flex-col">
           {/* Header */}
           <div className="p-3 border-b border-border flex items-center justify-between bg-primary/10">
@@ -253,8 +251,8 @@ const ChatWidget = () => {
         </div>
       )}
       
-      {/* Chat Button - only show when minimized */}
-      {isMinimized && (
+      {/* Chat Button when minimized (already open, but minimized) */}
+      {isOpen && isMinimized && (
         <button
           onClick={() => setIsMinimized(false)}
           className="flex items-center bg-primary text-primary-foreground px-4 py-2 rounded-t-lg shadow-lg"
@@ -265,13 +263,26 @@ const ChatWidget = () => {
         </button>
       )}
       
-      {/* Chat Button - show when full widget is open */}
-      {!isMinimized && (
+      {/* Chat Button when widget is open but not minimized (close button) */}
+      {isOpen && !isMinimized && (
         <Button
           className="w-full rounded-t-none border-t-0"
           onClick={() => setIsOpen(false)}
         >
           Close Chat
+        </Button>
+      )}
+      
+      {/* Floating chat button when the chat widget is completely closed */}
+      {!isOpen && (
+        <Button
+          onClick={() => {
+            setIsOpen(true);
+            setIsMinimized(false);
+          }}
+          className="rounded-full h-14 w-14 p-0 shadow-lg flex items-center justify-center"
+        >
+          <MessageSquare className="h-6 w-6" />
         </Button>
       )}
     </div>
