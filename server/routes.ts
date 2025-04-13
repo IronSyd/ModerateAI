@@ -30,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ status: "ok" });
   });
   
-  // Direct OpenAI chat completion for the demo interface
+  // Direct OpenAI chat completion for the website demo interface
   app.post("/api/openai-demo", async (req, res) => {
     try {
       const { message } = req.body;
@@ -39,10 +39,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Message is required" });
       }
       
+      // Create a system prompt focused on ModerateAI features
+      const systemPrompt = 
+        "You are an AI assistant for ModerateAI, a SaaS platform that provides customer support " + 
+        "and community moderation across multiple platforms (Website, Telegram, Discord). " + 
+        "Answer user questions in a helpful, friendly, and concise manner. " +
+        "Focus on information about ModerateAI's features, pricing, and integrations. " +
+        "Keep responses under 150 words.";
+      
       const response = await generateAIResponse(
         message,
         [], // No conversation history
-        "You are a helpful customer support assistant for ModerateAI.", // System prompt
+        systemPrompt,
         75, // Friendly tone
         50  // Moderate length
       );

@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { MessagesSquare, CheckCircle, Shield, Sparkles, ArrowRight } from "lucide-react";
+import { 
+  MessagesSquare, 
+  CheckCircle, 
+  Shield, 
+  Sparkles, 
+  ArrowRight, 
+  Globe,
+  SendHorizontal,
+  MessageSquareMore
+} from "lucide-react";
+import ChatWidget from "@/components/chat/chat-widget";
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -473,12 +483,11 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+      
+      {/* Chat Widget */}
+      <ChatWidget />
     </div>
   );
 };
 
 export default LandingPage;
-
-import { Globe } from "lucide-react";
-import { SendHorizontal } from "lucide-react";
-import { MessageSquareMore } from "lucide-react";
