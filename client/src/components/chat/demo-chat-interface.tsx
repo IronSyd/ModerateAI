@@ -26,13 +26,22 @@ const DemoChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Scroll to bottom whenever messages change
+  // Scroll chat to bottom only when messages change
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll if messages were added after initial render
+    if (messages.length > 1) {
+      scrollToBottom();
+    }
   }, [messages]);
   
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll only within the chat container, not the whole page
+    if (messagesEndRef.current) {
+      const chatContainer = messagesEndRef.current.parentElement;
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
   };
   
   const handleSendMessage = async () => {
