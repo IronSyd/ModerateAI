@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { Menu, Bell, HelpCircle } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Menu, Bell, HelpCircle, MessagesSquare } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
@@ -51,6 +51,19 @@ const Header = () => {
               <Menu className="h-6 w-6" />
             </button>
           )}
+          
+          {/* Added logo on mobile */}
+          {isMobile && (
+            <Link href="/">
+              <a className="flex items-center mr-3 cursor-pointer hover:opacity-90 transition-opacity">
+                <div className="rounded-lg bg-primary p-1.5 mr-2">
+                  <MessagesSquare className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span className="font-semibold text-foreground">ModerateAI</span>
+              </a>
+            </Link>
+          )}
+          
           <h1 className="text-xl font-semibold text-foreground">{getPageTitle()}</h1>
         </div>
         

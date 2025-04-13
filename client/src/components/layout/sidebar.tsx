@@ -141,14 +141,16 @@ const Sidebar = () => {
       
       {/* Sidebar */}
       <div className={sidebarClasses}>
-        {/* Logo */}
+        {/* Logo - Clickable and links to homepage */}
         <div className="p-4 border-b border-border">
-          <div className="flex items-center">
-            <div className="rounded-lg bg-primary p-2 mr-2">
-              <MessagesSquare className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground">ModerateAI</span>
-          </div>
+          <Link href="/">
+            <a className="flex items-center cursor-pointer hover:opacity-90 transition-opacity">
+              <div className="rounded-lg bg-primary p-2 mr-2">
+                <MessagesSquare className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-semibold text-foreground">ModerateAI</span>
+            </a>
+          </Link>
         </div>
         
         {/* Navigation Links */}
