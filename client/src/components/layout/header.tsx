@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
 import { HelpMenu } from "../help/help-menu";
 import { Logo } from "@/components/logo";
-import { useDemoUser } from "@/hooks/use-demo-user";
+import { useAdminUser } from "@/hooks/use-admin-user";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -16,7 +16,7 @@ const Header = () => {
   const [, setIsSidebarOpen] = useState(!isMobile);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const { isDemoUser, demoUser } = useDemoUser();
+  const { isAdminUser, adminUser } = useAdminUser();
   
   // Get page title based on current route
   const getPageTitle = () => {
@@ -68,21 +68,21 @@ const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          {isDemoUser && (
+          {isAdminUser && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-0.5 rounded-md text-xs font-medium flex items-center">
+                  <div className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-0.5 rounded-md text-xs font-medium flex items-center">
                     <Avatar className="h-6 w-6 mr-2">
-                      <AvatarFallback className="text-xs bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-200">
-                        D
+                      <AvatarFallback className="text-xs bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-200">
+                        A
                       </AvatarFallback>
                     </Avatar>
-                    Demo Mode
+                    Admin Mode
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>You're currently browsing in demo mode</p>
+                  <p>You're currently using admin access</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
