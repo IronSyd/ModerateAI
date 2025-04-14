@@ -1,22 +1,22 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { User } from "@shared/schema";
 
-interface DemoUserContextType {
-  isDemoUser: boolean;
-  enableDemoUser: () => void;
-  disableDemoUser: () => void;
-  demoUser: User | null;
+interface AdminUserContextType {
+  isAdminUser: boolean;
+  enableAdminUser: () => void;
+  disableAdminUser: () => void;
+  adminUser: User | null;
 }
 
-const DemoUserContext = createContext<DemoUserContextType | null>(null);
+const AdminUserContext = createContext<AdminUserContextType | null>(null);
 
-// Mock demo user data
-const DEMO_USER: User = {
+// Mock admin user data
+const ADMIN_USER: User = {
   id: 0,
-  username: "demo",
-  email: "demo@moderateai.com",
+  username: "admin",
+  email: "admin@moderateai.com",
   password: "",
-  fullName: "Demo User",
+  fullName: "Admin User",
   role: "admin",
   createdAt: new Date()
 };

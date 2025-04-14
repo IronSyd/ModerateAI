@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useDemoUser } from "@/hooks/use-demo-user";
+import { useAdminUser } from "@/hooks/use-admin-user";
 import { MessagesSquare } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "@/components/logo";
@@ -31,7 +31,7 @@ const AuthPage = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
-  const { enableDemoUser } = useDemoUser();
+  const { enableAdminUser } = useAdminUser();
 
   // Redirect if already logged in
   if (user) {
@@ -259,15 +259,15 @@ const AuthPage = () => {
                   variant="outline" 
                   className="w-full"
                   onClick={() => {
-                    enableDemoUser();
+                    enableAdminUser();
                     toast({
-                      title: "Demo mode enabled",
-                      description: "You're now using ModerateAI as a demo user",
+                      title: "Admin mode enabled",
+                      description: "You're now using ModerateAI as an admin user",
                     });
                     setLocation("/dashboard");
                   }}
                 >
-                  Continue as Demo User
+                  Continue as Admin User
                 </Button>
               </CardFooter>
             </Card>

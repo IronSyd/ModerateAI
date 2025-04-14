@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useDemoUser } from "@/hooks/use-demo-user";
+import { useAdminUser } from "@/hooks/use-admin-user";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 
@@ -11,7 +11,7 @@ export function ProtectedRoute({
   component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
-  const { isDemoUser, demoUser } = useDemoUser();
+  const { isAdminUser, adminUser } = useAdminUser();
 
   return (
     <Route path={path}>
@@ -19,7 +19,7 @@ export function ProtectedRoute({
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
-      ) : user || isDemoUser ? (
+      ) : user || isAdminUser ? (
         <Component />
       ) : (
         <Redirect to="/auth" />
