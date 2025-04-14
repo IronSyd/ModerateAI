@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Bell, HelpCircle } from "lucide-react";
+import { Menu, Bell, HelpCircle, User } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
 import { HelpMenu } from "../help/help-menu";
 import { Logo } from "@/components/logo";
+import { useDemoUser } from "@/hooks/use-demo-user";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Header = () => {
   const isMobile = useMobile();
@@ -13,6 +16,7 @@ const Header = () => {
   const [, setIsSidebarOpen] = useState(!isMobile);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const { isDemoUser, demoUser } = useDemoUser();
   
   // Get page title based on current route
   const getPageTitle = () => {
@@ -64,6 +68,25 @@ const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          {isDemoUser && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-0.5 rounded-md text-xs font-medium flex items-center">
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarFallback className="text-xs bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-200">
+                        D
+                      </AvatarFallback>
+                    </Avatar>
+                    Demo Mode
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>You're currently browsing in demo mode</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <div className="relative">
             <button 
               className="text-muted-foreground hover:text-foreground relative" 
