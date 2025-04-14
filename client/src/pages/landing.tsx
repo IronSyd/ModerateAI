@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { 
   MessagesSquare, 
   CheckCircle, 
@@ -16,6 +17,7 @@ import ChatWidget from "@/components/chat/chat-widget";
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isYearly, setIsYearly] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -292,9 +294,29 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
               Choose the plan that fits your needs. All plans include access to all integrations.
             </p>
+            
+            {/* Billing Period Toggle */}
+            <div className="flex items-center justify-center space-x-4 mb-8">
+              <span className={`text-base font-medium ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                Monthly
+              </span>
+              <Switch 
+                checked={isYearly} 
+                onCheckedChange={setIsYearly}
+                className="data-[state=checked]:bg-primary"
+              />
+              <span className="flex items-center">
+                <span className={`text-base font-medium ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  Yearly
+                </span>
+                <span className="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs font-medium rounded-full px-2 py-0.5">
+                  Save 15%
+                </span>
+              </span>
+            </div>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -302,8 +324,8 @@ const LandingPage = () => {
             <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
               <h3 className="text-xl font-semibold mb-2">Basic</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold">$29</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-4xl font-bold">{isYearly ? '$25' : '$29'}</span>
+                <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
               </div>
               <p className="text-muted-foreground mb-6">
                 Perfect for small communities and startups.
@@ -336,8 +358,8 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2">Pro</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold">$79</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-4xl font-bold">{isYearly ? '$67' : '$79'}</span>
+                <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
               </div>
               <p className="text-muted-foreground mb-6">
                 Ideal for growing communities and businesses.
