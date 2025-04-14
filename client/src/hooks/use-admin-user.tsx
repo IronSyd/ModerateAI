@@ -14,7 +14,7 @@ const AdminUserContext = createContext<AdminUserContextType | null>(null);
 const ADMIN_USER: User = {
   id: 0,
   username: "admin",
-  email: "admin@moderateai.com",
+  email: "excelay@gmail.com",
   password: "",
   fullName: "Admin User",
   role: "admin",

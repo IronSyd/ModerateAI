@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useAdminUser } from "@/hooks/use-admin-user";
-import { MessagesSquare } from "lucide-react";
+import { MessagesSquare, ShieldAlert } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "@/components/logo";
 import { useForm } from "react-hook-form";
@@ -257,17 +257,43 @@ const AuthPage = () => {
                 </div>
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full flex items-center justify-center gap-2 text-red-700 border-red-200 hover:bg-red-50 hover:text-red-800"
                   onClick={() => {
-                    enableAdminUser();
-                    toast({
-                      title: "Admin mode enabled",
-                      description: "You're now using ModerateAI as an admin user",
-                    });
-                    setLocation("/dashboard");
+                    // Check if form contains the correct admin email address
+                    if (isLogin) {
+                      if (loginForm.getValues().username === "excelay@gmail.com") {
+                        enableAdminUser();
+                        toast({
+                          title: "Admin mode enabled",
+                          description: "You're now using ModerateAI as an admin user",
+                        });
+                        setLocation("/dashboard");
+                      } else {
+                        toast({
+                          title: "Unauthorized",
+                          description: "This admin access is restricted",
+                          variant: "destructive",
+                        });
+                      }
+                    } else {
+                      if (registerForm.getValues().email === "excelay@gmail.com") {
+                        enableAdminUser();
+                        toast({
+                          title: "Admin mode enabled",
+                          description: "You're now using ModerateAI as an admin user",
+                        });
+                        setLocation("/dashboard");
+                      } else {
+                        toast({
+                          title: "Unauthorized",
+                          description: "This admin access is restricted",
+                          variant: "destructive",
+                        });
+                      }
+                    }
                   }}
                 >
-                  Continue as Admin User
+                  <ShieldAlert className="h-4 w-4" /> Continue as Admin User
                 </Button>
               </CardFooter>
             </Card>
