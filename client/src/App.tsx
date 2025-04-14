@@ -17,6 +17,7 @@ import AuthPage from "@/pages/auth-page";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { AuthProvider } from "@/hooks/use-auth";
+import { DemoUserProvider } from "@/hooks/use-demo-user";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 // Dashboard layout with sidebar and header
@@ -78,8 +79,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <DemoUserProvider>
+          <Router />
+          <Toaster />
+        </DemoUserProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
