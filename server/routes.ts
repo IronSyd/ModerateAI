@@ -39,21 +39,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Message is required" });
       }
       
-      // Create a system prompt focused on ModerateAI features
-      const systemPrompt = 
+      // Get a demo user for accessing the knowledge base and AI configuration
+      const demoUsers = await storage.getAllUsers();
+      const demoUser = demoUsers.find(user => user.username === "demo") || demoUsers[0];
+      
+      if (!demoUser) {
+        // Fallback if no demo user exists
+        return res.status(500).json({ 
+          message: "Demo user not found",
+          error: "configuration_error"
+        });
+      }
+      
+      // Get active AI configuration
+      const aiConfig = await storage.getActiveAiConfiguration(demoUser.id);
+      
+      // Get active knowledge base
+      const knowledgeBase = await storage.getActiveKnowledgeBase(demoUser.id);
+      
+      // Create a more comprehensive system prompt with knowledge base information
+      let systemPrompt = 
         "You are an AI assistant for ModerateAI, a SaaS platform that provides customer support " + 
         "and community moderation across multiple platforms (Website, Telegram, Discord). " + 
         "Answer user questions in a helpful, friendly, and concise manner. " +
         "Focus on information about ModerateAI's features, pricing, and integrations. " +
         "Keep responses under 150 words.";
       
+      // Add knowledge base info
+      if (knowledgeBase) {
+        systemPrompt += `\n\nYou have access to the "${knowledgeBase.name}" knowledge base with ${knowledgeBase.documentCount} documents containing detailed product information.`;
+      }
+      
+      // Add product information for better responses
+      systemPrompt += `\n\nHere is key information about ModerateAI:
+- Features: Multi-platform integration (Website, Telegram, Discord), AI-powered chat responses, content moderation, analytics dashboard, customizable AI configurations
+- Pricing: Basic plan ($29/month), Pro plan ($79/month), Enterprise (custom pricing)
+- Integration: Easy setup via web dashboard with platform-specific wizards
+- Moderation: Customizable strictness levels, policy-based filtering, manual review options
+- AI Configuration: Adjustable response style, length, and tone; knowledge base customization`;
+      
       try {
+        // Use AI config settings if available
         const response = await generateAIResponse(
           message,
-          [], // No conversation history
-          systemPrompt,
-          75, // Friendly tone
-          50  // Moderate length
+          [], // No conversation history 
+          aiConfig?.systemPrompt || systemPrompt,
+          aiConfig?.responseStyle || 75, // Friendly tone
+          aiConfig?.responseLength || 50  // Moderate length
         );
         
         res.status(200).json({ content: response });
