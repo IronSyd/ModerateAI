@@ -69,36 +69,34 @@ const ChatWidget = () => {
     setIsLoading(true);
     
     try {
-      // Try calling demo endpoint
+      let aiResponse: string;
+      
       try {
+        // Try calling demo endpoint
         console.log("Sending to OpenAI demo endpoint...");
         const response = await apiRequest("POST", "/api/openai-demo", {
           message: userMessage.content
         });
         
         const directResponse = response as unknown as { content: string };
-        const aiContent = directResponse?.content || 
-                         "I'm sorry, I couldn't generate a response at this time.";
-                         
-        setMessages(prev => [...prev, {
-          id: `ai-${Date.now()}`,
-          content: aiContent,
-          sender: "ai",
-          timestamp: new Date()
-        }]);
+        aiResponse = directResponse?.content || 
+                    "I'm sorry, I couldn't generate a response at this time.";
       } catch (error) {
+        // Log error for troubleshooting
         console.error("OpenAI demo failed:", error);
         
         // If the API call fails, use the demo response generator
-        const aiResponse = generateDemoResponse(userMessage.content);
-        
-        setMessages(prev => [...prev, {
-          id: `ai-${Date.now()}`,
-          content: aiResponse,
-          sender: "ai",
-          timestamp: new Date()
-        }]);
+        console.log("Using fallback demo response generator");
+        aiResponse = generateDemoResponse(userMessage.content);
       }
+      
+      // Add AI response to chat
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        content: aiResponse,
+        sender: "ai",
+        timestamp: new Date()
+      }]);
       
     } catch (error) {
       console.error("Error sending message:", error);

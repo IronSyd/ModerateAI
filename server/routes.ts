@@ -47,18 +47,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Focus on information about ModerateAI's features, pricing, and integrations. " +
         "Keep responses under 150 words.";
       
-      const response = await generateAIResponse(
-        message,
-        [], // No conversation history
-        systemPrompt,
-        75, // Friendly tone
-        50  // Moderate length
-      );
-      
-      res.status(200).json({ content: response });
-    } catch (error) {
+      try {
+        const response = await generateAIResponse(
+          message,
+          [], // No conversation history
+          systemPrompt,
+          75, // Friendly tone
+          50  // Moderate length
+        );
+        
+        res.status(200).json({ content: response });
+      } catch (openaiError: any) {
+        // Log the specific OpenAI error for debugging
+        console.error("Error generating AI response:", openaiError);
+        
+        // Return a more specific error status and message for different error types
+        if (openaiError.status === 429) {
+          return res.status(429).json({ 
+            message: "AI service is currently at capacity. Please try again later.",
+            error: "rate_limit_exceeded"
+          });
+        } else {
+          throw openaiError; // Let the outer catch handle other types of errors
+        }
+      }
+    } catch (error: any) {
       console.error("Error with direct OpenAI call:", error);
-      res.status(500).json({ message: "Error generating AI response" });
+      res.status(500).json({ 
+        message: "Error generating AI response",
+        error: error.message || "Unknown error"
+      });
     }
   });
 
