@@ -78,13 +78,23 @@ const ChatWidget = () => {
           message: userMessage.content
         });
         
-        const directResponse = response as unknown as { content: string, error?: string };
+        const directResponse = response as unknown as { 
+          content?: string, 
+          error?: string,
+          errorType?: string,
+          message?: string,
+          status?: number 
+        };
         
-        // If the response contains an error message or has no content,
+        // If the response contains an error field or has no content,
         // switch to the fallback demo generator
-        if (directResponse?.error || !directResponse?.content || 
-            directResponse.content.includes("I'm sorry, there was an error")) {
-          console.log("API response indicated an error, using fallback generator");
+        if (directResponse?.error || 
+            !directResponse?.content || 
+            directResponse.errorType === "rate_limit_exceeded" ||
+            directResponse.status === 429 ||
+            (directResponse.content && directResponse.content.includes("I'm sorry, there was an error"))) {
+          
+          console.log("API response indicated an error, using fallback generator", directResponse);
           aiResponse = generateDemoResponse(userMessage.content);
         } else {
           aiResponse = directResponse.content;

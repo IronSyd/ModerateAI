@@ -93,15 +93,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log the specific OpenAI error for debugging
         console.error("Error generating AI response:", openaiError);
         
-        // Return a more specific error status and message for different error types
-        if (openaiError.status === 429) {
-          return res.status(429).json({ 
-            message: "AI service is currently at capacity. Please try again later.",
-            error: "rate_limit_exceeded"
-          });
-        } else {
-          throw openaiError; // Let the outer catch handle other types of errors
-        }
+        // Return a specific error format that the client can detect and handle gracefully
+        // Always use HTTP 200 with error field so the client can process it properly
+        return res.status(200).json({ 
+          error: "ai_service_error",
+          errorType: openaiError.status === 429 ? "rate_limit_exceeded" : "service_error",
+          message: "AI service is currently at capacity or experiencing issues.",
+          status: openaiError.status || 500
+        });
       }
     } catch (error: any) {
       console.error("Error with direct OpenAI call:", error);
