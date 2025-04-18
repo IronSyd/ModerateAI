@@ -71,7 +71,7 @@ const ChatWidget = () => {
     try {
       let aiResponse: string;
       
-      // Create conversation history from previous messages (up to 5)
+      // Create conversation history from previous messages (up to 5, excluding the current user message)
       const conversationHistory = messages
         .slice(-5)  // Only include the most recent 5 messages to avoid token limits
         .map(msg => ({
@@ -79,9 +79,14 @@ const ChatWidget = () => {
           content: msg.content
         }));
       
+      console.log("Previous messages:", messages);
+      console.log("Current user message:", userMessage);
+      
       try {
         // Try calling demo endpoint with conversation history
         console.log("Sending to OpenAI demo endpoint with history...", conversationHistory);
+        
+        // Make the API request with clear conversation history
         const response = await apiRequest("POST", "/api/openai-demo", {
           message: userMessage.content,
           history: conversationHistory
@@ -145,6 +150,12 @@ const ChatWidget = () => {
     // More comprehensive keyword matching
     if (input.includes("price") || input.includes("cost") || input.includes("pricing") || input.includes("plan") || input.includes("subscription")) {
       return "Our pricing is flexible based on your needs. The Basic plan starts at $29/month, the Pro plan at $79/month, and we offer custom Enterprise solutions. Would you like specific details about any of these plans?";
+    } else if (input.includes("basic plan") || input.includes("basic")) {
+      return "The Basic plan at $29/month includes: 1 platform integration, up to 500 messages per month, basic content moderation, standard response times, and email support. It's perfect for small businesses or those just getting started with AI-powered support.";
+    } else if (input.includes("pro plan") || input.includes("pro")) {
+      return "The Pro plan at $79/month includes: 3 platform integrations, up to 5,000 messages per month, advanced content moderation with custom policies, priority response times, email + chat support, and customizable AI configurations. It's ideal for growing businesses with active online communities.";
+    } else if (input.includes("enterprise") || input.includes("custom pricing")) {
+      return "Our Enterprise solution offers unlimited platform integrations, unlimited messages, dedicated account manager, 24/7 priority support, custom AI model fine-tuning, advanced analytics, and SLA guarantees. Contact our sales team for custom pricing based on your specific needs.";
     } else if (input.includes("integration") || input.includes("connect") || input.includes("setup") || input.includes("install") || input.includes("implement")) {
       return "Integration is simple! You can connect your platforms through our dashboard. We support Website, Telegram, and Discord currently. Each integration has its own setup wizard that will guide you through the process.";
     } else if (input.includes("ai") || input.includes("model") || input.includes("assistant") || input.includes("chatbot") || input.includes("intelligence")) {
@@ -163,6 +174,8 @@ const ChatWidget = () => {
       return "ModerateAI currently supports Website chat widgets, Telegram bots, and Discord bots. Each platform can be configured separately but managed from a single dashboard. We're constantly working on adding new platform integrations based on customer feedback.";
     } else if (input.includes("analytics") || input.includes("report") || input.includes("data") || input.includes("performance")) {
       return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track performance across all platforms and export reports for further analysis.";
+    } else if (input.includes("yes")) {
+      return "Great! What specific information would you like me to provide about ModerateAI? I can tell you about our features, pricing plans, platform integrations, or how to get started with a free trial.";
     }
     
     // Catch-all response for unrecognized queries
