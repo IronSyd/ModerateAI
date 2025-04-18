@@ -42,19 +42,29 @@ export async function generateAIResponse(
     // Add instruction to address specific questions about the platform
     fullSystemPrompt += " When asked about the platform, provide specific information about ModerateAI features, capabilities, and pricing.";
     
+    // Validate conversation history format for OpenAI API
+    const formattedHistory = conversationHistory.map(msg => {
+      // Make sure role is either 'user' or 'assistant'
+      const role = msg.role === 'user' ? 'user' : 'assistant';
+      return { role, content: msg.content };
+    });
+    
+    console.log("Using conversation history:", JSON.stringify(formattedHistory));
+    
     // Create complete message history
     const messages = [
       { role: "system", content: fullSystemPrompt },
-      ...conversationHistory,
+      ...formattedHistory,
       { role: "user", content: userMessage }
     ];
     
     console.log("System prompt:", fullSystemPrompt);
     console.log("Sending message to OpenAI:", userMessage);
+    console.log("Total messages in conversation:", messages.length);
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: messages as any,
+      messages: messages as any, // Type assertion needed for strict TypeScript
       max_tokens: 500
     });
     
@@ -103,7 +113,7 @@ export async function moderateContent(
     
     return {
       flagged: flagged,
-      categories: result.categories as Record<string, boolean>,
+      categories: result.categories as unknown as Record<string, boolean>,
       reason
     };
   } catch (error) {
