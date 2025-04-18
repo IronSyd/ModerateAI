@@ -71,11 +71,20 @@ const ChatWidget = () => {
     try {
       let aiResponse: string;
       
+      // Create conversation history from previous messages (up to 5)
+      const conversationHistory = messages
+        .slice(-5)  // Only include the most recent 5 messages to avoid token limits
+        .map(msg => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.content
+        }));
+      
       try {
-        // Try calling demo endpoint
-        console.log("Sending to OpenAI demo endpoint...");
+        // Try calling demo endpoint with conversation history
+        console.log("Sending to OpenAI demo endpoint with history...", conversationHistory);
         const response = await apiRequest("POST", "/api/openai-demo", {
-          message: userMessage.content
+          message: userMessage.content,
+          history: conversationHistory
         });
         
         const directResponse = response as unknown as { 

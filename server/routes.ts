@@ -33,11 +33,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Direct OpenAI chat completion for the website demo interface
   app.post("/api/openai-demo", async (req, res) => {
     try {
-      const { message } = req.body;
+      const { message, history } = req.body;
       
       if (!message) {
         return res.status(400).json({ message: "Message is required" });
       }
+      
+      // Convert the history to the format expected by OpenAI
+      const conversationHistory = Array.isArray(history) ? history : [];
       
       // Get a demo user for accessing the knowledge base and AI configuration
       const demoUsers = await storage.getAllUsers();
@@ -82,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use AI config settings if available
         const response = await generateAIResponse(
           message,
-          [], // No conversation history 
+          conversationHistory, // Pass conversation history
           aiConfig?.systemPrompt || systemPrompt,
           aiConfig?.responseStyle || 75, // Friendly tone
           aiConfig?.responseLength || 50  // Moderate length
