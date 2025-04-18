@@ -51,8 +51,14 @@ export async function generateAIResponse(
     });
     
     return response.choices[0].message.content || "I'm sorry, I couldn't generate a response.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating AI response:", error);
+    
+    // More specific error message for rate limit issues
+    if (error.status === 429) {
+      throw error; // Re-throw to let the calling code handle it with appropriate status
+    }
+    
     return "I'm sorry, there was an error processing your request. Please try again later.";
   }
 }

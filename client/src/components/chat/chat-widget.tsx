@@ -78,15 +78,23 @@ const ChatWidget = () => {
           message: userMessage.content
         });
         
-        const directResponse = response as unknown as { content: string };
-        aiResponse = directResponse?.content || 
-                    "I'm sorry, I couldn't generate a response at this time.";
-      } catch (error) {
+        const directResponse = response as unknown as { content: string, error?: string };
+        
+        // If the response contains an error message or has no content,
+        // switch to the fallback demo generator
+        if (directResponse?.error || !directResponse?.content || 
+            directResponse.content.includes("I'm sorry, there was an error")) {
+          console.log("API response indicated an error, using fallback generator");
+          aiResponse = generateDemoResponse(userMessage.content);
+        } else {
+          aiResponse = directResponse.content;
+        }
+      } catch (error: any) {
         // Log error for troubleshooting
         console.error("OpenAI demo failed:", error);
         
         // If the API call fails, use the demo response generator
-        console.log("Using fallback demo response generator");
+        console.log("Using fallback demo response generator due to API error");
         aiResponse = generateDemoResponse(userMessage.content);
       }
       
@@ -116,21 +124,31 @@ const ChatWidget = () => {
   const generateDemoResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (input.includes("price") || input.includes("cost") || input.includes("pricing")) {
+    // More comprehensive keyword matching
+    if (input.includes("price") || input.includes("cost") || input.includes("pricing") || input.includes("plan") || input.includes("subscription")) {
       return "Our pricing is flexible based on your needs. The Basic plan starts at $29/month, the Pro plan at $79/month, and we offer custom Enterprise solutions. Would you like specific details about any of these plans?";
-    } else if (input.includes("integration") || input.includes("connect") || input.includes("setup")) {
+    } else if (input.includes("integration") || input.includes("connect") || input.includes("setup") || input.includes("install") || input.includes("implement")) {
       return "Integration is simple! You can connect your platforms through our dashboard. We support Website, Telegram, and Discord currently. Each integration has its own setup wizard that will guide you through the process.";
-    } else if (input.includes("ai") || input.includes("model") || input.includes("assistant")) {
+    } else if (input.includes("ai") || input.includes("model") || input.includes("assistant") || input.includes("chatbot") || input.includes("intelligence")) {
       return "Our AI uses state-of-the-art language models that are fine-tuned for customer support and community moderation. You can customize the AI's tone, response length, and knowledge base through the AI Configuration panel.";
-    } else if (input.includes("hello") || input.includes("hi") || input.includes("hey")) {
+    } else if (input.includes("hello") || input.includes("hi") || input.includes("hey") || input.includes("howdy") || input.includes("greetings")) {
       return "Hello! How can I help you today with your AI customer support or community moderation needs?";
-    } else if (input.includes("features") || input.includes("capabilities")) {
+    } else if (input.includes("features") || input.includes("capabilities") || input.includes("functions") || input.includes("what") || input.includes("do")) {
       return "ModerateAI offers multi-platform integration, intelligent content moderation, customizable AI configurations, and comprehensive analytics. Is there a specific feature you'd like to know more about?";
-    } else if (input.includes("free") || input.includes("trial")) {
+    } else if (input.includes("free") || input.includes("trial") || input.includes("demo") || input.includes("test") || input.includes("try")) {
       return "Yes, we offer a 14-day free trial with full access to all features. You don't need a credit card to get started. Would you like me to help you set up your free trial?";
+    } else if (input.includes("moderation") || input.includes("moderate") || input.includes("filter") || input.includes("content")) {
+      return "Our moderation system uses AI to detect and filter inappropriate content across all your platforms. You can set different moderation levels and customize which types of content to flag or block. The system learns from your moderation actions to improve over time.";
+    } else if (input.includes("support") || input.includes("help") || input.includes("assistance") || input.includes("customer")) {
+      return "ModerateAI streamlines customer support by automatically handling common questions and routing complex issues to your team. Our AI learns from past interactions to provide increasingly accurate responses, reducing your team's workload while maintaining high quality support.";
+    } else if (input.includes("platform") || input.includes("website") || input.includes("discord") || input.includes("telegram")) {
+      return "ModerateAI currently supports Website chat widgets, Telegram bots, and Discord bots. Each platform can be configured separately but managed from a single dashboard. We're constantly working on adding new platform integrations based on customer feedback.";
+    } else if (input.includes("analytics") || input.includes("report") || input.includes("data") || input.includes("performance")) {
+      return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track performance across all platforms and export reports for further analysis.";
     }
     
-    return "Thanks for your question about " + userInput + ". Would you like to know more about how ModerateAI can help with customer support and community moderation across your platforms?";
+    // Catch-all response for unrecognized queries
+    return "Thanks for your question about " + userInput + ". ModerateAI helps businesses manage customer communications and community content across multiple platforms with AI-powered responses and content moderation. Would you like to know more about our features, pricing, or platform integrations?";
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
