@@ -12,6 +12,8 @@ export async function generateAIResponse(
   responseLength: number
 ): Promise<string> {
   try {
+    console.log("Starting OpenAI request with API key:", process.env.OPENAI_API_KEY ? "API key is set" : "API key is NOT set");
+    
     // Build system prompt based on configuration
     let fullSystemPrompt = systemPrompt || "You are a helpful customer support assistant.";
     
@@ -37,6 +39,9 @@ export async function generateAIResponse(
       fullSystemPrompt += " Provide comprehensive, detailed responses.";
     }
     
+    // Add instruction to address specific questions about the platform
+    fullSystemPrompt += " When asked about the platform, provide specific information about ModerateAI features, capabilities, and pricing.";
+    
     // Create complete message history
     const messages = [
       { role: "system", content: fullSystemPrompt },
@@ -44,11 +49,16 @@ export async function generateAIResponse(
       { role: "user", content: userMessage }
     ];
     
+    console.log("System prompt:", fullSystemPrompt);
+    console.log("Sending message to OpenAI:", userMessage);
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: messages as any,
       max_tokens: 500
     });
+    
+    console.log("OpenAI response received:", response.choices[0].message.content);
     
     return response.choices[0].message.content || "I'm sorry, I couldn't generate a response.";
   } catch (error: any) {

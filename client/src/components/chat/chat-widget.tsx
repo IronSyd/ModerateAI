@@ -86,17 +86,16 @@ const ChatWidget = () => {
           status?: number 
         };
         
-        // If the response contains an error field or has no content,
-        // switch to the fallback demo generator
+        // Only use fallback if there's a clear error - be more selective
         if (directResponse?.error || 
-            !directResponse?.content || 
             directResponse.errorType === "rate_limit_exceeded" ||
             directResponse.status === 429 ||
-            (directResponse.content && directResponse.content.includes("I'm sorry, there was an error"))) {
+            !directResponse?.content) {
           
           console.log("API response indicated an error, using fallback generator", directResponse);
           aiResponse = generateDemoResponse(userMessage.content);
         } else {
+          console.log("Using real OpenAI response:", directResponse.content);
           aiResponse = directResponse.content;
         }
       } catch (error: any) {
