@@ -74,25 +74,21 @@ const ChatWidget = () => {
     try {
       let aiResponse: string;
       
-      // First update our local state with the new message
-      const updatedMessages = [...messages, userMessage];
+      // Update messages state with user message first
+      setMessages(prev => [...prev, userMessage]);
       
-      // Then create conversation history including the current message (up to 5 messages)
-      const conversationHistory = updatedMessages
+      // Then create conversation history from the updated messages
+      const conversationHistory = [...messages, userMessage]
         .slice(-6)  // Include up to 6 messages (to ensure we have at least one back-and-forth)
         .map(msg => ({
           role: msg.sender === "user" ? "user" : "assistant",
           content: msg.content
         }));
       
-      console.log("Updated messages array:", updatedMessages);
-      console.log("Conversation history being sent:", conversationHistory);
+      console.log("Full conversation history being sent:", conversationHistory);
       
       try {
-        // Try calling demo endpoint with conversation history
-        console.log("Sending to OpenAI demo endpoint with history...", conversationHistory);
-        
-        // Make the API request with clear conversation history
+        // Make the API request with conversation history
         const response = await apiRequest("POST", "/api/openai-demo", {
           message: userMessage.content,
           history: conversationHistory
@@ -106,7 +102,7 @@ const ChatWidget = () => {
           status?: number 
         };
         
-        // Only use fallback if there's a clear error - be more selective
+        // Only use fallback if there's a clear error
         if (directResponse?.error || 
             directResponse.errorType === "rate_limit_exceeded" ||
             directResponse.status === 429 ||
