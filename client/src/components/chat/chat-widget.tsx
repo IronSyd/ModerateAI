@@ -56,7 +56,7 @@ const ChatWidget = () => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
     
-    // Add user message
+    // Create user message object but don't add to state yet
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       content: inputMessage,
@@ -64,23 +64,29 @@ const ChatWidget = () => {
       timestamp: new Date()
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    // Clear input and show loading immediately
     setInputMessage("");
     setIsLoading(true);
+    
+    // Temporarily add the message to UI without changing state permanently yet
+    const tempMessages = [...messages, userMessage];
     
     try {
       let aiResponse: string;
       
-      // Create conversation history from previous messages (up to 5, excluding the current user message)
-      const conversationHistory = messages
-        .slice(-5)  // Only include the most recent 5 messages to avoid token limits
+      // First update our local state with the new message
+      const updatedMessages = [...messages, userMessage];
+      
+      // Then create conversation history including the current message (up to 5 messages)
+      const conversationHistory = updatedMessages
+        .slice(-6)  // Include up to 6 messages (to ensure we have at least one back-and-forth)
         .map(msg => ({
           role: msg.sender === "user" ? "user" : "assistant",
           content: msg.content
         }));
       
-      console.log("Previous messages:", messages);
-      console.log("Current user message:", userMessage);
+      console.log("Updated messages array:", updatedMessages);
+      console.log("Conversation history being sent:", conversationHistory);
       
       try {
         // Try calling demo endpoint with conversation history
