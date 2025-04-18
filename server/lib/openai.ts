@@ -103,7 +103,7 @@ export async function moderateContent(
     
     return {
       flagged: flagged,
-      categories: result.categories,
+      categories: result.categories as Record<string, boolean>,
       reason
     };
   } catch (error) {
