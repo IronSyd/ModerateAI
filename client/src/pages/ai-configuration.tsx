@@ -35,7 +35,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, FileBadge, Bot, MessageSquare } from "lucide-react";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload } from "lucide-react";
+import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 
 // Define form schema
 const aiConfigFormSchema = z.object({
@@ -57,6 +58,8 @@ type AIConfigFormValues = z.infer<typeof aiConfigFormSchema>;
 const AIConfiguration = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("general");
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<number | null>(null);
 
   // Fetch active AI configuration
   const { data: activeConfig, isLoading: isLoadingConfig } = useQuery({
@@ -448,12 +451,38 @@ const AIConfiguration = () => {
                     ))}
                   </div>
 
-                  <Button variant="outline" className="w-full mb-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full mb-4"
+                    onClick={() => {
+                      const activeKb = knowledgeBases && knowledgeBases[0];
+                      if (activeKb) {
+                        setSelectedKnowledgeBaseId(activeKb.id);
+                        setShowUploadDialog(true);
+                      } else {
+                        toast({
+                          title: "No knowledge base available",
+                          description: "Please create a knowledge base first",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
                     Upload Documents
                   </Button>
                   <Button variant="outline" className="w-full">
                     Create New Knowledge Base
                   </Button>
+                  
+                  {/* Document Upload Dialog */}
+                  {selectedKnowledgeBaseId && (
+                    <DocumentUploadDialog
+                      open={showUploadDialog}
+                      onOpenChange={setShowUploadDialog}
+                      knowledgeBaseId={selectedKnowledgeBaseId}
+                    />
+                  )}
                 </>
               )}
             </CardContent>

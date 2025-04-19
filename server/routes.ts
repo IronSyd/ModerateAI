@@ -575,6 +575,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching active knowledge base" });
     }
   });
+  
+  // Knowledge Documents API
+  app.get("/api/knowledge-bases/:id/documents", authMiddleware, async (req, res) => {
+    try {
+      const knowledgeBaseId = parseInt(req.params.id);
+      const knowledgeBase = await storage.getKnowledgeBase(knowledgeBaseId);
+      
+      if (!knowledgeBase) {
+        return res.status(404).json({ message: "Knowledge base not found" });
+      }
+      
+      if (knowledgeBase.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const documents = await storage.getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId);
+      res.status(200).json(documents);
+    } catch (error) {
+      console.error("Error fetching knowledge documents:", error);
+      res.status(500).json({ message: "Error fetching knowledge documents" });
+    }
+  });
+  
+  app.post("/api/knowledge-bases/:id/documents", authMiddleware, async (req, res) => {
+    try {
+      const knowledgeBaseId = parseInt(req.params.id);
+      const knowledgeBase = await storage.getKnowledgeBase(knowledgeBaseId);
+      
+      if (!knowledgeBase) {
+        return res.status(404).json({ message: "Knowledge base not found" });
+      }
+      
+      if (knowledgeBase.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const { title, content, metadata } = req.body;
+      
+      if (!title || !content) {
+        return res.status(400).json({ message: "Title and content are required" });
+      }
+      
+      const document = await storage.createKnowledgeDocument({
+        knowledgeBaseId,
+        title,
+        content,
+        metadata: metadata || {}
+      });
+      
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Error creating knowledge document:", error);
+      res.status(500).json({ message: "Error creating knowledge document" });
+    }
+  });
 
   // Moderation Actions
   app.get("/api/moderation-actions", authMiddleware, async (req, res) => {
