@@ -49,6 +49,12 @@ const ChatWidget = () => {
       const chatContainer = messagesEndRef.current.parentElement;
       if (chatContainer) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        // For smoother scrolling in some browsers, also use scrollIntoView
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'end' 
+        });
       }
     }
   };
@@ -197,8 +203,8 @@ const ChatWidget = () => {
             </div>
           </div>
           
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 h-72">
+          {/* Messages - improved scrolling container */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 h-72 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
             {messages.map((message) => (
               <div 
                 key={message.id} 

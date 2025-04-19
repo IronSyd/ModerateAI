@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { generateAIResponse, moderateContent } from "./lib/openai";
+import { generateAIResponse, generateKnowledgeBasedResponse, moderateContent } from "./lib/openai";
 import { setupAuth } from "./auth";
 import { 
   insertPlatformSchema, 
@@ -79,8 +79,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 - AI Configuration: Adjustable response style, length, and tone; knowledge base customization`;
       
       try {
-        // Use AI config settings if available
-        const response = await generateAIResponse(
+        // Log the user message for debugging
+        console.log(`[openai-demo] Processing request: "${message}"`);
+        
+        // Use knowledge-based response generation
+        const response = await generateKnowledgeBasedResponse(
           message,
           [], // No conversation history 
           aiConfig?.systemPrompt || systemPrompt,
@@ -88,6 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           aiConfig?.responseLength || 50  // Moderate length
         );
         
+        console.log(`[openai-demo] Generated response: "${response.substring(0, 100)}..."`);
         res.status(200).json({ content: response });
       } catch (openaiError: any) {
         // Log the specific OpenAI error for debugging
