@@ -47,7 +47,17 @@ const ChatWidget = () => {
     }
   }, [messages, isOpen, isMinimized]);
   
-  // Ensure scroll position is maintained when new messages are added
+  // Force scroll on any UI state change
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      // Force additional scroll after transitions
+      setTimeout(() => {
+        scrollToBottom();
+      }, 300); // Slightly longer delay to account for animations
+    }
+  }, [isOpen, isMinimized, messages.length]);
+  
+  // Ensure scroll position is maintained when new messages are added or window is resized
   useEffect(() => {
     const handleResize = () => {
       if (isOpen && !isMinimized) {
@@ -63,13 +73,21 @@ const ChatWidget = () => {
     if (messagesEndRef.current) {
       const chatContainer = messagesEndRef.current.parentElement;
       if (chatContainer) {
+        // Try multiple approaches to ensure scrolling works cross-browser
+        
+        // Standard approach
         chatContainer.scrollTop = chatContainer.scrollHeight;
         
-        // For smoother scrolling in some browsers, also use scrollIntoView
+        // Force scroll via scrollIntoView for more reliability
         messagesEndRef.current.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'end' 
         });
+        
+        // Additional forced scroll as some browsers need this
+        setTimeout(() => {
+          chatContainer.scrollTop = chatContainer.scrollHeight + 100; // Add buffer
+        }, 50);
       }
     }
   };

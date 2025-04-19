@@ -26,22 +26,34 @@ const DemoChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Scroll chat to bottom only when messages change
+  // Scroll chat to bottom when messages change
   useEffect(() => {
-    // Only scroll if messages were added after initial render
-    if (messages.length > 1) {
-      scrollToBottom();
-    }
+    // Scroll on any message update (including initial load)
+    scrollToBottom();
   }, [messages]);
   
+  // Also scroll on initial load
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+  
   const scrollToBottom = () => {
-    // Scroll only within the chat container, not the whole page
-    if (messagesEndRef.current) {
-      const chatContainer = messagesEndRef.current.parentElement;
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+    // Add a slight delay to ensure DOM updates are complete
+    setTimeout(() => {
+      // Scroll only within the chat container, not the whole page
+      if (messagesEndRef.current) {
+        const chatContainer = messagesEndRef.current.parentElement;
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          
+          // For smoother scrolling in some browsers, also use scrollIntoView
+          messagesEndRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'end' 
+          });
+        }
       }
-    }
+    }, 100);
   };
   
   const handleSendMessage = async () => {
@@ -210,8 +222,8 @@ const DemoChatInterface = () => {
         </div>
       </div>
       
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Chat Messages - improved with better scrolling support */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
         {messages.map((message) => (
           <div 
             key={message.id} 
