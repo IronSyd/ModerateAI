@@ -87,7 +87,7 @@ export async function generateKnowledgeBasedResponse(
     // Build context information from knowledge documents
     let knowledgeContext = "";
     if (relevantDocs.length > 0) {
-      knowledgeContext = "Please use the following information from our knowledge base to answer the user's question:\n\n";
+      knowledgeContext = "IMPORTANT: Base your answers ONLY on the following information from our knowledge base. If the information doesn't contain the answer, say you don't have that specific information rather than making up an answer:\n\n";
       
       // Use up to 3 most relevant documents to keep context manageable
       for (let i = 0; i < Math.min(3, relevantDocs.length); i++) {
