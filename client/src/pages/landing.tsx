@@ -326,6 +326,7 @@ const LandingPage = () => {
               <div className="mb-4">
                 <span className="text-4xl font-bold">{isYearly ? '$25' : '$29'}</span>
                 <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
               <p className="text-muted-foreground mb-6">
                 Perfect for small communities and startups.
@@ -348,7 +349,7 @@ const LandingPage = () => {
                   <span>5 response templates</span>
                 </li>
               </ul>
-              <Button className="w-full">Get Started</Button>
+              <Button className="w-full">Start Free Trial</Button>
             </div>
             
             {/* Pro Plan */}
@@ -360,6 +361,7 @@ const LandingPage = () => {
               <div className="mb-4">
                 <span className="text-4xl font-bold">{isYearly ? '$67' : '$79'}</span>
                 <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
               <p className="text-muted-foreground mb-6">
                 Ideal for growing communities and businesses.
@@ -386,7 +388,7 @@ const LandingPage = () => {
                   <span>Priority support</span>
                 </li>
               </ul>
-              <Button className="w-full">Get Started</Button>
+              <Button className="w-full">Start Free Trial</Button>
             </div>
             
             {/* Enterprise Plan */}
@@ -394,6 +396,7 @@ const LandingPage = () => {
               <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
               <div className="mb-4">
                 <span className="text-4xl font-bold">Custom</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
               <p className="text-muted-foreground mb-6">
                 For large organizations with specific needs.
