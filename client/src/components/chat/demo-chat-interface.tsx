@@ -39,6 +39,13 @@ const DemoChatInterface = () => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Hide suggestions after user starts chatting
+  useEffect(() => {
+    if (messages.length > 1) {
+      setShowSuggestions(false);
+    }
+  }, [messages.length]);
+  
   // Force scroll whenever messages change
   useEffect(() => {
     if (messages.length > 0) {
@@ -50,13 +57,6 @@ const DemoChatInterface = () => {
   useEffect(() => {
     forceScrollToBottom();
   }, []);
-  
-  // Hide suggestions after user starts chatting
-  useEffect(() => {
-    if (messages.length > 1) {
-      setShowSuggestions(false);
-    }
-  }, [messages.length]);
   
   // Extremely aggressive scrolling implementation that uses multiple techniques
   const forceScrollToBottom = () => {
@@ -225,6 +225,8 @@ const DemoChatInterface = () => {
       return "You can create customized knowledge bases for your product by uploading documents, FAQs, manuals, or even website content. Our AI automatically indexes and analyzes this content to extract key information. When a user asks a question, the AI searches your knowledge base for the most relevant information. You can create multiple knowledge bases for different products or services, and our system will learn which sources to prioritize based on user interactions.";
     } else if (input.includes("languages") || input.includes("language") || input.includes("multilingual") || input.includes("translate")) {
       return "Yes, ModerateAI supports over 30 languages! Our AI can detect the language being used and respond in the same language. This works across all platforms - website, Discord, and Telegram. You can set preferred languages for each platform or let the system automatically adapt. The moderation system also works in multiple languages, detecting inappropriate content regardless of the language used.";
+    } else if (input.includes("detect") || input.includes("types of inappropriate") || input.includes("inappropriate content")) {
+      return "ModerateAI can detect a wide range of inappropriate content including profanity, hate speech, harassment, threats, adult content, discrimination, personal information exposure, and potentially harmful links. Our advanced AI evaluates text in context, understanding nuance and intent rather than just flagging keywords. Each category has customizable severity thresholds, so you can adjust moderation based on your community standards and audience.";
     }
     
     // Catch-all response for unrecognized queries
