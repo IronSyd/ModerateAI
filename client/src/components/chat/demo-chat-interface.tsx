@@ -64,28 +64,17 @@ const DemoChatInterface = () => {
       // First create a dummy conversation if none exists
       let conversationId = 1; // For demo purposes, we'll use conversation ID 1
       
-      // Try the fallback first, which doesn't require authentication
-      try {
-        console.log("Sending to OpenAI demo endpoint...");
-        // Cast response to unknown first, then to our expected type to avoid TypeScript errors
-        const response = await apiRequest("POST", "/api/openai-demo", {
-          message: userMessage.content
-        });
+      // Try to determine if this is a question about the platform that we can handle with the fallback generator
+      const input = userMessage.content.toLowerCase();
+      const isPlatformQuestion = 
+        input.includes("platform") || 
+        input.includes("about") && input.includes("this") ||
+        input.includes("tell me about") ||
+        input.includes("what is this");
         
-        const directResponse = response as unknown as { content: string };
-        const aiContent = directResponse?.content || 
-                         "I'm sorry, I couldn't generate a response at this time.";
-                         
-        setMessages(prev => [...prev, {
-          id: `ai-${Date.now()}`,
-          content: aiContent,
-          sender: "ai",
-          timestamp: new Date()
-        }]);
-      } catch (error) {
-        console.error("OpenAI demo failed:", error);
-        
-        // If the API call fails, use the demo response generator
+      // Use the local fallback generator for platform questions
+      if (isPlatformQuestion) {
+        console.log("Platform question detected, using local fallback generator");
         const aiResponse = generateDemoResponse(userMessage.content);
         
         setMessages(prev => [...prev, {
@@ -94,6 +83,64 @@ const DemoChatInterface = () => {
           sender: "ai",
           timestamp: new Date()
         }]);
+      } else {
+        try {
+          console.log("Sending to OpenAI demo endpoint...");
+          // Cast response to unknown first, then to our expected type to avoid TypeScript errors
+          const response = await apiRequest("POST", "/api/openai-demo", {
+            message: userMessage.content
+          });
+          
+          const directResponse = response as unknown as { 
+            content?: string, 
+            error?: string,
+            errorType?: string,
+            message?: string,
+            status?: number 
+          };
+          
+          // If the response contains an error field or has no content,
+          // switch to the fallback demo generator
+          if (directResponse?.error || 
+              !directResponse?.content || 
+              directResponse.errorType === "rate_limit_exceeded" ||
+              directResponse.status === 429 ||
+              (directResponse.content && directResponse.content.includes("I'm sorry, there was an error"))) {
+            
+            console.log("API response indicated an error, using fallback generator", directResponse);
+            const aiResponse = generateDemoResponse(userMessage.content);
+            
+            setMessages(prev => [...prev, {
+              id: `ai-${Date.now()}`,
+              content: aiResponse,
+              sender: "ai",
+              timestamp: new Date()
+            }]);
+          } else {
+            // Use the API response
+            const aiContent = directResponse.content || 
+                             "I'm sorry, I couldn't generate a response at this time.";
+                             
+            setMessages(prev => [...prev, {
+              id: `ai-${Date.now()}`,
+              content: aiContent,
+              sender: "ai",
+              timestamp: new Date()
+            }]);
+          }
+        } catch (error) {
+          console.error("OpenAI demo failed:", error);
+          
+          // If the API call fails, use the demo response generator
+          const aiResponse = generateDemoResponse(userMessage.content);
+          
+          setMessages(prev => [...prev, {
+            id: `ai-${Date.now()}`,
+            content: aiResponse,
+            sender: "ai",
+            timestamp: new Date()
+          }]);
+        }
       }
       setIsLoading(false);
       
@@ -114,17 +161,31 @@ const DemoChatInterface = () => {
   const generateDemoResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (input.includes("pricing")) {
+    // More comprehensive keyword matching
+    if (input.includes("price") || input.includes("cost") || input.includes("pricing") || input.includes("plan") || input.includes("subscription")) {
       return "Our pricing is flexible based on your needs. The Basic plan starts at $29/month, the Pro plan at $79/month, and we offer custom Enterprise solutions. Would you like specific details about any of these plans?";
-    } else if (input.includes("integration") || input.includes("connect")) {
+    } else if (input.includes("integration") || input.includes("connect") || input.includes("setup") || input.includes("install") || input.includes("implement")) {
       return "Integration is simple! You can connect your platforms through our dashboard. We support Website, Telegram, and Discord currently. Each integration has its own setup wizard that will guide you through the process.";
-    } else if (input.includes("ai") || input.includes("model")) {
+    } else if (input.includes("ai") || input.includes("model") || input.includes("assistant") || input.includes("chatbot") || input.includes("intelligence")) {
       return "Our AI uses state-of-the-art language models that are fine-tuned for customer support and community moderation. You can customize the AI's tone, response length, and knowledge base through the AI Configuration panel.";
-    } else if (input.includes("hello") || input.includes("hi")) {
+    } else if (input.includes("hello") || input.includes("hi") || input.includes("hey") || input.includes("howdy") || input.includes("greetings")) {
       return "Hello! How can I help you today with your AI customer support or community moderation needs?";
+    } else if (input.includes("features") || input.includes("capabilities") || input.includes("functions") || input.includes("what") || input.includes("do")) {
+      return "ModerateAI offers multi-platform integration, intelligent content moderation, customizable AI configurations, and comprehensive analytics. Is there a specific feature you'd like to know more about?";
+    } else if (input.includes("free") || input.includes("trial") || input.includes("demo") || input.includes("test") || input.includes("try")) {
+      return "Yes, we offer a 14-day free trial with full access to all features. You don't need a credit card to get started. Would you like me to help you set up your free trial?";
+    } else if (input.includes("moderation") || input.includes("moderate") || input.includes("filter") || input.includes("content")) {
+      return "Our moderation system uses AI to detect and filter inappropriate content across all your platforms. You can set different moderation levels and customize which types of content to flag or block. The system learns from your moderation actions to improve over time.";
+    } else if (input.includes("support") || input.includes("help") || input.includes("assistance") || input.includes("customer")) {
+      return "ModerateAI streamlines customer support by automatically handling common questions and routing complex issues to your team. Our AI learns from past interactions to provide increasingly accurate responses, reducing your team's workload while maintaining high quality support.";
+    } else if (input.includes("platform") || input.includes("website") || input.includes("discord") || input.includes("telegram") || input.includes("about") || input.includes("this")) {
+      return "ModerateAI is a powerful SaaS platform designed for AI-powered customer support and community moderation across various digital channels. Key features include multi-platform support for websites, Telegram, and Discord; intelligent, AI-powered responses using OpenAI technology; and automatic content filtering and moderation based on customizable settings. Additionally, it offers knowledge base integration and an analytics dashboard to track conversations, response rates, and moderation actions.";
+    } else if (input.includes("analytics") || input.includes("report") || input.includes("data") || input.includes("performance")) {
+      return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track performance across all platforms and export reports for further analysis.";
     }
     
-    return "I understand you're asking about " + userInput + ". Could you provide more details so I can give you a more specific answer?";
+    // Catch-all response for unrecognized queries
+    return "Thanks for your question about " + userInput + ". ModerateAI helps businesses manage customer communications and community content across multiple platforms with AI-powered responses and content moderation. Would you like to know more about our features, pricing, or platform integrations?";
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
