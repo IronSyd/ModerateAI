@@ -2,8 +2,19 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, X, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  MessageSquare, X, Send, ChevronDown, ChevronUp, 
+  MoreVertical, RefreshCw, Trash2, Copy, Download 
+} from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Message = {
   id: string;
@@ -309,6 +320,76 @@ const ChatWidget = () => {
               <span className="font-medium">ModerateAI Assistant</span>
             </div>
             <div className="flex space-x-1">
+              {/* Dropdown Menu for Chat Options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-1 rounded-full hover:bg-accent/50">
+                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Chat Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      // Reset chat to initial state
+                      setMessages([
+                        {
+                          id: "welcome",
+                          content: "👋 Hi there! I'm the ModerateAI assistant. How can I help you today?",
+                          sender: "ai",
+                          timestamp: new Date()
+                        }
+                      ]);
+                      setShowSuggestions(true);
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // Clear all messages except the welcome message
+                      setMessages(messages.slice(0, 1));
+                      setShowSuggestions(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // Copy chat to clipboard
+                      const chatText = messages
+                        .map(msg => `${msg.sender === "ai" ? "Assistant" : "You"}: ${msg.content}`)
+                        .join("\n\n");
+                      navigator.clipboard.writeText(chatText);
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // Create and download chat transcript
+                      const chatText = messages
+                        .map(msg => `${msg.sender === "ai" ? "Assistant" : "You"} (${new Date(msg.timestamp).toLocaleString()}):\n${msg.content}`)
+                        .join("\n\n");
+                      
+                      const blob = new Blob([chatText], { type: "text/plain" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `moderateai-chat-${new Date().toISOString().split("T")[0]}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Transcript
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <button 
                 onClick={() => setIsMinimized(true)}
                 className="p-1 rounded-full hover:bg-accent/50"
@@ -316,7 +397,19 @@ const ChatWidget = () => {
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </button>
               <button 
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  // Reset chat to initial state when closing
+                  setMessages([
+                    {
+                      id: "welcome",
+                      content: "👋 Hi there! I'm the ModerateAI assistant. How can I help you today?",
+                      sender: "ai",
+                      timestamp: new Date()
+                    }
+                  ]);
+                  setShowSuggestions(true);
+                }}
                 className="p-1 rounded-full hover:bg-accent/50"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
@@ -438,7 +531,19 @@ const ChatWidget = () => {
       {isOpen && !isMinimized && (
         <Button
           className="w-full rounded-t-none border-t-0"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            // Reset chat to initial state when closing
+            setMessages([
+              {
+                id: "welcome",
+                content: "👋 Hi there! I'm the ModerateAI assistant. How can I help you today?",
+                sender: "ai",
+                timestamp: new Date()
+              }
+            ]);
+            setShowSuggestions(true);
+          }}
         >
           Close Chat
         </Button>
