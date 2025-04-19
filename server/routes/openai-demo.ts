@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { generateAIResponse } from "../lib/openai";
+import { generateKnowledgeBasedResponse } from "../lib/openai";
+import { storage } from "../storage";
 
 const openaiDemoRouter = Router();
 
@@ -19,8 +20,8 @@ openaiDemoRouter.post("/openai-demo", async (req, res) => {
       "Focus on information about ModerateAI's features, pricing, and integrations. " +
       "Keep responses under 150 words.";
     
-    // Call OpenAI API with the standard parameters from our generateAIResponse function
-    const aiResponse = await generateAIResponse(
+    // Call OpenAI API with knowledge-based response generation
+    const aiResponse = await generateKnowledgeBasedResponse(
       message,
       [], // No conversation history
       systemPrompt,
@@ -31,9 +32,19 @@ openaiDemoRouter.post("/openai-demo", async (req, res) => {
     return res.json({ content: aiResponse });
   } catch (error: any) {
     console.error("Error in OpenAI demo endpoint:", error);
+    
+    // Handle rate limiting errors specifically
+    if (error.status === 429) {
+      return res.status(429).json({
+        error: "OpenAI API rate limit exceeded",
+        message: "Our AI assistant is experiencing high demand. Please try again in a moment."
+      });
+    }
+    
+    // Return a user-friendly error message
     return res.status(500).json({ 
       error: "Failed to generate AI response",
-      message: error.message 
+      message: "I'm having trouble connecting to my knowledge base right now. Please try again in a moment."
     });
   }
 });
