@@ -105,8 +105,9 @@ const ChatWidget = () => {
     });
   };
   
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async (message?: string) => {
+    const messageToSend = message || inputMessage;
+    if (!messageToSend.trim()) return;
     
     // Hide the conversation starters once a message is sent
     setShowSuggestions(false);
@@ -114,7 +115,7 @@ const ChatWidget = () => {
     // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      content: inputMessage,
+      content: messageToSend,
       sender: "user",
       timestamp: new Date()
     };
@@ -229,6 +230,12 @@ const ChatWidget = () => {
     }
   };
   
+  // Separate handler for the button to correctly handle React events
+  const handleSendButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    handleSendMessage();
+  };
+  
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col shadow-xl">
       {/* Chat Widget Body - visible when open and not minimized */}
@@ -320,10 +327,7 @@ const ChatWidget = () => {
                     <button
                       key={index}
                       className="text-xs bg-accent/50 hover:bg-accent text-accent-foreground rounded-lg px-2.5 py-1.5 transition-colors"
-                      onClick={() => {
-                        setInputMessage(starter);
-                        handleSendMessage();
-                      }}
+                      onClick={() => handleSendMessage(starter)}
                     >
                       {starter}
                     </button>
@@ -349,7 +353,7 @@ const ChatWidget = () => {
               />
               <Button 
                 className="ml-2 h-9 w-9 p-0" 
-                onClick={handleSendMessage}
+                onClick={handleSendButtonClick}
                 disabled={!inputMessage.trim() || isLoading}
               >
                 <Send className="h-4 w-4" />
