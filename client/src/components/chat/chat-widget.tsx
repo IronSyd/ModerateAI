@@ -57,10 +57,34 @@ const ChatWidget = () => {
     }
   }, [messages.length]);
   
-  // Force scroll whenever messages change
+  // Force scroll whenever messages change with enhanced reliability
   useEffect(() => {
     if (messages.length > 0) {
+      // Immediate scroll
       forceScrollToBottom();
+      
+      // Additional delayed scrolls to handle dynamic content loading
+      const timeouts = [100, 300, 600, 1000, 1500].map(delay => 
+        setTimeout(() => {
+          // Direct access to container for more reliable scrolling
+          const chatContainer = document.querySelector('.chat-messages-container');
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight + 1000;
+          }
+          
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
+              behavior: 'auto',
+              block: 'end'
+            });
+          }
+        }, delay)
+      );
+      
+      // Cleanup function
+      return () => {
+        timeouts.forEach(timeout => clearTimeout(timeout));
+      };
     }
   }, [messages]);
   
@@ -83,20 +107,36 @@ const ChatWidget = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isOpen, isMinimized]);
   
-  // Extremely aggressive scrolling implementation that uses multiple techniques
+  // Ultra-aggressive scrolling implementation that uses multiple techniques
   const forceScrollToBottom = () => {
     // Schedule multiple scroll attempts with increasing delays
-    [0, 50, 100, 300, 500].forEach(delay => {
+    [0, 50, 100, 300, 500, 800, 1200].forEach(delay => {
       setTimeout(() => {
+        // Method 1: Direct querySelector on chat container
         const chatContainer = document.querySelector('.chat-messages-container');
         if (chatContainer) {
           // Direct DOM method
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          
+          // Force layout recalculation
+          void (chatContainer as HTMLElement).offsetHeight;
+          
+          // Additional scroll attempt after forced layout recalculation
           chatContainer.scrollTop = 999999;
         }
         
+        // Method 2: Use the ref for scrollIntoView (most reliable)
         if (messagesEndRef.current) {
-          // Force scroll with scrollIntoView - this is the most reliable method
           messagesEndRef.current.scrollIntoView({
+            behavior: 'auto',
+            block: 'end'
+          });
+        }
+        
+        // Method 3: Find the last message directly and scroll to it
+        const lastMessage = document.querySelector('.chat-messages-container > div:last-child');
+        if (lastMessage) {
+          lastMessage.scrollIntoView({
             behavior: 'auto',
             block: 'end'
           });
@@ -285,7 +325,7 @@ const ChatWidget = () => {
           </div>
           
           {/* Messages - improved scrolling container with custom scrollbar */}
-          <div className="chat-messages-container flex-1 overflow-y-auto p-3 space-y-3 h-72 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
+          <div className="chat-messages-container flex-1 overflow-y-auto p-3 space-y-3 max-h-[18rem] min-h-[18rem] scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
             {messages.map((message) => (
               <div 
                 key={message.id} 
