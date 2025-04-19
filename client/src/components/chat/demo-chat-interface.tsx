@@ -12,16 +12,16 @@ type Message = {
   timestamp: Date;
 };
 
-// Define conversation starters for the chat interface
+// Define conversation starters for the chat interface that highlight platform features
 const conversationStarters = [
-  "How do I set up content moderation for my Discord server?",
-  "What kind of analytics does ModerateAI provide?",
-  "How can I customize the AI responses for my customers?",
-  "Can I create a knowledge base for my product?",
-  "How does the multi-platform integration work?",
-  "What types of inappropriate content can ModerateAI detect?",
-  "Can I use ModerateAI for different languages?",
-  "How does the AI handle complex customer questions?"
+  "How does multi-platform integration work across Discord, Telegram, and Web?",
+  "Tell me about the AI-powered content moderation capabilities",
+  "How can I train the AI with my own knowledge base?",
+  "What analytics and insights does ModerateAI provide?",
+  "Can I customize the AI's tone and response style?",
+  "How does ModerateAI handle message threads and conversations?",
+  "What languages does the platform support?",
+  "How does the sentiment analysis feature work?"
 ];
 
 const DemoChatInterface = () => {
@@ -323,13 +323,13 @@ const DemoChatInterface = () => {
         
         {/* Conversation Starters */}
         {showSuggestions && (
-          <div className="mt-2">
-            <p className="text-xs text-muted-foreground mb-2">Ask me about:</p>
+          <div className="mt-3">
+            <p className="text-xs text-muted-foreground mb-2 font-medium">💬 Ask me about these features:</p>
             <div className="flex flex-wrap gap-2">
               {conversationStarters.map((starter, index) => (
                 <button
                   key={index}
-                  className="text-xs bg-secondary/40 hover:bg-secondary text-foreground rounded-lg px-3 py-1.5 transition-colors"
+                  className="text-xs bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-full px-3 py-1.5 transition-colors border border-primary/20 hover:border-primary/30"
                   onClick={() => handleSendMessage(starter)}
                 >
                   {starter}
