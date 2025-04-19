@@ -77,6 +77,13 @@ export async function generateKnowledgeBasedResponse(
     // Search for relevant knowledge documents
     const relevantDocs = await storage.searchKnowledgeDocuments(userMessage);
     
+    // Log for debugging
+    console.log(`[generateKnowledgeBasedResponse] Query: "${userMessage}"`);
+    console.log(`[generateKnowledgeBasedResponse] Found ${relevantDocs.length} relevant documents`);
+    if (relevantDocs.length > 0) {
+      console.log(`[generateKnowledgeBasedResponse] Most relevant document: "${relevantDocs[0].title}"`);
+    }
+    
     // Build context information from knowledge documents
     let knowledgeContext = "";
     if (relevantDocs.length > 0) {
@@ -86,6 +93,7 @@ export async function generateKnowledgeBasedResponse(
       for (let i = 0; i < Math.min(3, relevantDocs.length); i++) {
         const doc = relevantDocs[i];
         knowledgeContext += `--- Document: ${doc.title} ---\n${doc.content}\n\n`;
+        console.log(`[generateKnowledgeBasedResponse] Using document: "${doc.title}"`);
       }
     }
     
