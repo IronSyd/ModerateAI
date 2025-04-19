@@ -35,8 +35,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload } from "lucide-react";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
+import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 
 // Define form schema
 const aiConfigFormSchema = z.object({
@@ -59,6 +60,7 @@ const AIConfiguration = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("general");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showCreateKbDialog, setShowCreateKbDialog] = useState(false);
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<number | null>(null);
 
   // Fetch active AI configuration
@@ -471,7 +473,12 @@ const AIConfiguration = () => {
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Documents
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setShowCreateKbDialog(true)}
+                  >
+                    <Database className="mr-2 h-4 w-4" />
                     Create New Knowledge Base
                   </Button>
                   
@@ -483,6 +490,12 @@ const AIConfiguration = () => {
                       knowledgeBaseId={selectedKnowledgeBaseId}
                     />
                   )}
+                  
+                  {/* Create Knowledge Base Dialog */}
+                  <CreateKnowledgeBaseDialog
+                    open={showCreateKbDialog}
+                    onOpenChange={setShowCreateKbDialog}
+                  />
                 </>
               )}
             </CardContent>
