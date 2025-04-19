@@ -295,7 +295,7 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Choose the plan that fits your needs. All plans include access to all integrations. No credit card required and you can cancel anytime.
+              Choose the plan that fits your needs. All plans include access to all integrations. No credit card required during free trial and you can cancel anytime.
             </p>
             
             {/* Billing Period Toggle */}
