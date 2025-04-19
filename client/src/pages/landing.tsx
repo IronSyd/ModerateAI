@@ -442,7 +442,7 @@ const LandingPage = () => {
           </p>
           <Link href="/dashboard">
             <Button size="lg">
-              Get Started Today
+              Start Your Free 14-Day Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
