@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -90,7 +90,7 @@ const AIConfiguration = () => {
   });
 
   // Update form when data is loaded
-  useState(() => {
+  useEffect(() => {
     if (activeConfig && !form.formState.isDirty) {
       form.reset({
         name: activeConfig.name,
@@ -102,7 +102,7 @@ const AIConfiguration = () => {
         systemPrompt: activeConfig.systemPrompt || "",
       });
     }
-  });
+  }, [activeConfig, form]);
 
   // Save AI configuration
   const saveMutation = useMutation({
@@ -384,15 +384,15 @@ const AIConfiguration = () => {
                               </label>
                             </Card>
                             <Card className="p-3 flex items-center space-x-3">
-                              <Switch id="warn" defaultChecked />
-                              <label htmlFor="warn" className="text-sm font-medium">
-                                Warn users
+                              <Switch id="hide" defaultChecked />
+                              <label htmlFor="hide" className="text-sm font-medium">
+                                Hide harmful messages
                               </label>
                             </Card>
                             <Card className="p-3 flex items-center space-x-3">
-                              <Switch id="delete" />
-                              <label htmlFor="delete" className="text-sm font-medium">
-                                Delete content automatically
+                              <Switch id="mute" />
+                              <label htmlFor="mute" className="text-sm font-medium">
+                                Mute repeat offenders
                               </label>
                             </Card>
                             <Card className="p-3 flex items-center space-x-3">
@@ -427,31 +427,43 @@ const AIConfiguration = () => {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between p-3 bg-card rounded-md mb-3">
-                    <div className="flex items-center">
-                      <FileBadge className="h-5 w-5 text-muted-foreground mr-2" />
-                      <span className="text-sm text-foreground">
-                        {knowledgeBases?.[0]?.name || "Product Documentation"}
-                      </span>
-                    </div>
-                    <Badge variant="outline" className="text-xs text-foreground">
-                      Active
-                    </Badge>
-                  </div>
-
-                  <div className="flex flex-col space-y-3 mb-6">
-                    {(knowledgeBases || []).slice(1, 3).map((kb, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-card rounded-md">
-                        <div className="flex items-center">
-                          <FileBadge className="h-5 w-5 text-muted-foreground mr-2" />
-                          <span className="text-sm text-foreground">{kb.name}</span>
+                  {knowledgeBases && knowledgeBases.length > 0 ? (
+                    <div className="flex flex-col space-y-3 mb-6">
+                      {knowledgeBases.map((kb) => (
+                        <div key={kb.id} className="flex items-center justify-between p-3 bg-card rounded-md border">
+                          <div className="flex items-center">
+                            <FileBadge className="h-5 w-5 text-muted-foreground mr-2" />
+                            <div>
+                              <span className="text-sm font-medium text-foreground">{kb.name}</span>
+                              {kb.description && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {kb.description}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground">
+                                {kb.documentCount || 0} documents
+                              </p>
+                            </div>
+                          </div>
+                          {kb.isActive ? (
+                            <Badge className="text-xs">Active</Badge>
+                          ) : (
+                            <Button variant="ghost" size="sm" className="h-8 px-2">
+                              Activate
+                            </Button>
+                          )}
                         </div>
-                        <Button variant="ghost" size="sm" className="h-8 px-2">
-                          Activate
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center p-6 border border-dashed rounded-lg mb-6">
+                      <Database className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                      <h3 className="text-md font-medium mb-1">No knowledge bases yet</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Create your first knowledge base to train your AI
+                      </p>
+                    </div>
+                  )}
 
                   <Button 
                     variant="outline" 
