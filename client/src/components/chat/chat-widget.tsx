@@ -12,6 +12,16 @@ type Message = {
   timestamp: Date;
 };
 
+// Define conversation starters for the chat widget
+const conversationStarters = [
+  "How do I set up content moderation?",
+  "Tell me about analytics features",
+  "How can I customize the AI?",
+  "Can I create a knowledge base?",
+  "How does multi-platform work?",
+  "What languages do you support?"
+];
+
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -26,6 +36,7 @@ const ChatWidget = () => {
   
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Open the chat widget after a short delay

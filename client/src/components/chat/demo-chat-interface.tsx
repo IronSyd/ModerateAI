@@ -12,11 +12,23 @@ type Message = {
   timestamp: Date;
 };
 
+// Define conversation starters for the chat interface
+const conversationStarters = [
+  "How do I set up content moderation for my Discord server?",
+  "What kind of analytics does ModerateAI provide?",
+  "How can I customize the AI responses for my customers?",
+  "Can I create a knowledge base for my product?",
+  "How does the multi-platform integration work?",
+  "What types of inappropriate content can ModerateAI detect?",
+  "Can I use ModerateAI for different languages?",
+  "How does the AI handle complex customer questions?"
+];
+
 const DemoChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      content: "👋 Hi there! I'm your AI assistant. How can I help you today?",
+      content: "👋 Hi there! I'm your AI assistant. How can I help you today with ModerateAI?",
       sender: "ai",
       timestamp: new Date()
     }
@@ -24,6 +36,7 @@ const DemoChatInterface = () => {
   
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Force scroll whenever messages change
@@ -37,6 +50,13 @@ const DemoChatInterface = () => {
   useEffect(() => {
     forceScrollToBottom();
   }, []);
+  
+  // Hide suggestions after user starts chatting
+  useEffect(() => {
+    if (messages.length > 1) {
+      setShowSuggestions(false);
+    }
+  }, [messages.length]);
   
   // Extremely aggressive scrolling implementation that uses multiple techniques
   const forceScrollToBottom = () => {
@@ -62,6 +82,9 @@ const DemoChatInterface = () => {
   
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
+    
+    // Hide the conversation starters once a message is sent
+    setShowSuggestions(false);
     
     // Add user message
     const userMessage: Message = {
@@ -177,27 +200,31 @@ const DemoChatInterface = () => {
   const generateDemoResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    // More comprehensive keyword matching
+    // More comprehensive keyword matching including conversation starters
     if (input.includes("price") || input.includes("cost") || input.includes("pricing") || input.includes("plan") || input.includes("subscription")) {
       return "Our pricing is flexible based on your needs. The Basic plan starts at $29/month, the Pro plan at $79/month, and we offer custom Enterprise solutions. Would you like specific details about any of these plans?";
-    } else if (input.includes("integration") || input.includes("connect") || input.includes("setup") || input.includes("install") || input.includes("implement")) {
-      return "Integration is simple! You can connect your platforms through our dashboard. We support Website, Telegram, and Discord currently. Each integration has its own setup wizard that will guide you through the process.";
-    } else if (input.includes("ai") || input.includes("model") || input.includes("assistant") || input.includes("chatbot") || input.includes("intelligence")) {
-      return "Our AI uses state-of-the-art language models that are fine-tuned for customer support and community moderation. You can customize the AI's tone, response length, and knowledge base through the AI Configuration panel.";
+    } else if (input.includes("integration") || input.includes("connect") || input.includes("setup") || input.includes("install") || input.includes("implement") || input.includes("how does the multi-platform integration work")) {
+      return "Integration is simple! You can connect your platforms through our dashboard. We support Website, Telegram, and Discord currently. Each integration has its own setup wizard that will guide you through the process. For Discord, you'll create a bot and add it to your server. For Telegram, you'll connect to our bot API. For your website, we provide a JavaScript widget you can embed with a single line of code.";
+    } else if (input.includes("ai") || input.includes("model") || input.includes("assistant") || input.includes("chatbot") || input.includes("intelligence") || input.includes("customize the ai responses")) {
+      return "Our AI uses state-of-the-art GPT-4o language models that are fine-tuned for customer support and community moderation. You can customize the AI's tone (formal to casual), response length (concise to detailed), and enhance it with your own knowledge base. This lets you tailor responses to match your brand voice and provide accurate information about your specific products or services.";
     } else if (input.includes("hello") || input.includes("hi") || input.includes("hey") || input.includes("howdy") || input.includes("greetings")) {
       return "Hello! How can I help you today with your AI customer support or community moderation needs?";
     } else if (input.includes("features") || input.includes("capabilities") || input.includes("functions") || input.includes("what") || input.includes("do")) {
       return "ModerateAI offers multi-platform integration, intelligent content moderation, customizable AI configurations, and comprehensive analytics. Is there a specific feature you'd like to know more about?";
     } else if (input.includes("free") || input.includes("trial") || input.includes("demo") || input.includes("test") || input.includes("try")) {
       return "Yes, we offer a 14-day free trial with full access to all features. You don't need a credit card to get started. Would you like me to help you set up your free trial?";
-    } else if (input.includes("moderation") || input.includes("moderate") || input.includes("filter") || input.includes("content")) {
-      return "Our moderation system uses AI to detect and filter inappropriate content across all your platforms. You can set different moderation levels and customize which types of content to flag or block. The system learns from your moderation actions to improve over time.";
-    } else if (input.includes("support") || input.includes("help") || input.includes("assistance") || input.includes("customer")) {
-      return "ModerateAI streamlines customer support by automatically handling common questions and routing complex issues to your team. Our AI learns from past interactions to provide increasingly accurate responses, reducing your team's workload while maintaining high quality support.";
+    } else if (input.includes("moderation") || input.includes("moderate") || input.includes("filter") || input.includes("content") || input.includes("inappropriate") || input.includes("discord server")) {
+      return "Our moderation system uses AI to detect and filter inappropriate content across all your platforms. You can set different moderation levels (Relaxed, Balanced, or Strict) and customize which types of content to flag or block (profanity, harassment, adult content, etc.). For Discord specifically, our bot can automatically delete violating messages, warn users, or even time them out based on your custom settings. The system learns from your moderation actions to improve over time.";
+    } else if (input.includes("support") || input.includes("help") || input.includes("assistance") || input.includes("customer") || input.includes("complex")) {
+      return "ModerateAI streamlines customer support by automatically handling common questions and routing complex issues to your team. For complex questions, our AI evaluates the query and can either provide a comprehensive answer using your knowledge base or create a support ticket and assign it to the appropriate team member. It can also follow up with users after their issues are resolved to gather feedback and continuously improve.";
     } else if (input.includes("platform") || input.includes("website") || input.includes("discord") || input.includes("telegram") || input.includes("about") || input.includes("this")) {
       return "ModerateAI is a powerful SaaS platform designed for AI-powered customer support and community moderation across various digital channels. Key features include multi-platform support for websites, Telegram, and Discord; intelligent, AI-powered responses using OpenAI technology; and automatic content filtering and moderation based on customizable settings. Additionally, it offers knowledge base integration and an analytics dashboard to track conversations, response rates, and moderation actions.";
     } else if (input.includes("analytics") || input.includes("report") || input.includes("data") || input.includes("performance")) {
-      return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track performance across all platforms and export reports for further analysis.";
+      return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track metrics such as average response time, user satisfaction ratings, most common user questions, and moderation efficiency across all platforms. The analytics also identify trending topics, helping you detect emerging issues before they become widespread. All data can be exported to CSV or integrated with popular business intelligence tools.";
+    } else if (input.includes("knowledge base") || input.includes("kb") || input.includes("knowledge") || input.includes("information")) {
+      return "You can create customized knowledge bases for your product by uploading documents, FAQs, manuals, or even website content. Our AI automatically indexes and analyzes this content to extract key information. When a user asks a question, the AI searches your knowledge base for the most relevant information. You can create multiple knowledge bases for different products or services, and our system will learn which sources to prioritize based on user interactions.";
+    } else if (input.includes("languages") || input.includes("language") || input.includes("multilingual") || input.includes("translate")) {
+      return "Yes, ModerateAI supports over 30 languages! Our AI can detect the language being used and respond in the same language. This works across all platforms - website, Discord, and Telegram. You can set preferred languages for each platform or let the system automatically adapt. The moderation system also works in multiple languages, detecting inappropriate content regardless of the language used.";
     }
     
     // Catch-all response for unrecognized queries
@@ -281,6 +308,27 @@ const DemoChatInterface = () => {
                 <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.2s" }}></div>
                 <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.4s" }}></div>
               </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Conversation Starters */}
+        {showSuggestions && (
+          <div className="mt-2">
+            <p className="text-xs text-muted-foreground mb-2">Ask me about:</p>
+            <div className="flex flex-wrap gap-2">
+              {conversationStarters.map((starter, index) => (
+                <button
+                  key={index}
+                  className="text-xs bg-secondary/40 hover:bg-secondary text-foreground rounded-lg px-3 py-1.5 transition-colors"
+                  onClick={() => {
+                    setInputMessage(starter);
+                    handleSendMessage();
+                  }}
+                >
+                  {starter}
+                </button>
+              ))}
             </div>
           </div>
         )}
