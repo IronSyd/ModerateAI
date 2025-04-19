@@ -26,34 +26,38 @@ const DemoChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Scroll chat to bottom when messages change
+  // Force scroll whenever messages change
   useEffect(() => {
-    // Scroll on any message update (including initial load)
-    scrollToBottom();
+    if (messages.length > 0) {
+      forceScrollToBottom();
+    }
   }, [messages]);
   
-  // Also scroll on initial load
+  // Force scroll on initial load
   useEffect(() => {
-    scrollToBottom();
+    forceScrollToBottom();
   }, []);
   
-  const scrollToBottom = () => {
-    // Add a slight delay to ensure DOM updates are complete
-    setTimeout(() => {
-      // Scroll only within the chat container, not the whole page
-      if (messagesEndRef.current) {
-        const chatContainer = messagesEndRef.current.parentElement;
+  // Extremely aggressive scrolling implementation that uses multiple techniques
+  const forceScrollToBottom = () => {
+    // Schedule multiple scroll attempts with increasing delays
+    [0, 50, 100, 300, 500].forEach(delay => {
+      setTimeout(() => {
+        const chatContainer = document.querySelector('.demo-chat-messages-container');
         if (chatContainer) {
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-          
-          // For smoother scrolling in some browsers, also use scrollIntoView
-          messagesEndRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'end' 
+          // Direct DOM method
+          chatContainer.scrollTop = 999999;
+        }
+        
+        if (messagesEndRef.current) {
+          // Force scroll with scrollIntoView - this is the most reliable method
+          messagesEndRef.current.scrollIntoView({
+            behavior: 'auto',
+            block: 'end'
           });
         }
-      }
-    }, 100);
+      }, delay);
+    });
   };
   
   const handleSendMessage = async () => {
@@ -223,7 +227,7 @@ const DemoChatInterface = () => {
       </div>
       
       {/* Chat Messages - improved with better scrolling support */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
+      <div className="demo-chat-messages-container flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
         {messages.map((message) => (
           <div 
             key={message.id} 

@@ -37,31 +37,25 @@ const ChatWidget = () => {
     return () => clearTimeout(timer);
   }, []);
   
-  // Scroll to bottom when messages change or widget opens
+  // Force scroll whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      forceScrollToBottom();
+    }
+  }, [messages]);
+  
+  // Force scroll when chat is opened or unminimized
   useEffect(() => {
     if (isOpen && !isMinimized) {
-      // Small delay to ensure DOM has updated
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+      forceScrollToBottom();
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [isOpen, isMinimized]);
   
-  // Force scroll on any UI state change
-  useEffect(() => {
-    if (isOpen && !isMinimized) {
-      // Force additional scroll after transitions
-      setTimeout(() => {
-        scrollToBottom();
-      }, 300); // Slightly longer delay to account for animations
-    }
-  }, [isOpen, isMinimized, messages.length]);
-  
-  // Ensure scroll position is maintained when new messages are added or window is resized
+  // Handle window resize events
   useEffect(() => {
     const handleResize = () => {
       if (isOpen && !isMinimized) {
-        scrollToBottom();
+        forceScrollToBottom();
       }
     };
     
@@ -69,27 +63,26 @@ const ChatWidget = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isOpen, isMinimized]);
   
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      const chatContainer = messagesEndRef.current.parentElement;
-      if (chatContainer) {
-        // Try multiple approaches to ensure scrolling works cross-browser
+  // Extremely aggressive scrolling implementation that uses multiple techniques
+  const forceScrollToBottom = () => {
+    // Schedule multiple scroll attempts with increasing delays
+    [0, 50, 100, 300, 500].forEach(delay => {
+      setTimeout(() => {
+        const chatContainer = document.querySelector('.chat-messages-container');
+        if (chatContainer) {
+          // Direct DOM method
+          chatContainer.scrollTop = 999999;
+        }
         
-        // Standard approach
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        
-        // Force scroll via scrollIntoView for more reliability
-        messagesEndRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'end' 
-        });
-        
-        // Additional forced scroll as some browsers need this
-        setTimeout(() => {
-          chatContainer.scrollTop = chatContainer.scrollHeight + 100; // Add buffer
-        }, 50);
-      }
-    }
+        if (messagesEndRef.current) {
+          // Force scroll with scrollIntoView - this is the most reliable method
+          messagesEndRef.current.scrollIntoView({
+            behavior: 'auto',
+            block: 'end'
+          });
+        }
+      }, delay);
+    });
   };
   
   const handleSendMessage = async () => {
@@ -237,7 +230,7 @@ const ChatWidget = () => {
           </div>
           
           {/* Messages - improved scrolling container with custom scrollbar */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 h-72 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
+          <div className="chat-messages-container flex-1 overflow-y-auto p-3 space-y-3 h-72 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
             {messages.map((message) => (
               <div 
                 key={message.id} 
