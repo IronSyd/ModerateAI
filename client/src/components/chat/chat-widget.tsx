@@ -118,8 +118,8 @@ const ChatWidget = () => {
           // Direct DOM method
           chatContainer.scrollTop = chatContainer.scrollHeight;
           
-          // Force layout recalculation
-          void (chatContainer as HTMLElement).offsetHeight;
+          // Force layout recalculation - use proper typecasting to HTMLDivElement
+          void (chatContainer as HTMLDivElement).offsetHeight;
           
           // Additional scroll attempt after forced layout recalculation
           chatContainer.scrollTop = 999999;
