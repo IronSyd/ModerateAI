@@ -80,8 +80,9 @@ const DemoChatInterface = () => {
     });
   };
   
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async (message?: string) => {
+    const messageToSend = message || inputMessage;
+    if (!messageToSend.trim()) return;
     
     // Hide the conversation starters once a message is sent
     setShowSuggestions(false);
@@ -89,7 +90,7 @@ const DemoChatInterface = () => {
     // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      content: inputMessage,
+      content: messageToSend,
       sender: "user",
       timestamp: new Date()
     };
@@ -240,6 +241,12 @@ const DemoChatInterface = () => {
     }
   };
   
+  // Separate handler for the button to correctly handle React events
+  const handleSendButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    handleSendMessage();
+  };
+  
   return (
     <div className="bg-card rounded-lg shadow-sm border border-border flex flex-col h-[500px]">
       {/* Chat Header */}
@@ -323,10 +330,7 @@ const DemoChatInterface = () => {
                 <button
                   key={index}
                   className="text-xs bg-secondary/40 hover:bg-secondary text-foreground rounded-lg px-3 py-1.5 transition-colors"
-                  onClick={() => {
-                    setInputMessage(starter);
-                    handleSendMessage();
-                  }}
+                  onClick={() => handleSendMessage(starter)}
                 >
                   {starter}
                 </button>
@@ -351,7 +355,7 @@ const DemoChatInterface = () => {
             rows={1}
           />
           <Button 
-            onClick={handleSendMessage} 
+            onClick={handleSendButtonClick} 
             className="ml-3"
             disabled={isLoading || !inputMessage.trim()}
           >
