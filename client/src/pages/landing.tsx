@@ -139,7 +139,7 @@ const LandingPage = () => {
                   </div>
                   <div>
                     <p className="text-sm">
-                      ModerateAI uses advanced AI models to detect inappropriate content, spam, and toxic behavior across your website, Discord, and Telegram channels. Our platform provides consistent moderation with customizable strictness levels to match your community guidelines.
+                      ModerateAI uses advanced AI models to offer customer support and moderation across your website, Discord, and Telegram channels. Our platform provides consistent moderation with customizable strictness levels to match your community guidelines.
                     </p>
                   </div>
                 </div>
