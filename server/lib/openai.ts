@@ -105,14 +105,18 @@ export async function generateKnowledgeBasedResponse(
     // Build context information from knowledge documents
     let knowledgeContext = "";
     if (relevantDocs.length > 0) {
-      knowledgeContext = "IMPORTANT: Base your answers ONLY on the following information from our knowledge base. If the information doesn't contain the answer, say you don't have that specific information rather than making up an answer:\n\n";
+      knowledgeContext = "### KNOWLEDGE BASE INFORMATION ###\n";
+      knowledgeContext += "INSTRUCTION: Base your answers ONLY on the following information from our knowledge base.\n";
+      knowledgeContext += "If the information doesn't contain the answer, say you don't have that specific information rather than making up an answer.\n\n";
       
       // Use up to 3 most relevant documents to keep context manageable
       for (let i = 0; i < Math.min(3, relevantDocs.length); i++) {
         const doc = relevantDocs[i];
-        knowledgeContext += `--- Document: ${doc.title} ---\n${doc.content}\n\n`;
+        knowledgeContext += `### DOCUMENT ${i+1}: ${doc.title} ###\n${doc.content}\n\n`;
         console.log(`[generateKnowledgeBasedResponse] Using document: "${doc.title}"`);
       }
+      
+      knowledgeContext += "### END OF KNOWLEDGE BASE INFORMATION ###\n\n";
     }
     
     // Build system prompt based on configuration
@@ -153,10 +157,8 @@ export async function generateKnowledgeBasedResponse(
       fullSystemPrompt += " Provide comprehensive, detailed responses.";
     }
     
-    // Instructions for using knowledge
-    if (knowledgeContext) {
-      fullSystemPrompt += " If the knowledge base information doesn't fully answer the question, use your general knowledge but prioritize the knowledge base information.";
-    }
+    // We've already added instructions for using knowledge at the end of the context setup
+    // No need for additional instructions here
     
     // Create complete message history
     const messages = [
