@@ -74,11 +74,29 @@ export async function generateKnowledgeBasedResponse(
   responseLength: number
 ): Promise<string> {
   try {
+    console.log(`[generateKnowledgeBasedResponse] Processing query: "${userMessage}"`);
+    
+    // Extract keywords from the query for better retrieval
+    const keywords = userMessage.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter(word => 
+        word.length > 3 && 
+        !['what', 'when', 'where', 'which', 'there', 'their', 'about', 'would'].includes(word)
+      );
+      
+    console.log(`[generateKnowledgeBasedResponse] Extracted keywords: ${keywords.join(', ')}`);
+    
     // Search for relevant knowledge documents
-    const relevantDocs = await storage.searchKnowledgeDocuments(userMessage);
+    let relevantDocs = await storage.searchKnowledgeDocuments(userMessage);
+    
+    // Try searching with just keywords if no results
+    if (relevantDocs.length === 0 && keywords.length > 0) {
+      console.log(`[generateKnowledgeBasedResponse] No results with full query, trying keywords...`);
+      relevantDocs = await storage.searchKnowledgeDocuments(keywords.join(' '));
+    }
     
     // Log for debugging
-    console.log(`[generateKnowledgeBasedResponse] Query: "${userMessage}"`);
     console.log(`[generateKnowledgeBasedResponse] Found ${relevantDocs.length} relevant documents`);
     if (relevantDocs.length > 0) {
       console.log(`[generateKnowledgeBasedResponse] Most relevant document: "${relevantDocs[0].title}"`);
@@ -166,7 +184,7 @@ export async function generateKnowledgeBasedResponse(
 export async function moderateContent(
   content: string,
   strictnessLevel: number
-): Promise<{ flagged: boolean; categories: Record<string, boolean>; reason?: string }> {
+): Promise<{ flagged: boolean; categories: any; reason?: string }> {
   try {
     const response = await openai.moderations.create({
       input: content
@@ -192,7 +210,7 @@ export async function moderateContent(
     
     return {
       flagged: flagged,
-      categories: result.categories,
+      categories: result.categories as any,
       reason
     };
   } catch (error) {

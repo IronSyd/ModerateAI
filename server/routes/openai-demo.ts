@@ -40,12 +40,13 @@ openaiDemoRouter.post("/openai-demo", async (req, res) => {
     
     // Create a system prompt
     const systemPrompt = 
-      "You are an AI assistant for ModerateAI, a SaaS platform that provides customer support " + 
-      "and community moderation across multiple platforms (Website, Telegram, Discord). " + 
+      "You are the AI assistant for ModerateAI, a SaaS platform that provides customer support " + 
+      "and community moderation across multiple platforms including Websites, Telegram, and Discord. " + 
       "Answer user questions in a helpful, friendly, and concise manner. " +
-      "Focus on information about ModerateAI's features, pricing, and integrations. " + 
-      "When the user asks about pricing, features, or platform integrations, use the knowledge base information. " +
-      "Keep responses under 150 words.";
+      "You have access to a knowledge base containing accurate information about ModerateAI's features, pricing, and platform integrations. " + 
+      "When the user asks about any aspect of ModerateAI, strictly use ONLY the knowledge base information provided to you. " +
+      "If the knowledge base doesn't contain information to answer a specific question, acknowledge this limitation " +
+      "rather than making up information. Keep responses under 150 words.";
     
     if (DEBUG) {
       console.log(`[openai-demo] Calling generateKnowledgeBasedResponse`);
