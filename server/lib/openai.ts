@@ -102,7 +102,10 @@ export async function generateKnowledgeBasedResponse(
     
     // Add knowledge context if available
     if (knowledgeContext) {
+      console.log(`[generateKnowledgeBasedResponse] Adding knowledge context with length: ${knowledgeContext.length}`);
       fullSystemPrompt += "\n\n" + knowledgeContext;
+    } else {
+      console.log(`[generateKnowledgeBasedResponse] No knowledge context available`);
     }
     
     // Adjust tone based on response style (0-100)

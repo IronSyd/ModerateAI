@@ -837,30 +837,87 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchKnowledgeDocuments(query: string): Promise<KnowledgeDocument[]> {
-    // Using ILIKE for case-insensitive search in PostgreSQL
-    const searchPattern = `%${query}%`;
+    console.log(`[searchKnowledgeDocuments] Searching for: "${query}"`);
     
-    // First get documents with title matches
-    const titleMatches = await db.select().from(knowledgeDocuments)
-      .where(sql`${knowledgeDocuments.title} ILIKE ${searchPattern}`);
+    // Extract keywords from the query
+    const keywords = this.extractKeywords(query);
+    console.log(`[searchKnowledgeDocuments] Extracted keywords: ${keywords.join(', ')}`);
     
-    // Then get documents with content matches (excluding those already found)
-    const titleIds = titleMatches.map(doc => doc.id);
-    let contentMatches: KnowledgeDocument[] = [];
+    // Get all documents first (we'll have a small number initially)
+    const allDocuments = await db.select().from(knowledgeDocuments);
+    console.log(`[searchKnowledgeDocuments] Total documents available: ${allDocuments.length}`);
     
-    if (titleIds.length > 0) {
-      contentMatches = await db.select().from(knowledgeDocuments)
-        .where(and(
-          sql`${knowledgeDocuments.content} ILIKE ${searchPattern}`,
-          sql`${knowledgeDocuments.id} NOT IN (${titleIds.join(',')})`
-        ));
-    } else {
-      contentMatches = await db.select().from(knowledgeDocuments)
-        .where(sql`${knowledgeDocuments.content} ILIKE ${searchPattern}`);
+    if (allDocuments.length === 0) {
+      return [];
     }
     
-    // Return title matches first, then content matches
-    return [...titleMatches, ...contentMatches];
+    // Score each document based on keyword matches
+    const scoredDocuments = allDocuments.map(doc => {
+      const titleScore = this.calculateMatchScore(doc.title, keywords);
+      const contentScore = this.calculateMatchScore(doc.content, keywords);
+      const totalScore = titleScore * 2 + contentScore; // Title matches weighted higher
+      
+      return {
+        document: doc,
+        score: totalScore
+      };
+    });
+    
+    // Sort by score (highest first) and return just the documents
+    const sortedDocuments = scoredDocuments
+      .sort((a, b) => b.score - a.score)
+      .filter(item => item.score > 0) // Only return documents with at least some relevance
+      .map(item => item.document);
+    
+    console.log(`[searchKnowledgeDocuments] Found ${sortedDocuments.length} relevant documents`);
+    if (sortedDocuments.length > 0) {
+      sortedDocuments.forEach((doc, i) => {
+        if (i < 3) { // Log just the top 3
+          console.log(`[searchKnowledgeDocuments] Relevant doc ${i+1}: "${doc.title}" (ID: ${doc.id})`);
+        }
+      });
+    }
+    
+    return sortedDocuments;
+  }
+  
+  // Helper method to extract keywords from a query
+  private extractKeywords(query: string): string[] {
+    // Remove common words and punctuation
+    const stopWords = ["what", "which", "how", "when", "where", "why", "who", "is", "are", "the", "a", "an", "of", "for", "in", "on", "at", "to", "with", "by", "about", "like", "and", "or", "but", "if", "because", "as", "does", "do", "can", "could", "would", "should", "will", "i", "you", "he", "she", "it", "we", "they", "their", "your", "my", "his", "her", "its", "our"];
+    
+    // Convert to lowercase, remove punctuation and split into words
+    const words = query.toLowerCase()
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+      .split(/\s+/);
+    
+    // Filter out stop words and words shorter than 3 characters
+    return words.filter(word => 
+      !stopWords.includes(word) && 
+      word.length >= 3
+    );
+  }
+  
+  // Helper method to calculate match score between text and keywords
+  private calculateMatchScore(text: string, keywords: string[]): number {
+    if (!text || !keywords.length) return 0;
+    
+    const lowerText = text.toLowerCase();
+    let score = 0;
+    
+    keywords.forEach(keyword => {
+      // Check for exact matches
+      const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+      const exactMatches = (lowerText.match(regex) || []).length;
+      score += exactMatches * 2; // Exact matches count more
+      
+      // Check for partial matches
+      if (lowerText.includes(keyword)) {
+        score += 1;
+      }
+    });
+    
+    return score;
   }
 
   async createKnowledgeDocument(document: InsertKnowledgeDocument): Promise<KnowledgeDocument> {
