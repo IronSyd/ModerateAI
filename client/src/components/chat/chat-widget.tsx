@@ -56,7 +56,7 @@ const ChatWidget = () => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
     
-    // Create user message object but don't add to state yet
+    // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       content: inputMessage,
@@ -64,34 +64,18 @@ const ChatWidget = () => {
       timestamp: new Date()
     };
     
-    // Clear input and show loading immediately
+    setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
-    
-    // Temporarily add the message to UI without changing state permanently yet
-    const tempMessages = [...messages, userMessage];
     
     try {
       let aiResponse: string;
       
-      // Update messages state with user message first
-      setMessages(prev => [...prev, userMessage]);
-      
-      // Then create conversation history from the updated messages
-      const conversationHistory = [...messages, userMessage]
-        .slice(-6)  // Include up to 6 messages (to ensure we have at least one back-and-forth)
-        .map(msg => ({
-          role: msg.sender === "user" ? "user" : "assistant",
-          content: msg.content
-        }));
-      
-      console.log("Full conversation history being sent:", conversationHistory);
-      
       try {
-        // Make the API request with conversation history
+        // Try calling demo endpoint
+        console.log("Sending to OpenAI demo endpoint...");
         const response = await apiRequest("POST", "/api/openai-demo", {
-          message: userMessage.content,
-          history: conversationHistory
+          message: userMessage.content
         });
         
         const directResponse = response as unknown as { 
@@ -102,16 +86,17 @@ const ChatWidget = () => {
           status?: number 
         };
         
-        // Only use fallback if there's a clear error
+        // If the response contains an error field or has no content,
+        // switch to the fallback demo generator
         if (directResponse?.error || 
+            !directResponse?.content || 
             directResponse.errorType === "rate_limit_exceeded" ||
             directResponse.status === 429 ||
-            !directResponse?.content) {
+            (directResponse.content && directResponse.content.includes("I'm sorry, there was an error"))) {
           
           console.log("API response indicated an error, using fallback generator", directResponse);
           aiResponse = generateDemoResponse(userMessage.content);
         } else {
-          console.log("Using real OpenAI response:", directResponse.content);
           aiResponse = directResponse.content;
         }
       } catch (error: any) {
@@ -152,12 +137,6 @@ const ChatWidget = () => {
     // More comprehensive keyword matching
     if (input.includes("price") || input.includes("cost") || input.includes("pricing") || input.includes("plan") || input.includes("subscription")) {
       return "Our pricing is flexible based on your needs. The Basic plan starts at $29/month, the Pro plan at $79/month, and we offer custom Enterprise solutions. Would you like specific details about any of these plans?";
-    } else if (input.includes("basic plan") || input.includes("basic")) {
-      return "The Basic plan at $29/month includes: 1 platform integration, up to 500 messages per month, basic content moderation, standard response times, and email support. It's perfect for small businesses or those just getting started with AI-powered support.";
-    } else if (input.includes("pro plan") || input.includes("pro")) {
-      return "The Pro plan at $79/month includes: 3 platform integrations, up to 5,000 messages per month, advanced content moderation with custom policies, priority response times, email + chat support, and customizable AI configurations. It's ideal for growing businesses with active online communities.";
-    } else if (input.includes("enterprise") || input.includes("custom pricing")) {
-      return "Our Enterprise solution offers unlimited platform integrations, unlimited messages, dedicated account manager, 24/7 priority support, custom AI model fine-tuning, advanced analytics, and SLA guarantees. Contact our sales team for custom pricing based on your specific needs.";
     } else if (input.includes("integration") || input.includes("connect") || input.includes("setup") || input.includes("install") || input.includes("implement")) {
       return "Integration is simple! You can connect your platforms through our dashboard. We support Website, Telegram, and Discord currently. Each integration has its own setup wizard that will guide you through the process.";
     } else if (input.includes("ai") || input.includes("model") || input.includes("assistant") || input.includes("chatbot") || input.includes("intelligence")) {
@@ -176,8 +155,6 @@ const ChatWidget = () => {
       return "ModerateAI currently supports Website chat widgets, Telegram bots, and Discord bots. Each platform can be configured separately but managed from a single dashboard. We're constantly working on adding new platform integrations based on customer feedback.";
     } else if (input.includes("analytics") || input.includes("report") || input.includes("data") || input.includes("performance")) {
       return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track performance across all platforms and export reports for further analysis.";
-    } else if (input.includes("yes")) {
-      return "Great! What specific information would you like me to provide about ModerateAI? I can tell you about our features, pricing plans, platform integrations, or how to get started with a free trial.";
     }
     
     // Catch-all response for unrecognized queries
