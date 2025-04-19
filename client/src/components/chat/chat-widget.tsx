@@ -40,9 +40,24 @@ const ChatWidget = () => {
   // Scroll to bottom when messages change or widget opens
   useEffect(() => {
     if (isOpen && !isMinimized) {
-      scrollToBottom();
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
   }, [messages, isOpen, isMinimized]);
+  
+  // Ensure scroll position is maintained when new messages are added
+  useEffect(() => {
+    const handleResize = () => {
+      if (isOpen && !isMinimized) {
+        scrollToBottom();
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isOpen, isMinimized]);
   
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -203,8 +218,8 @@ const ChatWidget = () => {
             </div>
           </div>
           
-          {/* Messages - improved scrolling container */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 h-72 scroll-smooth scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+          {/* Messages - improved scrolling container with custom scrollbar */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 h-72 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
             {messages.map((message) => (
               <div 
                 key={message.id} 
@@ -223,7 +238,7 @@ const ChatWidget = () => {
                 
                 <div 
                   className={`
-                    rounded-lg px-3 py-2 max-w-[75%] text-sm
+                    rounded-lg px-3 py-2 max-w-[75%] text-sm whitespace-pre-wrap break-words
                     ${message.sender === "user" 
                       ? "bg-primary text-primary-foreground" 
                       : "bg-accent/70 text-accent-foreground"
