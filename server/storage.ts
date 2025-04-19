@@ -4,9 +4,10 @@ import {
   Conversation, InsertConversation, 
   Message, InsertMessage, 
   AiConfiguration, InsertAiConfiguration, 
-  KnowledgeBase, InsertKnowledgeBase, 
+  KnowledgeBase, InsertKnowledgeBase,
+  KnowledgeDocument, InsertKnowledgeDocument,
   ModerationAction, InsertModerationAction,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, moderationActions
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";

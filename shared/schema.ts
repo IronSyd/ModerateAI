@@ -123,6 +123,24 @@ export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBases).pick
   isActive: true,
 });
 
+// Knowledge Documents table - stores content for AI to reference
+export const knowledgeDocuments = pgTable("knowledge_documents", {
+  id: serial("id").primaryKey(),
+  knowledgeBaseId: integer("knowledge_base_id").notNull().references(() => knowledgeBases.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  metadata: jsonb("metadata"), // Additional document metadata (source URL, type, tags, etc.)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertKnowledgeDocumentSchema = createInsertSchema(knowledgeDocuments).pick({
+  knowledgeBaseId: true,
+  title: true,
+  content: true,
+  metadata: true,
+});
+
 // Moderation Actions table
 export const moderationActions = pgTable("moderation_actions", {
   id: serial("id").primaryKey(),
@@ -184,10 +202,18 @@ export const aiConfigurationsRelations = relations(aiConfigurations, ({ one }) =
   })
 }));
 
-export const knowledgeBasesRelations = relations(knowledgeBases, ({ one }) => ({
+export const knowledgeBasesRelations = relations(knowledgeBases, ({ one, many }) => ({
   user: one(users, {
     fields: [knowledgeBases.userId],
     references: [users.id]
+  }),
+  documents: many(knowledgeDocuments)
+}));
+
+export const knowledgeDocumentsRelations = relations(knowledgeDocuments, ({ one }) => ({
+  knowledgeBase: one(knowledgeBases, {
+    fields: [knowledgeDocuments.knowledgeBaseId],
+    references: [knowledgeBases.id]
   })
 }));
 
@@ -228,3 +254,6 @@ export type InsertKnowledgeBase = z.infer<typeof insertKnowledgeBaseSchema>;
 
 export type ModerationAction = typeof moderationActions.$inferSelect;
 export type InsertModerationAction = z.infer<typeof insertModerationActionSchema>;
+
+export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
+export type InsertKnowledgeDocument = z.infer<typeof insertKnowledgeDocumentSchema>;
