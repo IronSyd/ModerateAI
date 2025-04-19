@@ -49,7 +49,18 @@ openaiDemoRouter.post("/openai-demo", async (req, res) => {
       "rather than making up information. Keep responses under 150 words.";
     
     if (DEBUG) {
-      console.log(`[openai-demo] Calling generateKnowledgeBasedResponse`);
+      console.log(`[openai-demo] Calling generateKnowledgeBasedResponse for query: "${message}"`);
+      
+      // Test knowledge search directly for comparison
+      try {
+        const docs = await storage.searchKnowledgeDocuments(message);
+        console.log(`[openai-demo] DIRECT SEARCH: Found ${docs.length} matching documents directly through storage.searchKnowledgeDocuments`);
+        if (docs.length > 0) {
+          console.log(`[openai-demo] DIRECT SEARCH: First doc: "${docs[0].title}" (first 50 chars: ${docs[0].content.substring(0, 50)}...)`);
+        }
+      } catch (err) {
+        console.error(`[openai-demo] Error in direct search test:`, err);
+      }
     }
     
     // Call OpenAI API with knowledge-based response generation

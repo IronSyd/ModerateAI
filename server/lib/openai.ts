@@ -121,7 +121,12 @@ export async function generateKnowledgeBasedResponse(
     // Add knowledge context if available
     if (knowledgeContext) {
       console.log(`[generateKnowledgeBasedResponse] Adding knowledge context with length: ${knowledgeContext.length}`);
-      fullSystemPrompt += "\n\n" + knowledgeContext;
+      
+      // Make knowledge context more prominent by putting it at the beginning
+      fullSystemPrompt = knowledgeContext + "\n\n" + fullSystemPrompt;
+      
+      // Add explicit instruction to use knowledge
+      fullSystemPrompt += "\n\nIMPORTANT: Base your answers ONLY on the knowledge base documents provided above. If you can't find an answer in the documents, say 'I don't have specific information about that in my knowledge base' rather than making up an answer.";
     } else {
       console.log(`[generateKnowledgeBasedResponse] No knowledge context available`);
     }
