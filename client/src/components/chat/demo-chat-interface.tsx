@@ -2,8 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Info, MoreVertical, Send } from "lucide-react";
+import { Info, MoreVertical, Send, Trash, RefreshCw, Copy, Download } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Message = {
   id: string;
@@ -255,10 +263,88 @@ const DemoChatInterface = () => {
           <h3 className="text-base font-medium text-foreground">Website Chat Widget Preview</h3>
           <p className="text-xs text-muted-foreground">Test your AI responses before deploying</p>
         </div>
-        <div>
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground p-1">
-            <MoreVertical className="h-5 w-5" />
-          </Button>
+        <div className="relative">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-muted-foreground hover:text-foreground p-1"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Chat Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => {
+                  // Reset conversation
+                  setMessages([{
+                    id: "welcome",
+                    content: "👋 Hi there! I'm your AI assistant. How can I help you today with ModerateAI?",
+                    sender: "ai",
+                    timestamp: new Date()
+                  }]);
+                  setShowSuggestions(true);
+                }}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Reset Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Clear all messages except the welcome message
+                  setMessages([]);
+                  setShowSuggestions(true);
+                  // Add the welcome message after a short delay
+                  setTimeout(() => {
+                    setMessages([{
+                      id: "welcome",
+                      content: "👋 Hi there! I'm your AI assistant. How can I help you today with ModerateAI?",
+                      sender: "ai",
+                      timestamp: new Date()
+                    }]);
+                  }, 100);
+                }}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Clear Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Copy chat to clipboard
+                  const chatText = messages
+                    .map(msg => `${msg.sender === 'user' ? 'You' : 'AI'}: ${msg.content}`)
+                    .join('\n\n');
+                  navigator.clipboard.writeText(chatText);
+                }}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Download chat transcript
+                  const chatText = messages
+                    .map(msg => `${msg.sender === 'user' ? 'You' : 'AI'}: ${msg.content}`)
+                    .join('\n\n');
+                  const blob = new Blob([chatText], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'moderateai-chat-transcript.txt';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Transcript
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       
