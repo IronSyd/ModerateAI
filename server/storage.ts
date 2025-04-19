@@ -54,6 +54,14 @@ export interface IStorage {
   createKnowledgeBase(knowledgeBase: InsertKnowledgeBase): Promise<KnowledgeBase>;
   updateKnowledgeBase(id: number, knowledgeBase: Partial<KnowledgeBase>): Promise<KnowledgeBase | undefined>;
 
+  // Knowledge Document operations
+  getKnowledgeDocument(id: number): Promise<KnowledgeDocument | undefined>;
+  getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId: number): Promise<KnowledgeDocument[]>;
+  searchKnowledgeDocuments(query: string): Promise<KnowledgeDocument[]>;
+  createKnowledgeDocument(document: InsertKnowledgeDocument): Promise<KnowledgeDocument>;
+  updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined>;
+  deleteKnowledgeDocument(id: number): Promise<boolean>;
+
   // Moderation Action operations
   getModerationAction(id: number): Promise<ModerationAction | undefined>;
   getModerationActionsByPlatformId(platformId: number): Promise<ModerationAction[]>;
@@ -80,6 +88,7 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message>;
   private aiConfigurations: Map<number, AiConfiguration>;
   private knowledgeBases: Map<number, KnowledgeBase>;
+  private knowledgeDocuments: Map<number, KnowledgeDocument>;
   private moderationActions: Map<number, ModerationAction>;
 
   private userIdCounter: number;
@@ -88,6 +97,7 @@ export class MemStorage implements IStorage {
   private messageIdCounter: number;
   private aiConfigurationIdCounter: number;
   private knowledgeBaseIdCounter: number;
+  private knowledgeDocumentIdCounter: number;
   private moderationActionIdCounter: number;
 
   constructor() {
@@ -97,6 +107,7 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.aiConfigurations = new Map();
     this.knowledgeBases = new Map();
+    this.knowledgeDocuments = new Map();
     this.moderationActions = new Map();
 
     this.userIdCounter = 1;
@@ -105,6 +116,7 @@ export class MemStorage implements IStorage {
     this.messageIdCounter = 1;
     this.aiConfigurationIdCounter = 1;
     this.knowledgeBaseIdCounter = 1;
+    this.knowledgeDocumentIdCounter = 1;
     this.moderationActionIdCounter = 1;
 
     // Initialize with demo data
@@ -420,6 +432,88 @@ export class MemStorage implements IStorage {
     return updatedKnowledgeBase;
   }
 
+  // Knowledge Document operations
+  async getKnowledgeDocument(id: number): Promise<KnowledgeDocument | undefined> {
+    return this.knowledgeDocuments.get(id);
+  }
+
+  async getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId: number): Promise<KnowledgeDocument[]> {
+    return Array.from(this.knowledgeDocuments.values())
+      .filter(doc => doc.knowledgeBaseId === knowledgeBaseId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async searchKnowledgeDocuments(query: string): Promise<KnowledgeDocument[]> {
+    // Simple search implementation that checks if the query exists in title or content
+    const lowercaseQuery = query.toLowerCase();
+    return Array.from(this.knowledgeDocuments.values())
+      .filter(doc => 
+        doc.title.toLowerCase().includes(lowercaseQuery) ||
+        doc.content.toLowerCase().includes(lowercaseQuery)
+      )
+      .sort((a, b) => {
+        // Sort by relevance (title matches first, then content matches)
+        const aTitleMatch = a.title.toLowerCase().includes(lowercaseQuery);
+        const bTitleMatch = b.title.toLowerCase().includes(lowercaseQuery);
+        
+        if (aTitleMatch && !bTitleMatch) return -1;
+        if (!aTitleMatch && bTitleMatch) return 1;
+        return 0;
+      });
+  }
+
+  async createKnowledgeDocument(document: InsertKnowledgeDocument): Promise<KnowledgeDocument> {
+    const id = this.knowledgeDocumentIdCounter++;
+    const now = new Date();
+    const newDocument: KnowledgeDocument = {
+      ...document,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.knowledgeDocuments.set(id, newDocument);
+
+    // Update the document count in the knowledge base
+    const knowledgeBase = this.knowledgeBases.get(document.knowledgeBaseId);
+    if (knowledgeBase) {
+      this.knowledgeBases.set(knowledgeBase.id, {
+        ...knowledgeBase,
+        documentCount: knowledgeBase.documentCount + 1
+      });
+    }
+
+    return newDocument;
+  }
+
+  async updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined> {
+    const existingDocument = this.knowledgeDocuments.get(id);
+    if (!existingDocument) return undefined;
+    
+    const updatedDocument = {
+      ...existingDocument,
+      ...document,
+      updatedAt: new Date()
+    };
+    this.knowledgeDocuments.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async deleteKnowledgeDocument(id: number): Promise<boolean> {
+    const document = this.knowledgeDocuments.get(id);
+    if (!document) return false;
+    
+    // Update the document count in the knowledge base
+    const knowledgeBase = this.knowledgeBases.get(document.knowledgeBaseId);
+    if (knowledgeBase && knowledgeBase.documentCount > 0) {
+      this.knowledgeBases.set(knowledgeBase.id, {
+        ...knowledgeBase,
+        documentCount: knowledgeBase.documentCount - 1
+      });
+    }
+    
+    return this.knowledgeDocuments.delete(id);
+  }
+
   // Moderation Action operations
   async getModerationAction(id: number): Promise<ModerationAction | undefined> {
     return this.moderationActions.get(id);
@@ -728,6 +822,94 @@ export class DatabaseStorage implements IStorage {
       .where(eq(knowledgeBases.id, id))
       .returning();
     return updatedKb;
+  }
+
+  // Knowledge Document operations
+  async getKnowledgeDocument(id: number): Promise<KnowledgeDocument | undefined> {
+    const [doc] = await db.select().from(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
+    return doc;
+  }
+
+  async getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId: number): Promise<KnowledgeDocument[]> {
+    return await db.select().from(knowledgeDocuments)
+      .where(eq(knowledgeDocuments.knowledgeBaseId, knowledgeBaseId))
+      .orderBy(asc(knowledgeDocuments.createdAt));
+  }
+
+  async searchKnowledgeDocuments(query: string): Promise<KnowledgeDocument[]> {
+    // Using ILIKE for case-insensitive search in PostgreSQL
+    const searchPattern = `%${query}%`;
+    
+    // First get documents with title matches
+    const titleMatches = await db.select().from(knowledgeDocuments)
+      .where(sql`${knowledgeDocuments.title} ILIKE ${searchPattern}`);
+    
+    // Then get documents with content matches (excluding those already found)
+    const titleIds = titleMatches.map(doc => doc.id);
+    let contentMatches: KnowledgeDocument[] = [];
+    
+    if (titleIds.length > 0) {
+      contentMatches = await db.select().from(knowledgeDocuments)
+        .where(and(
+          sql`${knowledgeDocuments.content} ILIKE ${searchPattern}`,
+          sql`${knowledgeDocuments.id} NOT IN (${titleIds.join(',')})`
+        ));
+    } else {
+      contentMatches = await db.select().from(knowledgeDocuments)
+        .where(sql`${knowledgeDocuments.content} ILIKE ${searchPattern}`);
+    }
+    
+    // Return title matches first, then content matches
+    return [...titleMatches, ...contentMatches];
+  }
+
+  async createKnowledgeDocument(document: InsertKnowledgeDocument): Promise<KnowledgeDocument> {
+    const now = new Date();
+    const [newDoc] = await db.insert(knowledgeDocuments)
+      .values({
+        ...document,
+        updatedAt: now
+      })
+      .returning();
+    
+    // Update document count in knowledge base
+    await db.update(knowledgeBases)
+      .set({
+        documentCount: sql`${knowledgeBases.documentCount} + 1`
+      })
+      .where(eq(knowledgeBases.id, document.knowledgeBaseId));
+    
+    return newDoc;
+  }
+
+  async updateKnowledgeDocument(id: number, updates: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined> {
+    const [updatedDoc] = await db
+      .update(knowledgeDocuments)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(knowledgeDocuments.id, id))
+      .returning();
+    return updatedDoc;
+  }
+
+  async deleteKnowledgeDocument(id: number): Promise<boolean> {
+    // First get the document to get its knowledgeBaseId
+    const [doc] = await db.select().from(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
+    if (!doc) return false;
+    
+    // Delete the document
+    const result = await db.delete(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
+    
+    // Update the document count in the knowledge base
+    await db.update(knowledgeBases)
+      .set({
+        documentCount: sql`GREATEST(${knowledgeBases.documentCount} - 1, 0)`
+      })
+      .where(eq(knowledgeBases.id, doc.knowledgeBaseId));
+    
+    return result.count > 0;
   }
 
   // Moderation Action operations
