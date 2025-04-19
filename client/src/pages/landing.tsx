@@ -114,7 +114,7 @@ const LandingPage = () => {
                 <div className="rounded-md bg-accent p-4">
                   <h3 className="font-medium mb-2">Welcome to ModerateAI!</h3>
                   <p className="text-muted-foreground text-sm">
-                    I'm your AI assistant. I can help moderate your community and provide customer support across all your platforms.
+                    I'm your AI assistant. I can help detect inappropriate content and provide customer support across all your platforms.
                   </p>
                 </div>
                 <div className="bg-primary/10 rounded-md p-4 flex items-start">
