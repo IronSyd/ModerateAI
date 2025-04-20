@@ -500,11 +500,11 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Premium moderation tools</span>
+                  <span>Advanced moderation tools</span>
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Multiple knowledge bases</span>
+                  <span>All platform integrations</span>
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
@@ -512,11 +512,27 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Dedicated account manager</span>
+                  <span>Community chat history for training</span>
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Custom integrations</span>
+                  <span>Unlimited template insights</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited collaborator seats</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited tracking of unanswered inquiries</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Metrics report</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Dedicated account manager</span>
                 </li>
               </ul>
               <Button variant="outline" className="w-full">Contact Sales</Button>
