@@ -496,7 +496,7 @@ const Team = () => {
                 </div>
               ) : (
                 <div className="text-center py-8 border rounded-lg">
-                  <CheckCircle2 className="mx-auto h-10 w-10 text-gray-300" />
+                  <CheckCircle2 className="mx-auto h-6 w-6 text-gray-300" />
                   <p className="mt-2 text-sm text-gray-500">
                     No pending invitations
                   </p>
@@ -530,19 +530,19 @@ const Team = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Manage team members
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Configure AI settings
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Manage integrations
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Access billing & subscription
                   </div>
                 </div>
@@ -563,15 +563,15 @@ const Team = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Access conversations
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Perform moderation actions
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     Edit response templates
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
@@ -596,11 +596,11 @@ const Team = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     View conversations
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                     View analytics
                   </div>
                   <div className="flex items-center p-2 rounded-md bg-gray-50">
