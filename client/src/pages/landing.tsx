@@ -334,7 +334,7 @@ const LandingPage = () => {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Up to 200 AI responses/month</span>
+                  <span>Up to 20 AI responses/month</span>
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
@@ -342,11 +342,19 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>Website integration</span>
+                  <span>All platform integrations</span>
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>1 response template</span>
+                  <span>10 response templates</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Community chat history for training</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>5 template insights per month</span>
                 </li>
               </ul>
               <Button className="w-full" variant="outline">Get Started Free</Button>
@@ -378,7 +386,7 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span>5 response templates</span>
+                  <span>15 response templates</span>
                 </li>
               </ul>
               <Button className="w-full">Start Free Trial</Button>
