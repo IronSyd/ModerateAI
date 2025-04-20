@@ -319,7 +319,39 @@ const LandingPage = () => {
             </div>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            {/* Free Plan */}
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-semibold mb-2">Free</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">$0</span>
+                <span className="text-muted-foreground">/month</span>
+                <div className="mt-1 text-sm text-blue-600 font-medium">Free forever</div>
+              </div>
+              <p className="text-muted-foreground mb-6">
+                Perfect for individuals and testing.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Up to 200 AI responses/month</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Basic moderation tools</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Website integration</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>1 response template</span>
+                </li>
+              </ul>
+              <Button className="w-full" variant="outline">Get Started Free</Button>
+            </div>
+
             {/* Basic Plan */}
             <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
               <h3 className="text-xl font-semibold mb-2">Basic</h3>
@@ -440,12 +472,20 @@ const LandingPage = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Join thousands of businesses that are using ModerateAI to provide excellent customer support and community moderation.
           </p>
-          <Link href="/dashboard">
-            <Button size="lg">
-              Start Your Free 14-Day Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/dashboard">
+              <Button size="lg" variant="outline">
+                Start Free Forever
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button size="lg">
+                Start 14-Day Pro Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
