@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import SetupSteps from "@/components/dashboard/setup-steps";
@@ -7,8 +7,8 @@ import PlatformIntegrationCard from "@/components/dashboard/platform-integration
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
 import AIConfigurationPreview from "@/components/dashboard/ai-configuration-preview";
 import DemoChatInterface from "@/components/chat/demo-chat-interface";
+import DashboardWrapper from "@/components/layout/dashboard-wrapper";
 import { MessagesSquare, MonitorSmartphone, ShieldAlert, CheckCircle } from "lucide-react";
-import { forceScrollToTop, initDashboardScroll } from "@/lib/scrollUtils";
 
 const Dashboard = () => {
   // Handle scrolling specifically for the dashboard component

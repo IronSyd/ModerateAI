@@ -34,18 +34,30 @@
     margin-right: 0.5rem;
   }
   
-  .dashboard-root {
-    position: absolute;
-    top: 0;
-    left: 0;
+  /* Dashboard scroll prevention */
+  .dashboard-wrapper {
+    display: block;
     width: 100%;
+    transform: translateY(0);
+    will-change: transform;
   }
   
-  /* Force dashboard to start at top */
-  body:has(.dashboard-root) {
+  /* Apply special styles when dashboard is active */
+  body.dashboard-view {
     scroll-behavior: auto !important;
     scroll-padding-top: 0 !important;
     overflow-x: hidden;
     overflow-y: auto !important;
+  }
+  
+  /* Ensure content stays at the top */
+  body.dashboard-view #root {
+    scroll-padding-top: 0;
+    scroll-margin-top: 0;
+  }
+  
+  /* Force the dashboard to the top */
+  #dashboard-top {
+    scroll-margin-top: 0 !important;
   }
 }
