@@ -326,7 +326,7 @@ const LandingPage = () => {
               <div className="mb-4">
                 <span className="text-4xl font-bold">$0</span>
                 <span className="text-muted-foreground">/month</span>
-                <div className="mt-1 text-sm text-blue-600 font-medium">Free forever</div>
+                <div className="mt-1 text-sm text-green-600 font-medium">Free forever</div>
               </div>
               <p className="text-muted-foreground mb-6">
                 Perfect for individuals and testing.
