@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ type ActivityItem = {
 
 const ActivityPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [platformFilter, setPlatformFilter] = useState<string>("");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 20;
   
@@ -94,8 +95,8 @@ const ActivityPage = () => {
       time: new Date(activity.time)
     }));
     
-    // Apply platform filter
-    if (platformFilter) {
+    // Apply platform filter (skip if "all" is selected)
+    if (platformFilter && platformFilter !== "all") {
       activities = activities.filter(activity => activity.platform === platformFilter);
     }
     
@@ -167,7 +168,7 @@ const ActivityPage = () => {
             <SelectValue placeholder="All platforms" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All platforms</SelectItem>
+            <SelectItem value="all">All platforms</SelectItem>
             <SelectItem value="website">Website</SelectItem>
             <SelectItem value="discord">Discord</SelectItem>
             <SelectItem value="telegram">Telegram</SelectItem>
@@ -280,12 +281,11 @@ const ActivityPage = () => {
       
       {/* Back button */}
       <div className="mt-6">
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = "/dashboard"}
-        >
-          Back to Dashboard
-        </Button>
+        <Link href="/dashboard">
+          <Button variant="outline">
+            Back to Dashboard
+          </Button>
+        </Link>
       </div>
     </div>
   );
