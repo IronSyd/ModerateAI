@@ -414,6 +414,10 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Metrics report</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   <span>Access to support team</span>
                 </li>
               </ul>
