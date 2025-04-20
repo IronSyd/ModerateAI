@@ -13,6 +13,7 @@ import TelegramIntegration from "@/pages/integrations/telegram";
 import DiscordIntegration from "@/pages/integrations/discord";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
+import ActivityPage from "@/pages/activity";
 import LandingPage from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
 import Sidebar from "@/components/layout/sidebar";
@@ -98,6 +99,7 @@ function Router() {
         <ProtectedRoute path="/integrations/discord" component={DiscordIntegration} />
         <ProtectedRoute path="/team" component={Team} />
         <ProtectedRoute path="/settings" component={Settings} />
+        <ProtectedRoute path="/activity" component={ActivityPage} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

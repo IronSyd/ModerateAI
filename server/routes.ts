@@ -146,6 +146,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching recent activity" });
     }
   });
+  
+  // All activity - for the activity page
+  app.get("/api/activity", authMiddleware, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100; // Default to a larger number
+      const recentActivity = await storage.getRecentActivity(limit);
+      res.status(200).json(recentActivity);
+    } catch (error) {
+      console.error("Error fetching all activity:", error);
+      res.status(500).json({ message: "Error fetching activity data" });
+    }
+  });
 
   // Platforms
   app.get("/api/platforms", authMiddleware, async (req, res) => {

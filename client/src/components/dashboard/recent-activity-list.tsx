@@ -113,7 +113,13 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
         </ul>
       </div>
       <div className="mt-5">
-        <Button variant="outline" className="w-full text-center">View all activity</Button>
+        <Button 
+          variant="outline" 
+          className="w-full text-center"
+          onClick={() => window.location.href = "/activity"}
+        >
+          View all activity
+        </Button>
       </div>
     </div>
   );

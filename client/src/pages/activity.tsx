@@ -1,0 +1,294 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { formatDistanceToNow } from "date-fns";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
+import { Search } from "lucide-react";
+
+type ActivityItem = {
+  id: string;
+  user: {
+    name: string;
+    avatar: string;
+  };
+  action: string;
+  platform: "website" | "discord" | "telegram";
+  time: Date;
+};
+
+const ActivityPage = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [platformFilter, setPlatformFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const itemsPerPage = 20;
+  
+  // Fetch all activity data - in a real app, you would implement pagination and filtering on the server
+  const { data: activityData, isLoading } = useQuery({
+    queryKey: ['/api/activity'],
+    retry: false,
+  });
+  
+  // For demo placeholder images - in a real app, these would come from the backend
+  const placeholderAvatars = [
+    "https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    "https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+  ];
+  
+  // Get platform badge color
+  const getPlatformBadgeClass = (platform: string) => {
+    switch (platform) {
+      case "website":
+        return "text-primary";
+      case "discord":
+        return "text-indigo-400";
+      case "telegram":
+        return "text-blue-400";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+  
+  // Get platform badge dot color
+  const getPlatformDotClass = (platform: string) => {
+    switch (platform) {
+      case "website":
+        return "text-primary";
+      case "discord":
+        return "text-indigo-400";
+      case "telegram":
+        return "text-blue-400";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+  
+  // Process and filter activity data
+  const processedActivities = () => {
+    if (!activityData) return [];
+    
+    let activities: ActivityItem[] = activityData.map((activity: any, index: number) => ({
+      id: `activity-${activity.id || index}`,
+      user: {
+        name: activity.user,
+        avatar: ""
+      },
+      action: activity.action,
+      platform: activity.platform as "website" | "discord" | "telegram",
+      time: new Date(activity.time)
+    }));
+    
+    // Apply platform filter
+    if (platformFilter) {
+      activities = activities.filter(activity => activity.platform === platformFilter);
+    }
+    
+    // Apply search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      activities = activities.filter(activity => 
+        activity.user.name.toLowerCase().includes(query) || 
+        activity.action.toLowerCase().includes(query)
+      );
+    }
+    
+    return activities;
+  };
+  
+  // Calculate pagination
+  const filteredActivities = processedActivities();
+  const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
+  const paginatedActivities = filteredActivities.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4 p-4 md:p-6">
+        <h1 className="text-2xl font-bold">Activity Log</h1>
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="w-full sm:w-64 h-10 bg-muted rounded-md animate-pulse"></div>
+          <div className="w-full sm:w-48 h-10 bg-muted rounded-md animate-pulse"></div>
+        </div>
+        <div className="bg-card rounded-lg shadow-sm p-6 border border-border">
+          <div className="animate-pulse space-y-6">
+            {Array(10).fill(0).map((_, i) => (
+              <div key={i} className="flex items-start space-x-3">
+                <div className="rounded-full bg-muted h-10 w-10"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                  <div className="h-3 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/3"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-4 p-4 md:p-6">
+      <h1 className="text-2xl font-bold">Activity Log</h1>
+      
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search activity..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Select value={platformFilter} onValueChange={setPlatformFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="All platforms" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All platforms</SelectItem>
+            <SelectItem value="website">Website</SelectItem>
+            <SelectItem value="discord">Discord</SelectItem>
+            <SelectItem value="telegram">Telegram</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {/* Activity List */}
+      <div className="bg-card rounded-lg shadow-sm p-6 border border-border">
+        {paginatedActivities.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No activity found</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {paginatedActivities.map((activity, index) => (
+              <li key={activity.id} className="py-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Avatar>
+                      <AvatarImage
+                        src={activity.user.avatar || placeholderAvatars[index % placeholderAvatars.length]}
+                        alt={activity.user.name}
+                      />
+                      <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="ml-3 min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">{activity.user.name}</p>
+                    <p className="text-sm text-muted-foreground">{activity.action}</p>
+                    <div className="mt-1 flex items-center">
+                      <span className={`inline-flex items-center text-xs font-medium ${getPlatformBadgeClass(activity.platform)}`}>
+                        <svg className={`mr-1.5 h-3 w-3 ${getPlatformDotClass(activity.platform)}`} fill="currentColor" viewBox="0 0 8 8">
+                          <circle cx="4" cy="4" r="3" />
+                        </svg>
+                        {activity.platform.charAt(0).toUpperCase() + activity.platform.slice(1)}
+                      </span>
+                      <span className="text-xs text-muted-foreground mx-2">•</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(activity.time, { addSuffix: true })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) setCurrentPage(currentPage - 1);
+                    }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Show a window of 5 pages centered around current page
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(pageNum);
+                        }}
+                        isActive={currentPage === pageNum}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                    }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
+      
+      {/* Back button */}
+      <div className="mt-6">
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.href = "/dashboard"}
+        >
+          Back to Dashboard
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default ActivityPage;
