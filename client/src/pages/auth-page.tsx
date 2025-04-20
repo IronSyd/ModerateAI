@@ -236,7 +236,7 @@ const AuthPage = () => {
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
                 <div className="text-sm text-muted-foreground text-center">
-                  {isLogin ? "Don't have an account?" : "Already have an account?"}
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
                   <Button
                     variant="link"
                     className="pl-1 h-auto p-0"
