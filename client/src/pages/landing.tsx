@@ -319,9 +319,9 @@ const LandingPage = () => {
             </div>
           </div>
           
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-4 gap-8 items-start">
             {/* Free Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm h-auto">
               <h3 className="text-xl font-semibold mb-2">Free</h3>
               <div className="mb-4">
                 <span className="text-4xl font-bold">$0</span>
@@ -369,7 +369,7 @@ const LandingPage = () => {
             </div>
 
             {/* Basic Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm h-auto">
               <h3 className="text-xl font-semibold mb-2">Basic</h3>
               <div className="mb-4">
                 <span className="text-4xl font-bold">{isYearly ? '$68' : '$80'}</span>
@@ -425,7 +425,7 @@ const LandingPage = () => {
             </div>
             
             {/* Pro Plan */}
-            <div className="bg-card border-2 border-primary rounded-xl p-8 shadow-lg relative">
+            <div className="bg-card border-2 border-primary rounded-xl p-8 shadow-lg relative h-auto">
               <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-sm font-medium transform translate-y-[-50%] rounded-full">
                 Most Popular
               </div>
@@ -484,7 +484,7 @@ const LandingPage = () => {
             </div>
             
             {/* Enterprise Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm h-auto">
               <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
               <div className="mb-4">
                 <span className="text-4xl font-bold">Custom</span>
