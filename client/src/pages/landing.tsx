@@ -321,7 +321,7 @@ const LandingPage = () => {
           
           <div className="grid md:grid-cols-4 gap-8">
             {/* Free Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm" style={{ borderWidth: '1px' }}>
               <h3 className="text-xl font-semibold mb-2">Free</h3>
               <div className="mb-4">
                 <span className="text-4xl font-bold">$0</span>
