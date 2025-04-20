@@ -1,4 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
+import { useEffect, useLayoutEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,6 +23,29 @@ import { ProtectedRoute } from "@/lib/protected-route";
 
 // Dashboard layout with sidebar and header
 function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Scroll to top when dashboard layout mounts or location changes
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    
+    // Prevent scrolling for a short time after mounting to avoid auto-scrolling
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    
+    document.addEventListener('scroll', preventScroll, { passive: false });
+    
+    // Remove the event listener after a short delay to allow normal scrolling
+    const timer = setTimeout(() => {
+      document.removeEventListener('scroll', preventScroll);
+    }, 500);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('scroll', preventScroll);
+    };
+  }, []);
+  
   return (
     <div className="min-h-screen flex bg-background font-sans">
       {/* Sidebar */}
@@ -41,6 +65,11 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 function Router() {
   const [location] = useLocation();
+  
+  // Reset scroll position on route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
   
   // Check if current path is the landing page, auth page, or requires the dashboard layout
   const isPublicPage = location === "/" || location === "/auth";

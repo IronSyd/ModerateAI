@@ -10,10 +10,7 @@ import DemoChatInterface from "@/components/chat/demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, ShieldAlert, CheckCircle } from "lucide-react";
 
 const Dashboard = () => {
-  // Scroll to top when the component mounts
-  useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // Scroll handling now done at the App level
 
   // Fetch dashboard stats
   const { data: stats, isLoading: isLoadingStats } = useQuery({
