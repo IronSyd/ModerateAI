@@ -331,7 +331,7 @@ const LandingPage = () => {
               <p className="text-muted-foreground mb-6">
                 Perfect for individuals and testing.
               </p>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-4">
                 <li className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   <span>Up to 20 AI responses/month</span>
