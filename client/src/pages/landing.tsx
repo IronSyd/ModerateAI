@@ -356,7 +356,7 @@ const LandingPage = () => {
             <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
               <h3 className="text-xl font-semibold mb-2">Basic</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold">{isYearly ? '$25' : '$29'}</span>
+                <span className="text-4xl font-bold">{isYearly ? '$68' : '$80'}</span>
                 <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
                 <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
@@ -391,7 +391,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2">Pro</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold">{isYearly ? '$67' : '$79'}</span>
+                <span className="text-4xl font-bold">{isYearly ? '$127' : '$150'}</span>
                 <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
                 <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
