@@ -365,7 +365,7 @@ const LandingPage = () => {
                   <span>Tracking 5 unanswered inquiries/month</span>
                 </li>
               </ul>
-              <Link href="/auth">
+              <Link href="/auth?plan=free">
                 <Button className="w-full" variant="outline">Get Started Free</Button>
               </Link>
             </div>
@@ -423,7 +423,9 @@ const LandingPage = () => {
                   <span>Access to support team</span>
                 </li>
               </ul>
-              <Button className="w-full">Start Free Trial</Button>
+              <Link href="/auth">
+                <Button className="w-full">Start Free Trial</Button>
+              </Link>
             </div>
 
             {/* Pro Plan */}
@@ -482,7 +484,9 @@ const LandingPage = () => {
                   <span>Priority support</span>
                 </li>
               </ul>
-              <Button className="w-full">Start Free Trial</Button>
+              <Link href="/auth">
+                <Button className="w-full">Start Free Trial</Button>
+              </Link>
             </div>
 
             {/* Enterprise Plan */}
@@ -537,7 +541,9 @@ const LandingPage = () => {
                   <span>Dedicated account manager</span>
                 </li>
               </ul>
-              <Button variant="outline" className="w-full">Contact Sales</Button>
+              <Link href="/auth?plan=enterprise">
+                <Button variant="outline" className="w-full">Contact Sales</Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -551,13 +557,13 @@ const LandingPage = () => {
             Join thousands of businesses that are using ModerateAI to provide excellent customer support and community moderation.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/dashboard">
+            <Link href="/auth?plan=free">
               <Button size="lg" variant="outline">
                 Start Free Forever
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/auth?plan=pro">
               <Button size="lg">
                 Start 14-Day Pro Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
