@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import SetupSteps from "@/components/dashboard/setup-steps";
@@ -10,6 +10,11 @@ import DemoChatInterface from "@/components/chat/demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, ShieldAlert, CheckCircle } from "lucide-react";
 
 const Dashboard = () => {
+  // Scroll to top when the component mounts
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch dashboard stats
   const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
