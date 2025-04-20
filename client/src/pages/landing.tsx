@@ -360,6 +360,10 @@ const LandingPage = () => {
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   <span>Unlimited collaborator seats</span>
                 </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Tracking 5 unanswered inquiries/month</span>
+                </li>
               </ul>
               <Button className="w-full" variant="outline">Get Started Free</Button>
             </div>
