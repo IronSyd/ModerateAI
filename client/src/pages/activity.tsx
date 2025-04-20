@@ -123,9 +123,8 @@ const ActivityPage = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4 md:p-6">
-        <h1 className="text-2xl font-bold">Activity Log</h1>
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="space-y-3 -mt-2">
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="w-full sm:w-64 h-10 bg-muted rounded-md animate-pulse"></div>
           <div className="w-full sm:w-48 h-10 bg-muted rounded-md animate-pulse"></div>
         </div>
@@ -148,11 +147,9 @@ const ActivityPage = () => {
   }
   
   return (
-    <div className="space-y-4 p-4 md:p-6">
-      <h1 className="text-2xl font-bold">Activity Log</h1>
-      
+    <div className="space-y-3 -mt-2">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
