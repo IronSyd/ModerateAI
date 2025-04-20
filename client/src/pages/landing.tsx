@@ -365,7 +365,9 @@ const LandingPage = () => {
                   <span>Tracking 5 unanswered inquiries/month</span>
                 </li>
               </ul>
-              <Button className="w-full" variant="outline">Get Started Free</Button>
+              <Link href="/auth">
+                <Button className="w-full" variant="outline">Get Started Free</Button>
+              </Link>
             </div>
 
             {/* Basic Plan */}
