@@ -29,7 +29,19 @@ const Header = () => {
     if (location === "/integrations/discord") return "Discord Integration";
     if (location === "/team") return "Team";
     if (location === "/settings") return "Settings";
-    return "ModerateAI";
+    if (location === "/activity") return "Activity Log";
+    
+    // Get the current path without the leading slash
+    const path = location.replace(/^\//, '');
+    // Convert to title case with spaces (e.g., "my-page" becomes "My Page")
+    if (path) {
+      return path
+        .split(/[-/]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    return "";
   };
   
   // Close other menus when opening one
