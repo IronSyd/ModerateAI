@@ -321,245 +321,221 @@ const LandingPage = () => {
           
           <div className="grid md:grid-cols-4 gap-8">
             {/* Free Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm flex flex-col h-full">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Free</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">$0</span>
-                  <span className="text-muted-foreground">/month</span>
-                  <div className="mt-1 text-sm text-green-600 font-medium">Free forever</div>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  Perfect for individuals and testing.
-                </p>
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-semibold mb-2">Free</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">$0</span>
+                <span className="text-muted-foreground">/month</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">Free forever</div>
               </div>
-              <div className="flex-grow">
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Up to 20 AI responses/month</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Basic moderation tools</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>All platform integrations</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>10 response templates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Community chat history for training</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>5 template insights per month</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited collaborator seats</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Tracking 5 unanswered inquiries/month</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-auto">
-                <Button className="w-full" variant="outline">Get Started Free</Button>
-              </div>
+              <p className="text-muted-foreground mb-6">
+                Perfect for individuals and testing.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Up to 20 AI responses/month</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Basic moderation tools</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>All platform integrations</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>10 response templates</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Community chat history for training</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>5 template insights per month</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited collaborator seats</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Tracking 5 unanswered inquiries/month</span>
+                </li>
+              </ul>
+              <Button className="w-full" variant="outline">Get Started Free</Button>
             </div>
 
             {/* Basic Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm flex flex-col h-full">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Basic</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">{isYearly ? '$68' : '$80'}</span>
-                  <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
-                  <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  Perfect for small communities and startups.
-                </p>
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-semibold mb-2">Basic</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">{isYearly ? '$68' : '$80'}</span>
+                <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
-              <div className="flex-grow">
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>150 AI responses/month</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Basic moderation rules</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>All platform integrations</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited response templates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Community chat history for training</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited template insights</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited collaborator seats</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited tracking of unanswered inquiries</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Metrics report</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Access to support team</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-auto">
-                <Button className="w-full">Start Free Trial</Button>
-              </div>
+              <p className="text-muted-foreground mb-6">
+                Perfect for small communities and startups.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>150 AI responses/month</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Basic moderation rules</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>All platform integrations</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited response templates</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Community chat history for training</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited template insights</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited collaborator seats</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited tracking of unanswered inquiries</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Metrics report</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Access to support team</span>
+                </li>
+              </ul>
+              <Button className="w-full">Start Free Trial</Button>
             </div>
             
             {/* Pro Plan */}
-            <div className="bg-card border border-primary rounded-xl p-8 shadow-sm flex flex-col h-full relative">
+            <div className="bg-card border-2 border-primary rounded-xl p-8 shadow-lg relative">
               <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-sm font-medium transform translate-y-[-50%] rounded-full">
                 Most Popular
               </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Pro</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">{isYearly ? '$127' : '$150'}</span>
-                  <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
-                  <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  Ideal for growing communities and businesses.
-                </p>
+              <h3 className="text-xl font-semibold mb-2">Pro</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">{isYearly ? '$127' : '$150'}</span>
+                <span className="text-muted-foreground">{isYearly ? '/month, billed annually' : '/month'}</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
-              <div className="flex-grow">
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>400 AI responses/month</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Advanced moderation tools</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>All platform integrations</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited response templates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Community chat history for training</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited template insights</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited collaborator seats</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited tracking of unanswered inquiries</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Metrics report</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Priority support</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-auto">
-                <Button className="w-full">Start Free Trial</Button>
-              </div>
+              <p className="text-muted-foreground mb-6">
+                Ideal for growing communities and businesses.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>400 AI responses/month</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Advanced moderation tools</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>All platform integrations</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited response templates</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Community chat history for training</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited template insights</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited collaborator seats</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited tracking of unanswered inquiries</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Metrics report</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
+              <Button className="w-full">Start Free Trial</Button>
             </div>
             
             {/* Enterprise Plan */}
-            <div className="bg-card border border-border rounded-xl p-8 shadow-sm flex flex-col h-full">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">Custom</span>
-                  <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  For large organizations with specific needs.
-                </p>
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">Custom</span>
+                <div className="mt-1 text-sm text-green-600 font-medium">14-day free trial included</div>
               </div>
-              <div className="flex-grow">
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited AI responses</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Advanced moderation tools</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>All platform integrations</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited response templates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Community chat history for training</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited template insights</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited collaborator seats</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Unlimited tracking of unanswered inquiries</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Metrics report</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span>Dedicated account manager</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-auto">
-                <Button variant="outline" className="w-full">Contact Sales</Button>
-              </div>
+              <p className="text-muted-foreground mb-6">
+                For large organizations with specific needs.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited AI responses</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Advanced moderation tools</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>All platform integrations</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited response templates</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Community chat history for training</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited template insights</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited collaborator seats</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Unlimited tracking of unanswered inquiries</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Metrics report</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span>Dedicated account manager</span>
+                </li>
+              </ul>
+              <Button variant="outline" className="w-full">Contact Sales</Button>
             </div>
           </div>
         </div>
