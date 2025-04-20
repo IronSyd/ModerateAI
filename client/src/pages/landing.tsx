@@ -333,35 +333,35 @@ const LandingPage = () => {
               </p>
               <ul className="space-y-3 mb-4">
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Up to 20 AI responses/month</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Basic moderation tools</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>All platform integrations</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>10 response templates</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Community chat history for training</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>5 template insights per month</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Unlimited collaborator seats</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Tracking 5 unanswered inquiries/month</span>
                 </li>
               </ul>
@@ -381,43 +381,43 @@ const LandingPage = () => {
               </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>150 AI responses/month</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Basic moderation rules</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>All platform integrations</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Unlimited response templates</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Community chat history for training</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Unlimited template insights</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Unlimited collaborator seats</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Unlimited tracking of unanswered inquiries</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Metrics report</span>
                 </li>
                 <li className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <CheckCircle className="pricing-icon" />
                   <span>Access to support team</span>
                 </li>
               </ul>

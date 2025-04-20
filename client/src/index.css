@@ -11,3 +11,14 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  .pricing-icon {
+    height: 20px !important;
+    width: 20px !important;
+    min-height: 20px !important;
+    min-width: 20px !important;
+    color: #22c55e;
+    margin-right: 0.5rem;
+  }
+}
