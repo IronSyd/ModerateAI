@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import WelcomeBanner from "@/components/dashboard/welcome-banner";
 import SetupSteps from "@/components/dashboard/setup-steps";
@@ -7,21 +7,10 @@ import PlatformIntegrationCard from "@/components/dashboard/platform-integration
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
 import AIConfigurationPreview from "@/components/dashboard/ai-configuration-preview";
 import DemoChatInterface from "@/components/chat/demo-chat-interface";
-import DashboardWrapper from "@/components/layout/dashboard-wrapper";
 import { MessagesSquare, MonitorSmartphone, ShieldAlert, CheckCircle } from "lucide-react";
 
 const Dashboard = () => {
-  // Handle scrolling specifically for the dashboard component
-  useEffect(() => {
-    // Force scroll to top when dashboard mounts
-    forceScrollToTop();
-    
-    // Initialize dashboard scroll behavior with mutation observer
-    const cleanup = initDashboardScroll();
-    
-    // Clean up on unmount
-    return cleanup;
-  }, []);
+  // Scroll handling now done at the App level
 
   // Fetch dashboard stats
   const { data: stats, isLoading: isLoadingStats } = useQuery({
@@ -275,31 +264,8 @@ const Dashboard = () => {
     }));
   };
   
-  // Force-fix dashboard scroll position as a final measure
-  useEffect(() => {
-    // Immediate scroll to top when dashboard renders
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    
-    // Use a more aggressive approach with a slight delay
-    const scrollTimeout = setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      
-      // Try to scroll specifically to our anchor
-      const dashboardTop = document.getElementById('dashboard-top');
-      if (dashboardTop) {
-        dashboardTop.scrollIntoView({ block: 'start', behavior: 'auto' });
-      }
-    }, 50);
-    
-    return () => clearTimeout(scrollTimeout);
-  }, []);
-  
   return (
-    <div className="dashboard-root" id="dashboard-top">
+    <div>
       {/* Welcome Banner with Setup Steps */}
       <WelcomeBanner
         completedSteps={completedSteps}
