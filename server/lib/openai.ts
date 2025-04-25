@@ -268,7 +268,10 @@ Focus on identifying:
 `;
 }
 
-// Main training function that processes multiple conversations
+/**
+ * Processes multiple conversations for training purposes
+ * Used to analyze conversations and generate insights for improving AI responses
+ */
 export async function trainOnConversations(
   conversations: Array<{
     id: number;
@@ -313,7 +316,6 @@ export async function trainOnConversations(
   };
 }
 
-// Function to adapt the system prompt based on training data
 export async function generateImprovedSystemPrompt(
   currentPrompt: string,
   trainingAnalyses: Array<any>
@@ -439,4 +441,76 @@ function calculateTemperature(styleValue: number): number {
   
   // Calculate the adjusted temperature within bounds of 0.5 to 0.9
   return Math.max(0.5, Math.min(0.9, baseTemperature + adjustmentFactor));
+}
+
+/**
+ * Format a conversation into a prompt for analysis
+ */
+function formatConversationPrompt(
+  messages: Array<{ sender: string; content: string }>,
+  platformType: string
+): string {
+  const formattedMessages = messages.map(msg => {
+    const role = msg.sender === 'ai' ? 'AI Assistant' : 'User';
+    return `${role}: ${msg.content}`;
+  }).join('\n\n');
+
+  return `Analyze this conversation from a ${platformType} platform and extract insights for training:
+
+${formattedMessages}
+
+Focus on identifying:
+1. Common patterns in user requests
+2. User intents that were successfully addressed
+3. Effective AI responses that could be reused or adapted in future conversations
+4. Specific suggestions for improving responses to similar queries
+`;
+}
+
+/**
+ * Process a conversation for training purposes
+ */
+async function processConversationForTraining(conversationData: {
+  messages: Array<{ sender: string; content: string }>;
+  platformType: string;
+}) {
+  try {
+    const { messages, platformType } = conversationData;
+    
+    // Format the conversation into a prompt
+    const prompt = formatConversationPrompt(messages, platformType);
+    
+    // Send to OpenAI for analysis
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an AI assistant that analyzes conversation data to extract patterns and learning. " +
+            "Your task is to identify key conversational patterns, helpful responses, and user intents. " +
+            "The result will be used to improve AI responses in future similar conversations. " +
+            "Format your analysis as JSON with the following structure: { 'patterns': [], 'intents': [], 'effectiveResponses': [], 'suggestions': [] }"
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    // Parse and return the analysis
+    const analysisText = response.choices[0].message.content;
+    const analysis = JSON.parse(analysisText);
+
+    return {
+      success: true,
+      analysis,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error("Error analyzing conversation for training:", error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 }
