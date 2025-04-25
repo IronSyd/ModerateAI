@@ -711,7 +711,7 @@ const AIConfiguration = () => {
                 <>
                   {knowledgeBases && knowledgeBases.length > 0 ? (
                     <div className="flex flex-col space-y-3 mb-6">
-                      {knowledgeBases.map((kb) => (
+                      {knowledgeBases.map((kb: KnowledgeBase) => (
                         <div key={kb.id} className="flex items-center justify-between p-3 bg-card rounded-md border">
                           <div className="flex items-center">
                             <FileBadge className="h-5 w-5 text-muted-foreground mr-2" />
