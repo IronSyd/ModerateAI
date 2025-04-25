@@ -186,13 +186,22 @@ const AIConfiguration = () => {
   // Save AI configuration
   const saveMutation = useMutation({
     mutationFn: async (values: AIConfigFormValues) => {
-      if (activeConfig) {
-        return apiRequest("PATCH", `/api/ai-configurations/${activeConfig.id}`, values);
-      } else {
-        return apiRequest("POST", "/api/ai-configurations", values);
+      try {
+        console.log("Attempting to save configuration:", values);
+        if (activeConfig) {
+          console.log(`Updating existing config with ID ${activeConfig.id}`);
+          return await apiRequest("PATCH", `/api/ai-configurations/${activeConfig.id}`, values);
+        } else {
+          console.log("Creating new AI configuration");
+          return await apiRequest("POST", "/api/ai-configurations", values);
+        }
+      } catch (error) {
+        console.error("Error in mutation function:", error);
+        throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Save successful, response:", response);
       queryClient.invalidateQueries({ queryKey: ['/api/ai-configurations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/ai-configurations/active'] });
       toast({
@@ -200,10 +209,13 @@ const AIConfiguration = () => {
         description: "AI configuration saved successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("Save mutation error:", error);
+      // Extract more detailed error info if available
+      const errorMessage = error.message || "Failed to save AI configuration. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to save AI configuration. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
