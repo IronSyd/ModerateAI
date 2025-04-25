@@ -58,7 +58,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, CheckCircle, AlertCircle, Activity, SendHorizontal, Flag } from "lucide-react";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, CheckCircle, AlertCircle, Activity, SendHorizontal, Flag, LogIn } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 import { AuthDialog } from "@/components/auth-dialog";
@@ -365,13 +365,23 @@ const AIConfiguration = () => {
             </p>
           )}
         </div>
-        <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending || !user}>
+        <Button 
+          onClick={user ? form.handleSubmit(onSubmit) : () => setShowAuthDialog(true)} 
+          disabled={saveMutation.isPending}
+        >
           {saveMutation.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : !user ? (
+            <>
+              <LogIn className="mr-2 h-4 w-4" />
+              Login to Save
+            </>
           ) : (
-            <Save className="mr-2 h-4 w-4" />
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </>
           )}
-          Save Changes
         </Button>
       </div>
 
@@ -912,6 +922,13 @@ const AIConfiguration = () => {
           </Card>
         </div>
       </div>
+      
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </div>
   );
 };
