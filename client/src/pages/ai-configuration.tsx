@@ -58,7 +58,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, AlertCircle, Activity } from "lucide-react";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, AlertCircle, Activity, Globe, SendHorizontal } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 
@@ -559,6 +559,22 @@ const AIConfiguration = () => {
                                 <p className="text-sm text-muted-foreground mb-4">
                                   Please set up a platform integration first
                                 </p>
+                                <div className="flex justify-center gap-3">
+                                  <Button 
+                                    variant="outline" 
+                                    onClick={() => window.location.href = "/integrations/website"}
+                                  >
+                                    <Globe className="h-4 w-4 mr-2" />
+                                    Website Integration
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    onClick={() => window.location.href = "/integrations/telegram"}
+                                  >
+                                    <SendHorizontal className="h-4 w-4 mr-2" />
+                                    Telegram Integration
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </div>
