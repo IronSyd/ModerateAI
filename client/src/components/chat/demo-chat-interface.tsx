@@ -66,19 +66,14 @@ const DemoChatInterface = () => {
     forceScrollToBottom();
   }, []);
   
-  // Extremely aggressive scrolling implementation that uses multiple techniques
+  // Contained scrolling implementation that uses a ref to target only the chat container
   const forceScrollToBottom = () => {
     // Schedule multiple scroll attempts with increasing delays
     [0, 50, 100, 300, 500].forEach(delay => {
       setTimeout(() => {
-        const chatContainer = document.querySelector('.demo-chat-messages-container');
-        if (chatContainer) {
-          // Direct DOM method
-          chatContainer.scrollTop = 999999;
-        }
-        
+        // Only use the messagesEndRef to scroll, which is scoped to this component
         if (messagesEndRef.current) {
-          // Force scroll with scrollIntoView - this is the most reliable method
+          // Force scroll with scrollIntoView - this will only affect the chat container
           messagesEndRef.current.scrollIntoView({
             behavior: 'auto',
             block: 'end'
@@ -368,7 +363,7 @@ const DemoChatInterface = () => {
       </div>
       
       {/* Chat Messages - improved with better scrolling support */}
-      <div className="demo-chat-messages-container flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
+      <div className="demo-chat-messages-container website-chat-widget-container flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth scrollbar scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent scrollbar-thumb-rounded-full">
         {messages.map((message) => (
           <div 
             key={message.id} 
