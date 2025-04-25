@@ -765,7 +765,7 @@ const AIConfiguration = () => {
                     }}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Documents
+                    Add Knowledge Content
                   </Button>
                   <Button 
                     variant="outline" 
