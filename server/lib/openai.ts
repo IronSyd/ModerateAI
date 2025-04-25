@@ -1,228 +1,376 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
-import { KnowledgeDocument } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "sk-demo-key" });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Generate AI response to user message
+/**
+ * Generate an AI response based on a message and conversation history
+ */
 export async function generateAIResponse(
-  userMessage: string,
-  conversationHistory: { role: string, content: string }[],
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }>,
   systemPrompt: string,
-  responseStyle: number,
-  responseLength: number
+  responseStyle: number = 50,
+  responseLength: number = 50,
 ): Promise<string> {
   try {
-    // Build system prompt based on configuration
-    let fullSystemPrompt = systemPrompt || "You are a helpful customer support assistant.";
+    console.log(`[generateAIResponse] Generating response for message: "${message.substring(0, 50)}..."`);
     
-    // Adjust tone based on response style (0-100)
-    if (responseStyle <= 25) {
-      fullSystemPrompt += " Your tone is formal and professional.";
-    } else if (responseStyle <= 50) {
-      fullSystemPrompt += " Your tone is professional yet approachable.";
-    } else if (responseStyle <= 75) {
-      fullSystemPrompt += " Your tone is friendly and helpful.";
-    } else {
-      fullSystemPrompt += " Your tone is very friendly, casual and conversational.";
-    }
+    // Convert conversation history to OpenAI format
+    const formattedHistory = conversationHistory.map(msg => ({
+      role: msg.role === "ai" ? "assistant" : "user",
+      content: msg.content
+    }));
     
-    // Adjust length based on responseLength (0-100)
-    if (responseLength <= 25) {
-      fullSystemPrompt += " Keep your responses extremely concise and to the point.";
-    } else if (responseLength <= 50) {
-      fullSystemPrompt += " Keep your responses concise.";
-    } else if (responseLength <= 75) {
-      fullSystemPrompt += " Provide moderately detailed responses.";
-    } else {
-      fullSystemPrompt += " Provide comprehensive, detailed responses.";
-    }
+    // Apply response style to system prompt
+    const styledPrompt = applyResponseStyle(systemPrompt, responseStyle);
     
-    // Create complete message history
+    // Create the messages array
     const messages = [
-      { role: "system", content: fullSystemPrompt },
-      ...conversationHistory,
-      { role: "user", content: userMessage }
+      { role: "system", content: styledPrompt },
+      ...formattedHistory,
+      { role: "user", content: message }
     ];
     
+    // Get response from OpenAI
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: messages as any,
-      max_tokens: 500
+      max_tokens: calculateMaxTokens(responseLength),
+      temperature: calculateTemperature(responseStyle)
     });
     
-    return response.choices[0].message.content || "I'm sorry, I couldn't generate a response.";
-  } catch (error: any) {
+    return response.choices[0].message.content || "I apologize, but I couldn't generate a response at this time.";
+  } catch (error) {
     console.error("Error generating AI response:", error);
-    
-    // More specific error message for rate limit issues
-    if (error.status === 429) {
-      throw error; // Re-throw to let the calling code handle it with appropriate status
-    }
-    
-    return "I'm sorry, there was an error processing your request. Please try again later.";
+    throw error;
   }
 }
 
-// Generate AI response to user message with knowledge base support
+/**
+ * Generate an AI response with consideration of knowledge base documents
+ */
 export async function generateKnowledgeBasedResponse(
-  userMessage: string, 
-  conversationHistory: { role: string, content: string }[], 
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }>,
   systemPrompt: string,
-  responseStyle: number, 
-  responseLength: number
+  responseStyle: number = 50,
+  responseLength: number = 50,
 ): Promise<string> {
   try {
-    console.log(`[generateKnowledgeBasedResponse] Processing query: "${userMessage}"`);
+    console.log(`[generateKnowledgeBasedResponse] Processing query: "${message.substring(0, 50)}..."`);
     
-    // Extract keywords from the query for better retrieval
-    const keywords = userMessage.toLowerCase()
-      .replace(/[^\w\s]/g, '')
-      .split(/\s+/)
-      .filter(word => 
-        word.length > 3 && 
-        !['what', 'when', 'where', 'which', 'there', 'their', 'about', 'would'].includes(word)
-      );
+    // First, retrieve relevant documents from knowledge base using semantic search
+    // This could be implemented with embeddings, but for simplicity we'll use keywords
+    const keywords = extractKeywords(message);
+    
+    // For demo purposes, just use the default knowledge base if any
+    const knowledgeBases = await storage.getAllKnowledgeBases();
+    const knowledgeBase = knowledgeBases.find(kb => kb.isActive) || knowledgeBases[0];
+    
+    let relevantDocuments: Array<{ title: string; content: string }> = [];
+    
+    if (knowledgeBase) {
+      // Get documents from the knowledge base
+      const documents = await storage.getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBase.id);
       
-    console.log(`[generateKnowledgeBasedResponse] Extracted keywords: ${keywords.join(', ')}`);
-    
-    // Search for relevant knowledge documents
-    let relevantDocs = await storage.searchKnowledgeDocuments(userMessage);
-    
-    // Try searching with just keywords if no results
-    if (relevantDocs.length === 0 && keywords.length > 0) {
-      console.log(`[generateKnowledgeBasedResponse] No results with full query, trying keywords...`);
-      relevantDocs = await storage.searchKnowledgeDocuments(keywords.join(' '));
+      // Search for relevant documents
+      relevantDocuments = documents
+        .map(doc => {
+          // Simple relevance scoring
+          const titleMatches = keywords.filter(kw => doc.title.toLowerCase().includes(kw.toLowerCase())).length;
+          const contentMatches = keywords.filter(kw => doc.content.toLowerCase().includes(kw.toLowerCase())).length;
+          const score = titleMatches * 2 + contentMatches;
+          
+          return { doc, score };
+        })
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3) // Top 3 most relevant documents
+        .map(item => ({ title: item.doc.title, content: item.doc.content }));
     }
     
-    // Log for debugging
-    console.log(`[generateKnowledgeBasedResponse] Found ${relevantDocs.length} relevant documents`);
-    if (relevantDocs.length > 0) {
-      console.log(`[generateKnowledgeBasedResponse] Most relevant document: "${relevantDocs[0].title}"`);
+    // Convert conversation history to OpenAI format
+    const formattedHistory = conversationHistory.map(msg => ({
+      role: msg.role === "ai" ? "assistant" : "user",
+      content: msg.content
+    }));
+    
+    // Apply response style to system prompt
+    const styledPrompt = applyResponseStyle(systemPrompt, responseStyle);
+    
+    // Add knowledge context to system prompt if available
+    let enhancedPrompt = styledPrompt;
+    if (relevantDocuments.length > 0) {
+      enhancedPrompt += "\n\nRelevant information from knowledge base:";
+      relevantDocuments.forEach((doc, index) => {
+        enhancedPrompt += `\n\nDocument ${index + 1} - ${doc.title}:\n${doc.content.substring(0, 500)}`;
+      });
+      enhancedPrompt += "\n\nPlease use this information when relevant to answer the user's question.";
     }
     
-    // Build context information from knowledge documents
-    let knowledgeContext = "";
-    if (relevantDocs.length > 0) {
-      knowledgeContext = "### KNOWLEDGE BASE INFORMATION ###\n";
-      knowledgeContext += "INSTRUCTION: Base your answers ONLY on the following information from our knowledge base.\n";
-      knowledgeContext += "If the information doesn't contain the answer, say you don't have that specific information rather than making up an answer.\n\n";
-      
-      // Use up to 3 most relevant documents to keep context manageable
-      for (let i = 0; i < Math.min(3, relevantDocs.length); i++) {
-        const doc = relevantDocs[i];
-        knowledgeContext += `### DOCUMENT ${i+1}: ${doc.title} ###\n${doc.content}\n\n`;
-        console.log(`[generateKnowledgeBasedResponse] Using document: "${doc.title}"`);
-      }
-      
-      knowledgeContext += "### END OF KNOWLEDGE BASE INFORMATION ###\n\n";
-    }
-    
-    // Build system prompt based on configuration
-    let fullSystemPrompt = systemPrompt || "You are a helpful customer support assistant.";
-    
-    // Add knowledge context if available
-    if (knowledgeContext) {
-      console.log(`[generateKnowledgeBasedResponse] Adding knowledge context with length: ${knowledgeContext.length}`);
-      
-      // Make knowledge context more prominent by putting it at the beginning
-      fullSystemPrompt = knowledgeContext + "\n\n" + fullSystemPrompt;
-      
-      // Add explicit instruction to use knowledge
-      fullSystemPrompt += "\n\nIMPORTANT: Base your answers ONLY on the knowledge base documents provided above. If you can't find an answer in the documents, say 'I don't have specific information about that in my knowledge base' rather than making up an answer.";
-    } else {
-      console.log(`[generateKnowledgeBasedResponse] No knowledge context available`);
-    }
-    
-    // Adjust tone based on response style (0-100)
-    if (responseStyle <= 25) {
-      fullSystemPrompt += " Your tone is formal and professional.";
-    } else if (responseStyle <= 50) {
-      fullSystemPrompt += " Your tone is professional yet approachable.";
-    } else if (responseStyle <= 75) {
-      fullSystemPrompt += " Your tone is friendly and helpful.";
-    } else {
-      fullSystemPrompt += " Your tone is very friendly, casual and conversational.";
-    }
-    
-    // Adjust length based on responseLength (0-100)
-    if (responseLength <= 25) {
-      fullSystemPrompt += " Keep your responses extremely concise and to the point.";
-    } else if (responseLength <= 50) {
-      fullSystemPrompt += " Keep your responses concise.";
-    } else if (responseLength <= 75) {
-      fullSystemPrompt += " Provide moderately detailed responses.";
-    } else {
-      fullSystemPrompt += " Provide comprehensive, detailed responses.";
-    }
-    
-    // We've already added instructions for using knowledge at the end of the context setup
-    // No need for additional instructions here
-    
-    // Create complete message history
+    // Create the messages array
     const messages = [
-      { role: "system", content: fullSystemPrompt },
-      ...conversationHistory,
-      { role: "user", content: userMessage }
+      { role: "system", content: enhancedPrompt },
+      ...formattedHistory,
+      { role: "user", content: message }
     ];
     
+    // Get response from OpenAI
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: messages as any,
-      max_tokens: 500
+      max_tokens: calculateMaxTokens(responseLength),
+      temperature: calculateTemperature(responseStyle)
     });
     
-    return response.choices[0].message.content || "I'm sorry, I couldn't generate a response.";
-  } catch (error: any) {
-    console.error("Error generating knowledge-based AI response:", error);
-    
-    // More specific error message for rate limit issues
-    if (error.status === 429) {
-      throw error; // Re-throw to let the calling code handle it with appropriate status
-    }
-    
-    // If there's an error accessing knowledge base, fall back to regular response
-    return generateAIResponse(userMessage, conversationHistory, systemPrompt, responseStyle, responseLength);
+    return response.choices[0].message.content || "I apologize, but I couldn't generate a response at this time.";
+  } catch (error) {
+    console.error("Error generating knowledge-based response:", error);
+    throw error;
   }
 }
 
-// Moderate content
+/**
+ * Moderate content and flag if it violates policies
+ */
 export async function moderateContent(
-  content: string,
-  strictnessLevel: number
-): Promise<{ flagged: boolean; categories: any; reason?: string }> {
+  content: string, 
+  strictnessLevel: number = 50
+): Promise<{
+  flagged: boolean;
+  reason: string | null;
+  categories: Record<string, boolean>;
+  scores: Record<string, number>;
+}> {
   try {
-    const response = await openai.moderations.create({
+    console.log(`[moderateContent] Moderating content with strictness level ${strictnessLevel}`);
+    
+    // Use OpenAI's moderation endpoint
+    const moderationResponse = await openai.moderations.create({
       input: content
     });
     
-    const result = response.results[0];
+    const result = moderationResponse.results[0];
+    const categories = result.categories;
+    const scores = result.category_scores;
     
-    // Make moderation more or less strict based on strictnessLevel
-    // Lower threshold means more content gets flagged (stricter)
-    const threshold = 1 - (strictnessLevel / 100);
+    // Adjust flagging threshold based on strictness level (0-100)
+    // Lower strictness level = higher threshold (more permissive)
+    // Higher strictness level = lower threshold (more strict)
+    const baseThreshold = 0.8; // Default threshold for moderate strictness (50)
+    const adjustedThreshold = baseThreshold - (strictnessLevel - 50) / 100;
     
-    // Check if any category exceeds our threshold
-    const flagged = Object.values(result.category_scores).some(score => score > threshold);
+    // Find the highest score and its category
+    let highestCategory = "";
+    let highestScore = 0;
     
-    // Find reason if flagged
-    let reason = undefined;
-    if (flagged) {
-      const highestCategory = Object.entries(result.category_scores)
-        .sort((a, b) => b[1] - a[1])[0];
-      
-      reason = `Content potentially violates ${highestCategory[0].replace(/_/g, ' ')} policy`;
+    Object.entries(scores).forEach(([category, score]) => {
+      if (score > highestScore) {
+        highestScore = score;
+        highestCategory = category;
+      }
+    });
+    
+    // Check if content should be flagged based on adjusted threshold
+    const shouldFlag = result.flagged || highestScore > adjustedThreshold;
+    
+    // Format the reason
+    let reason = null;
+    if (shouldFlag) {
+      reason = `Content flagged for ${highestCategory.replace('/', ' ')} with score ${highestScore.toFixed(2)}`;
     }
     
     return {
-      flagged: flagged,
-      categories: result.categories as any,
-      reason
+      flagged: shouldFlag,
+      reason,
+      categories,
+      scores
     };
   } catch (error) {
     console.error("Error moderating content:", error);
-    // Default to not flagging if there's an error
-    return { flagged: false, categories: {} };
+    // Default to flagging in case of error
+    return {
+      flagged: true,
+      reason: "Error occurred during moderation",
+      categories: {},
+      scores: {}
+    };
+  }
+}
+
+// Function to process a batch of messages for training
+export async function processConversationForTraining(conversationData: {
+  messages: Array<{ sender: string; content: string }>;
+  platformType: string;
+}) {
+  try {
+    const { messages, platformType } = conversationData;
+    
+    // Format the conversation into a prompt
+    const prompt = formatConversationPrompt(messages, platformType);
+    
+    // Send to OpenAI for analysis
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "You are an AI assistant that analyzes conversation data to extract patterns and learning. " +
+            "Your task is to identify key conversational patterns, helpful responses, and user intents. " +
+            "The result will be used to improve AI responses in future similar conversations. " +
+            "Format your analysis as JSON with the following structure: { 'patterns': [], 'intents': [], 'effectiveResponses': [], 'suggestions': [] }"
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    // Parse and return the analysis
+    const analysisText = response.choices[0].message.content;
+    const analysis = JSON.parse(analysisText);
+
+    return {
+      success: true,
+      analysis,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error("Error analyzing conversation for training:", error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Format the conversation into a prompt for the AI
+function formatConversationPrompt(
+  messages: Array<{ sender: string; content: string }>,
+  platformType: string
+): string {
+  const formattedMessages = messages.map(msg => {
+    const role = msg.sender === 'ai' ? 'AI Assistant' : 'User';
+    return `${role}: ${msg.content}`;
+  }).join('\n\n');
+
+  return `Analyze this conversation from a ${platformType} platform and extract insights for training:
+
+${formattedMessages}
+
+Focus on identifying:
+1. Common patterns in user requests
+2. User intents that were successfully addressed
+3. Effective AI responses that could be reused or adapted in future conversations
+4. Specific suggestions for improving responses to similar queries
+`;
+}
+
+// Main training function that processes multiple conversations
+export async function trainOnConversations(
+  conversations: Array<{
+    id: number;
+    messages: Array<{ sender: string; content: string }>;
+    platformType: string;
+  }>
+) {
+  const results = [];
+  let processedCount = 0;
+  
+  for (const conversation of conversations) {
+    try {
+      const result = await processConversationForTraining({
+        messages: conversation.messages,
+        platformType: conversation.platformType
+      });
+      
+      results.push({
+        conversationId: conversation.id,
+        success: result.success,
+        analysis: result.success ? result.analysis : null,
+        error: !result.success ? result.error : null
+      });
+      
+      processedCount++;
+      
+      // Sleep briefly to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.error(`Error processing conversation ${conversation.id}:`, error);
+      results.push({
+        conversationId: conversation.id,
+        success: false,
+        error: error.message
+      });
+    }
+  }
+  
+  return {
+    processedCount,
+    results
+  };
+}
+
+// Function to adapt the system prompt based on training data
+export async function generateImprovedSystemPrompt(
+  currentPrompt: string,
+  trainingAnalyses: Array<any>
+) {
+  try {
+    // Extract and compile insights from training analyses
+    const patterns = trainingAnalyses.flatMap(analysis => analysis.patterns || []);
+    const intents = trainingAnalyses.flatMap(analysis => analysis.intents || []);
+    const effectiveResponses = trainingAnalyses.flatMap(analysis => analysis.effectiveResponses || []);
+    const suggestions = trainingAnalyses.flatMap(analysis => analysis.suggestions || []);
+    
+    // Create a summary of insights for the AI
+    const insightsSummary = JSON.stringify({
+      patterns,
+      intents,
+      effectiveResponses,
+      suggestions
+    }, null, 2);
+    
+    // Generate improved prompt
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert AI prompt engineer who can improve system prompts based on conversation analysis."
+        },
+        {
+          role: "user",
+          content: `Here is the current system prompt for our AI assistant:
+
+"${currentPrompt}"
+
+Based on analysis of conversations, here are the insights we've gathered:
+${insightsSummary}
+
+Please generate an improved system prompt that incorporates these insights. The prompt should:
+1. Maintain the original purpose and tone
+2. Add specific guidance based on the patterns and intents identified
+3. Include examples of effective responses
+4. Address the suggestions for improvement
+5. Be clear, concise, and focused
+
+Return only the improved prompt text, without quotes or additional commentary.`
+        }
+      ]
+    });
+    
+    return {
+      success: true,
+      improvedPrompt: response.choices[0].message.content.trim()
+    };
+  } catch (error) {
+    console.error("Error generating improved system prompt:", error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }

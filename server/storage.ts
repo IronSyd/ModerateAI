@@ -130,6 +130,7 @@ export class MemStorage implements IStorage {
     this.knowledgeBaseIdCounter = 1;
     this.knowledgeDocumentIdCounter = 1;
     this.moderationActionIdCounter = 1;
+    this.conversationTrainingIdCounter = 1;
 
     // Initialize with demo data
     this.initializeDemoData();
@@ -557,6 +558,59 @@ export class MemStorage implements IStorage {
     };
     this.moderationActions.set(id, newModerationAction);
     return newModerationAction;
+  }
+  
+  // Conversation Training operations
+  async getConversationTraining(id: number): Promise<ConversationTraining | undefined> {
+    return this.conversationTrainings.get(id);
+  }
+
+  async getConversationTrainingsByUserId(userId: number): Promise<ConversationTraining[]> {
+    return Array.from(this.conversationTrainings.values())
+      .filter(training => training.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+
+  async getConversationTrainingsByPlatformId(platformId: number): Promise<ConversationTraining[]> {
+    return Array.from(this.conversationTrainings.values())
+      .filter(training => training.platformId === platformId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+
+  async getLatestConversationTraining(userId: number, platformId: number): Promise<ConversationTraining | undefined> {
+    return Array.from(this.conversationTrainings.values())
+      .filter(training => training.userId === userId && training.platformId === platformId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]; // Most recent first
+  }
+
+  async createConversationTraining(training: InsertConversationTraining): Promise<ConversationTraining> {
+    const id = this.conversationTrainingIdCounter++;
+    const now = new Date();
+    const newTraining: ConversationTraining = {
+      ...training,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      processedConversations: 0,
+      completedAt: null,
+      lastTrainedConversationId: null,
+      errorMessage: null
+    };
+    this.conversationTrainings.set(id, newTraining);
+    return newTraining;
+  }
+
+  async updateConversationTraining(id: number, updates: Partial<ConversationTraining>): Promise<ConversationTraining | undefined> {
+    const existingTraining = this.conversationTrainings.get(id);
+    if (!existingTraining) return undefined;
+    
+    const updatedTraining = {
+      ...existingTraining,
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.conversationTrainings.set(id, updatedTraining);
+    return updatedTraining;
   }
 
   // Analytics operations
@@ -1002,6 +1056,58 @@ export class DatabaseStorage implements IStorage {
   async createModerationAction(action: InsertModerationAction): Promise<ModerationAction> {
     const [newAction] = await db.insert(moderationActions).values(action).returning();
     return newAction;
+  }
+
+  // Conversation Training operations
+  async getConversationTraining(id: number): Promise<ConversationTraining | undefined> {
+    const [training] = await db.select().from(conversationTrainings).where(eq(conversationTrainings.id, id));
+    return training;
+  }
+
+  async getConversationTrainingsByUserId(userId: number): Promise<ConversationTraining[]> {
+    return await db.select().from(conversationTrainings)
+      .where(eq(conversationTrainings.userId, userId))
+      .orderBy(desc(conversationTrainings.createdAt));
+  }
+
+  async getConversationTrainingsByPlatformId(platformId: number): Promise<ConversationTraining[]> {
+    return await db.select().from(conversationTrainings)
+      .where(eq(conversationTrainings.platformId, platformId))
+      .orderBy(desc(conversationTrainings.createdAt));
+  }
+
+  async getLatestConversationTraining(userId: number, platformId: number): Promise<ConversationTraining | undefined> {
+    const [training] = await db.select().from(conversationTrainings)
+      .where(and(
+        eq(conversationTrainings.userId, userId),
+        eq(conversationTrainings.platformId, platformId)
+      ))
+      .orderBy(desc(conversationTrainings.createdAt))
+      .limit(1);
+    return training;
+  }
+
+  async createConversationTraining(training: InsertConversationTraining): Promise<ConversationTraining> {
+    const now = new Date();
+    const [newTraining] = await db.insert(conversationTrainings)
+      .values({
+        ...training,
+        processedConversations: 0,
+        updatedAt: now
+      })
+      .returning();
+    return newTraining;
+  }
+
+  async updateConversationTraining(id: number, updates: Partial<ConversationTraining>): Promise<ConversationTraining | undefined> {
+    const [updatedTraining] = await db.update(conversationTrainings)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(conversationTrainings.id, id))
+      .returning();
+    return updatedTraining;
   }
 
   // Analytics operations
