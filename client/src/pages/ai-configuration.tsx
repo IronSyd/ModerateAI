@@ -61,6 +61,7 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, CheckCircle, AlertCircle, Activity, SendHorizontal, Flag } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
+import { AuthDialog } from "@/components/auth-dialog";
 
 // Define form schema
 const aiConfigFormSchema = z.object({
@@ -221,6 +222,10 @@ const AIConfiguration = () => {
     },
   });
 
+  // State for auth dialog
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState<AIConfigFormValues | null>(null);
+  
   // Handle form submission
   const onSubmit = (values: AIConfigFormValues) => {
     console.log("Submitting form with values:", values);
@@ -228,15 +233,20 @@ const AIConfiguration = () => {
     
     // Check authentication
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to save AI configuration.",
-        variant: "destructive",
-      });
+      setPendingFormValues(values);
+      setShowAuthDialog(true);
       return;
     }
     
     saveMutation.mutate(values);
+  };
+  
+  // Handle successful login
+  const handleLoginSuccess = () => {
+    if (pendingFormValues) {
+      saveMutation.mutate(pendingFormValues);
+      setPendingFormValues(null);
+    }
   };
   
   // Start a new training
