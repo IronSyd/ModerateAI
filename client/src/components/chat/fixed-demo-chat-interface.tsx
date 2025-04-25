@@ -45,7 +45,6 @@ const DemoChatInterface = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Hide suggestions after user starts chatting
   useEffect(() => {
@@ -54,6 +53,7 @@ const DemoChatInterface = () => {
     }
   }, [messages.length]);
   
+  // Create a ref for the chat container to control scrolling
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   // Scroll to bottom of chat - defined as useCallback to prevent recreation on every render
@@ -83,7 +83,9 @@ const DemoChatInterface = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendButtonClick();
+      if (inputMessage.trim()) {
+        handleSendMessage();
+      }
     }
   };
   
@@ -246,29 +248,16 @@ const DemoChatInterface = () => {
     } else if (input.includes("features") || input.includes("capabilities") || input.includes("functions") || input.includes("what") || input.includes("do")) {
       return "ModerateAI offers multi-platform integration, intelligent content moderation, customizable AI configurations, and comprehensive analytics. Is there a specific feature you'd like to know more about?";
     } else if (input.includes("free") || input.includes("trial") || input.includes("demo") || input.includes("test") || input.includes("try")) {
-      return "Yes, we offer a 14-day free trial with full access to all features. You don't need a credit card to get started. Would you like me to help you set up your free trial?";
-    } else if (input.includes("moderation") || input.includes("moderate") || input.includes("filter") || input.includes("content") || input.includes("inappropriate") || input.includes("discord server")) {
-      return "Our moderation system uses AI to detect and filter inappropriate content across all your platforms. You can set different moderation levels (Relaxed, Balanced, or Strict) and customize which types of content to flag or block (profanity, harassment, adult content, etc.). For Discord specifically, our bot can automatically delete violating messages, warn users, or even time them out based on your custom settings. The system learns from your moderation actions to improve over time.";
-    } else if (input.includes("support") || input.includes("help") || input.includes("assistance") || input.includes("customer") || input.includes("complex")) {
-      return "ModerateAI streamlines customer support by automatically handling common questions and routing complex issues to your team. For complex questions, our AI evaluates the query and can either provide a comprehensive answer using your knowledge base or create a support ticket and assign it to the appropriate team member. It can also follow up with users after their issues are resolved to gather feedback and continuously improve.";
-    } else if (input.includes("platform") || input.includes("website") || input.includes("discord") || input.includes("telegram") || input.includes("about") || input.includes("this")) {
-      return "ModerateAI is a powerful SaaS platform designed for AI-powered customer support and community moderation across various digital channels. Key features include multi-platform support for websites, Telegram, and Discord; intelligent, AI-powered responses using OpenAI technology; and automatic content filtering and moderation based on customizable settings. Additionally, it offers knowledge base integration and an analytics dashboard to track conversations, response rates, and moderation actions.";
-    } else if (input.includes("report") || input.includes("data") || input.includes("performance")) {
-      return "Our comprehensive analytics dashboard provides insights into conversation volume, response times, common topics, and moderation actions. You can track metrics such as average response time, user satisfaction ratings, most common user questions, and moderation efficiency across all platforms. The analytics also identify trending topics, helping you detect emerging issues before they become widespread. All data can be exported to CSV or integrated with popular business intelligence tools.";
-    } else if (input.includes("kb") || input.includes("knowledge") || input.includes("information")) {
-      return "You can create customized knowledge bases for your product by uploading documents, FAQs, manuals, or even website content. Our AI automatically indexes and analyzes this content to extract key information. When a user asks a question, the AI searches your knowledge base for the most relevant information. You can create multiple knowledge bases for different products or services, and our system will learn which sources to prioritize based on user interactions.";
-    } else if (input.includes("multilingual") || input.includes("translate")) {
-      return "Yes, ModerateAI supports over 30 languages! Our AI can detect the language being used and respond in the same language. This works across all platforms - website, Discord, and Telegram. You can set preferred languages for each platform or let the system automatically adapt. The moderation system also works in multiple languages, detecting inappropriate content regardless of the language used.";
-    } else if (input.includes("detect") || input.includes("types of inappropriate") || input.includes("inappropriate content")) {
-      return "ModerateAI can detect a wide range of inappropriate content including profanity, hate speech, harassment, threats, adult content, discrimination, personal information exposure, and potentially harmful links. Our advanced AI evaluates text in context, understanding nuance and intent rather than just flagging keywords. Each category has customizable severity thresholds, so you can adjust moderation based on your community standards and audience.";
+      return "Yes, we offer a free tier that lets you experience the core features with moderate usage limits. It includes one platform integration, basic moderation rules, and our standard AI responses. You can upgrade anytime as your needs grow. Would you like to learn more about our paid plans?";
+    } else if (input.includes("documentation") || input.includes("docs") || input.includes("guide") || input.includes("help") || input.includes("tutorial")) {
+      return "Our documentation is comprehensive and includes step-by-step guides, video tutorials, and API references. You'll find platform-specific integration guides, best practices for AI training, and sample configurations. Our support team also offers free onboarding calls for all paid plans to help you get started.";
+    } else if (input.includes("difference") || input.includes("compare") || input.includes("versus") || input.includes("vs") || input.includes("better than")) {
+      return "What sets ModerateAI apart is our seamless multi-platform integration, advanced AI customization options, and specialized focus on both customer support and content moderation in a single solution. Many competitors offer either support OR moderation tools, but we combine both with powerful customization options at a more competitive price point.";
     }
     
     // Catch-all response for unrecognized queries
     return "Thanks for your question about " + userInput + ". ModerateAI helps businesses manage customer communications and community content across multiple platforms with AI-powered responses and content moderation. Would you like to know more about our features, pricing, or platform integrations?";
   };
-  // Removed duplicate handleKeyDown function
-  
-  // Removed duplicate handleSendButtonClick function
   
   return (
     <div className="bg-card rounded-lg shadow-sm border border-border flex flex-col h-[500px]">
@@ -442,9 +431,6 @@ const DemoChatInterface = () => {
             </div>
           </div>
         )}
-        
-        {/* Empty div for scrolling to bottom */}
-        <div ref={messagesEndRef} />
       </div>
       
       {/* Chat Input */}

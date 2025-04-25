@@ -6,7 +6,7 @@ import StatsCard from "@/components/dashboard/stats-card";
 import PlatformIntegrationCard from "@/components/dashboard/platform-integration-card";
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
 import AIConfigurationPreview from "@/components/dashboard/ai-configuration-preview";
-import DemoChatInterface from "@/components/chat/demo-chat-interface";
+import DemoChatInterface from "@/components/chat/fixed-demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, ShieldAlert, CheckCircle } from "lucide-react";
 
 const Dashboard = () => {
