@@ -10,7 +10,8 @@ import {
   SendHorizontal, 
   MessageSquareMore,
   Users,
-  Settings as SettingsCog
+  Settings as SettingsCog,
+  Activity
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useMobile } from "@/hooks/use-mobile";
@@ -36,6 +37,11 @@ const mainItems: SidebarItem[] = [
     icon: <SettingsIcon className="h-5 w-5 mr-3" />,
     label: "AI Configuration",
     path: "/ai-configuration"
+  },
+  {
+    icon: <Activity className="h-5 w-5 mr-3" />,
+    label: "Train AI",
+    path: "/train-ai"
   },
   {
     icon: <Clipboard className="h-5 w-5 mr-3" />,
