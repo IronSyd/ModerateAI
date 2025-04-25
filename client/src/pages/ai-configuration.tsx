@@ -58,7 +58,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, AlertCircle, Activity, SendHorizontal } from "lucide-react";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, CheckCircle, AlertCircle, Activity, SendHorizontal, Flag } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 
@@ -312,8 +312,38 @@ const AIConfiguration = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-6">
-        <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending}>
+      {!user && (
+        <Card className="mb-6 border-yellow-200 bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2 text-yellow-500" />
+              <div>
+                <h3 className="font-medium">Authentication Required</h3>
+                <p className="text-sm text-muted-foreground">
+                  Please log in to save configuration changes and access all features.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          {saveMutation.isError && (
+            <p className="text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 inline mr-1" />
+              Error saving configuration
+            </p>
+          )}
+          {saveMutation.isSuccess && (
+            <p className="text-sm text-green-600">
+              <CheckCircle className="h-4 w-4 inline mr-1" />
+              Configuration saved successfully
+            </p>
+          )}
+        </div>
+        <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending || !user}>
           {saveMutation.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
