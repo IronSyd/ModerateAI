@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -89,6 +89,10 @@ export const aiConfigurations = pgTable("ai_configurations", {
   isActive: boolean("is_active").notNull().default(true),
   model: text("model").notNull().default("gpt-4o"),
   systemPrompt: text("system_prompt"),
+  enableProactiveResponses: boolean("enable_proactive_responses").default(false),
+  enableConversationMemory: boolean("enable_conversation_memory").default(true),
+  enableSentimentAnalysis: boolean("enable_sentiment_analysis").default(true),
+  enableConversationTraining: boolean("enable_conversation_training").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -162,11 +166,36 @@ export const insertModerationActionSchema = createInsertSchema(moderationActions
   automatic: true,
 });
 
+// Conversation Training table - tracks AI training on conversation data
+export const conversationTrainings = pgTable("conversation_trainings", {
+  id: serial("id").primaryKey(),
+  platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed, failed
+  totalConversations: integer("total_conversations").notNull().default(0),
+  processedConversations: integer("processed_conversations").notNull().default(0),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  lastTrainedConversationId: integer("last_trained_conversation_id"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertConversationTrainingSchema = createInsertSchema(conversationTrainings).pick({
+  platformId: true,
+  userId: true,
+  status: true,
+  totalConversations: true,
+  startedAt: true,
+});
+
 // Define relations
 export const usersRelations = relations(users, ({ many }) => ({
   platforms: many(platforms),
   aiConfigurations: many(aiConfigurations),
-  knowledgeBases: many(knowledgeBases)
+  knowledgeBases: many(knowledgeBases),
+  conversationTrainings: many(conversationTrainings)
 }));
 
 export const platformsRelations = relations(platforms, ({ one, many }) => ({
@@ -175,7 +204,8 @@ export const platformsRelations = relations(platforms, ({ one, many }) => ({
     references: [users.id]
   }),
   conversations: many(conversations),
-  moderationActions: many(moderationActions)
+  moderationActions: many(moderationActions),
+  conversationTrainings: many(conversationTrainings)
 }));
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
