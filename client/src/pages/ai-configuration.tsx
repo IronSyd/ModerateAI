@@ -211,6 +211,19 @@ const AIConfiguration = () => {
 
   // Handle form submission
   const onSubmit = (values: AIConfigFormValues) => {
+    console.log("Submitting form with values:", values);
+    console.log("Form state:", form.formState);
+    
+    // Check authentication
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to save AI configuration.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     saveMutation.mutate(values);
   };
   
