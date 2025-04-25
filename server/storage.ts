@@ -7,7 +7,8 @@ import {
   KnowledgeBase, InsertKnowledgeBase,
   KnowledgeDocument, InsertKnowledgeDocument,
   ModerationAction, InsertModerationAction,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions
+  ConversationTraining, InsertConversationTraining,
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions, conversationTrainings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
@@ -68,6 +69,14 @@ export interface IStorage {
   getModerationActionsByConversationId(conversationId: number): Promise<ModerationAction[]>;
   createModerationAction(moderationAction: InsertModerationAction): Promise<ModerationAction>;
 
+  // Conversation Training operations
+  getConversationTraining(id: number): Promise<ConversationTraining | undefined>;
+  getConversationTrainingsByUserId(userId: number): Promise<ConversationTraining[]>;
+  getConversationTrainingsByPlatformId(platformId: number): Promise<ConversationTraining[]>;
+  getLatestConversationTraining(userId: number, platformId: number): Promise<ConversationTraining | undefined>;
+  createConversationTraining(training: InsertConversationTraining): Promise<ConversationTraining>;
+  updateConversationTraining(id: number, training: Partial<ConversationTraining>): Promise<ConversationTraining | undefined>;
+  
   // Analytics operations
   getConversationCount(): Promise<number>;
   getMessageCount(): Promise<number>;
@@ -90,6 +99,7 @@ export class MemStorage implements IStorage {
   private knowledgeBases: Map<number, KnowledgeBase>;
   private knowledgeDocuments: Map<number, KnowledgeDocument>;
   private moderationActions: Map<number, ModerationAction>;
+  private conversationTrainings: Map<number, ConversationTraining>;
 
   private userIdCounter: number;
   private platformIdCounter: number;
@@ -99,6 +109,7 @@ export class MemStorage implements IStorage {
   private knowledgeBaseIdCounter: number;
   private knowledgeDocumentIdCounter: number;
   private moderationActionIdCounter: number;
+  private conversationTrainingIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -109,6 +120,7 @@ export class MemStorage implements IStorage {
     this.knowledgeBases = new Map();
     this.knowledgeDocuments = new Map();
     this.moderationActions = new Map();
+    this.conversationTrainings = new Map();
 
     this.userIdCounter = 1;
     this.platformIdCounter = 1;
@@ -143,7 +155,11 @@ export class MemStorage implements IStorage {
       moderationStrictness: 50, // Balanced
       isActive: true,
       model: "gpt-4o",
-      systemPrompt: "You are a helpful customer support assistant for ModerateAI. ModerateAI is a SaaS platform that provides AI-powered chat support and community moderation across websites, Telegram, and Discord. Be friendly, helpful, and professional when answering questions."
+      systemPrompt: "You are a helpful customer support assistant for ModerateAI. ModerateAI is a SaaS platform that provides AI-powered chat support and community moderation across websites, Telegram, and Discord. Be friendly, helpful, and professional when answering questions.",
+      enableProactiveResponses: false,
+      enableConversationMemory: true,
+      enableSentimentAnalysis: true,
+      enableConversationTraining: false,
     };
     this.createAiConfiguration(aiConfig);
 

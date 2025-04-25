@@ -106,6 +106,10 @@ export const insertAiConfigurationSchema = createInsertSchema(aiConfigurations).
   isActive: true,
   model: true,
   systemPrompt: true,
+  enableProactiveResponses: true,
+  enableConversationMemory: true,
+  enableSentimentAnalysis: true,
+  enableConversationTraining: true,
 });
 
 // Knowledge Base table
@@ -263,6 +267,17 @@ export const moderationActionsRelations = relations(moderationActions, ({ one })
   })
 }));
 
+export const conversationTrainingsRelations = relations(conversationTrainings, ({ one }) => ({
+  platform: one(platforms, {
+    fields: [conversationTrainings.platformId],
+    references: [platforms.id]
+  }),
+  user: one(users, {
+    fields: [conversationTrainings.userId],
+    references: [users.id]
+  })
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -287,3 +302,6 @@ export type InsertModerationAction = z.infer<typeof insertModerationActionSchema
 
 export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
 export type InsertKnowledgeDocument = z.infer<typeof insertKnowledgeDocumentSchema>;
+
+export type ConversationTraining = typeof conversationTrainings.$inferSelect;
+export type InsertConversationTraining = z.infer<typeof insertConversationTrainingSchema>;
