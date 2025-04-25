@@ -1,14 +1,21 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { generateAIResponse, generateKnowledgeBasedResponse, moderateContent } from "./lib/openai";
+import { 
+  generateAIResponse, 
+  generateKnowledgeBasedResponse, 
+  moderateContent,
+  trainOnConversations,
+  generateImprovedSystemPrompt
+} from "./lib/openai";
 import { setupAuth } from "./auth";
 import { 
   insertPlatformSchema, 
   insertConversationSchema, 
   insertMessageSchema, 
   insertAiConfigurationSchema,
-  insertModerationActionSchema
+  insertModerationActionSchema,
+  insertConversationTrainingSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -704,6 +711,236 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error creating moderation action" });
     }
   });
+
+  // Conversation Training routes
+  app.get("/api/conversation-trainings", authMiddleware, async (req, res) => {
+    try {
+      const platformId = req.query.platformId ? parseInt(req.query.platformId as string) : undefined;
+      
+      let trainings = [];
+      if (platformId) {
+        // Check if user has access to this platform
+        const platform = await storage.getPlatform(platformId);
+        if (!platform || platform.userId !== req.user.id) {
+          return res.status(403).json({ message: "Unauthorized" });
+        }
+        
+        trainings = await storage.getConversationTrainingsByPlatformId(platformId);
+      } else {
+        // Get all trainings for user, grouped by platform
+        const platforms = await storage.getPlatformsByUserId(req.user.id);
+        const allTrainings = await Promise.all(
+          platforms.map(platform => storage.getConversationTrainingsByPlatformId(platform.id))
+        );
+        trainings = allTrainings.flat();
+      }
+      
+      res.status(200).json(trainings);
+    } catch (error) {
+      console.error("Error fetching conversation trainings:", error);
+      res.status(500).json({ message: "Error fetching conversation trainings" });
+    }
+  });
+  
+  app.get("/api/conversation-trainings/:id", authMiddleware, async (req, res) => {
+    try {
+      const trainingId = parseInt(req.params.id);
+      const training = await storage.getConversationTraining(trainingId);
+      
+      if (!training) {
+        return res.status(404).json({ message: "Training not found" });
+      }
+      
+      // Check if user has access to this training
+      const platform = await storage.getPlatform(training.platformId);
+      if (!platform || platform.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      res.status(200).json(training);
+    } catch (error) {
+      console.error("Error fetching conversation training:", error);
+      res.status(500).json({ message: "Error fetching conversation training" });
+    }
+  });
+  
+  app.post("/api/conversation-trainings", authMiddleware, async (req, res) => {
+    try {
+      const result = insertConversationTrainingSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: fromZodError(result.error).message });
+      }
+      
+      // Check if user has access to the platform
+      const platform = await storage.getPlatform(result.data.platformId);
+      if (!platform || platform.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      // Create the training record
+      const training = await storage.createConversationTraining({
+        ...result.data,
+        userId: req.user.id,
+        status: "pending"
+      });
+      
+      res.status(201).json(training);
+      
+      // Process training asynchronously
+      processTraining(training.id).catch(err => {
+        console.error(`Error processing training ${training.id}:`, err);
+      });
+    } catch (error) {
+      console.error("Error creating conversation training:", error);
+      res.status(500).json({ message: "Error creating conversation training" });
+    }
+  });
+  
+  // Helper function to process training asynchronously
+  async function processTraining(trainingId: number) {
+    try {
+      // Get the training record
+      const training = await storage.getConversationTraining(trainingId);
+      if (!training) {
+        console.error(`Training ${trainingId} not found`);
+        return;
+      }
+      
+      // Update status to 'in_progress' and set startedAt
+      await storage.updateConversationTraining(trainingId, { 
+        status: "in_progress", 
+        startedAt: new Date() 
+      });
+      
+      // Get platform to determine its type
+      const platform = await storage.getPlatform(training.platformId);
+      if (!platform) {
+        throw new Error(`Platform ${training.platformId} not found`);
+      }
+      
+      // Get AI configuration to update later
+      const aiConfig = await storage.getActiveAiConfiguration(training.userId);
+      if (!aiConfig) {
+        throw new Error(`No active AI configuration found for user ${training.userId}`);
+      }
+      
+      // Get conversations from the platform
+      const conversations = await storage.getConversationsByPlatformId(training.platformId);
+      if (conversations.length === 0) {
+        // No conversations to process
+        await storage.updateConversationTraining(trainingId, {
+          status: "completed",
+          completedAt: new Date(),
+          processedConversations: 0,
+          totalConversations: 0
+        });
+        return;
+      }
+      
+      // Filter out conversations that don't have enough messages
+      const validConversations = await Promise.all(
+        conversations.map(async (conversation) => {
+          const messages = await storage.getMessagesByConversationId(conversation.id);
+          if (messages.length >= 3) { // Need at least 3 messages for meaningful training
+            return {
+              id: conversation.id,
+              messages: messages.map(msg => ({ 
+                sender: msg.sender, 
+                content: msg.content 
+              })),
+              platformType: platform.type
+            };
+          }
+          return null;
+        })
+      );
+      
+      // Filter out null entries
+      const conversationsToProcess = validConversations.filter(Boolean);
+      
+      // Update total conversations count
+      await storage.updateConversationTraining(trainingId, {
+        totalConversations: conversationsToProcess.length
+      });
+      
+      if (conversationsToProcess.length === 0) {
+        // No valid conversations to process
+        await storage.updateConversationTraining(trainingId, {
+          status: "completed",
+          completedAt: new Date(),
+          processedConversations: 0
+        });
+        return;
+      }
+      
+      // Process conversations in batches to avoid rate limits
+      const batchSize = 5;
+      const trainingResults = [];
+      
+      for (let i = 0; i < conversationsToProcess.length; i += batchSize) {
+        const batch = conversationsToProcess.slice(i, i + batchSize);
+        const batchResult = await trainOnConversations(batch);
+        trainingResults.push(...batchResult.results);
+        
+        // Update progress
+        await storage.updateConversationTraining(trainingId, {
+          processedConversations: Math.min(i + batchSize, conversationsToProcess.length),
+          lastTrainedConversationId: batch[batch.length - 1].id
+        });
+        
+        // Add a delay between batches to avoid rate limits
+        if (i + batchSize < conversationsToProcess.length) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      
+      // Filter successful results
+      const successfulResults = trainingResults.filter(result => result.success && result.analysis);
+      
+      if (successfulResults.length === 0) {
+        // No successful results
+        await storage.updateConversationTraining(trainingId, {
+          status: "error",
+          completedAt: new Date(),
+          errorMessage: "No conversations could be processed successfully"
+        });
+        return;
+      }
+      
+      // Generate improved system prompt based on the results
+      const analyses = successfulResults.map(result => result.analysis);
+      const improvedPromptResult = await generateImprovedSystemPrompt(aiConfig.systemPrompt || "", analyses);
+      
+      if (improvedPromptResult.success) {
+        // Update AI configuration with improved prompt
+        await storage.updateAiConfiguration(aiConfig.id, {
+          systemPrompt: improvedPromptResult.improvedPrompt,
+          trainingCompletedAt: new Date()
+        });
+        
+        // Mark training as completed
+        await storage.updateConversationTraining(trainingId, {
+          status: "completed",
+          completedAt: new Date()
+        });
+      } else {
+        // Mark training as error
+        await storage.updateConversationTraining(trainingId, {
+          status: "error",
+          completedAt: new Date(),
+          errorMessage: "Failed to generate improved system prompt"
+        });
+      }
+    } catch (error) {
+      console.error(`Error processing training ${trainingId}:`, error);
+      // Update training record with error
+      await storage.updateConversationTraining(trainingId, {
+        status: "error",
+        completedAt: new Date(),
+        errorMessage: error.message || "Unknown error occurred during training"
+      });
+    }
+  }
 
   const httpServer = createServer(app);
   return httpServer;

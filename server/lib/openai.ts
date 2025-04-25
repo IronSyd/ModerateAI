@@ -374,3 +374,69 @@ Return only the improved prompt text, without quotes or additional commentary.`
     };
   }
 }
+
+/**
+ * Helper function to extract keywords from a message
+ */
+function extractKeywords(text: string): string[] {
+  // Remove special characters and split into words
+  const words = text.toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+    .split(/\s+/);
+  
+  // A very basic list of English stop words
+  const stopWords = ['a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'he',
+    'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'were', 'will', 'with'];
+  
+  // Filter out stop words and words shorter than 3 characters
+  return words.filter(word => 
+    !stopWords.includes(word) && 
+    word.length >= 3
+  );
+}
+
+/**
+ * Adjust the system prompt based on the desired response style
+ */
+function applyResponseStyle(prompt: string, styleValue: number): string {
+  // styleValue: 0-33 (formal), 34-66 (balanced), 67-100 (friendly)
+  let styleSuffix = "";
+  
+  if (styleValue <= 33) {
+    styleSuffix = "\n\nMaintain a formal, professional tone in your responses. Prioritize accuracy and precision over conversational language.";
+  } else if (styleValue <= 66) {
+    styleSuffix = "\n\nUse a balanced, neutral tone in your responses that is both professional and approachable.";
+  } else {
+    styleSuffix = "\n\nUse a friendly, conversational tone in your responses. Be warm and approachable while still being helpful and informative.";
+  }
+  
+  return prompt + styleSuffix;
+}
+
+/**
+ * Calculate the max tokens parameter based on response length preference
+ */
+function calculateMaxTokens(lengthValue: number): number {
+  // lengthValue: 0-33 (concise), 34-66 (balanced), 67-100 (detailed)
+  if (lengthValue <= 33) {
+    return 150; // Very concise responses
+  } else if (lengthValue <= 66) {
+    return 400; // Moderate length responses
+  } else {
+    return 800; // Detailed responses
+  }
+}
+
+/**
+ * Calculate temperature based on style parameter
+ */
+function calculateTemperature(styleValue: number): number {
+  // Convert from 0-100 scale to 0-1 scale with adjustment
+  // Lower values (more formal) should have lower temperature
+  // Higher values (more friendly) should have higher temperature
+  const baseTemperature = 0.7; // Default balanced temperature
+  const adjustmentFactor = (styleValue - 50) / 100; // Will be between -0.5 and 0.5
+  
+  // Calculate the adjusted temperature within bounds of 0.5 to 0.9
+  return Math.max(0.5, Math.min(0.9, baseTemperature + adjustmentFactor));
+}
