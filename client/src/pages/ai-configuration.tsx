@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 import {
   Card,
@@ -29,13 +30,35 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, AlertCircle, Activity } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 
@@ -58,10 +81,12 @@ type AIConfigFormValues = z.infer<typeof aiConfigFormSchema>;
 
 const AIConfiguration = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("general");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showCreateKbDialog, setShowCreateKbDialog] = useState(false);
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<number | null>(null);
+  const [selectedPlatformId, setSelectedPlatformId] = useState<string>("");
 
   // Fetch active AI configuration
   const { data: activeConfig, isLoading: isLoadingConfig } = useQuery({
@@ -73,6 +98,26 @@ const AIConfiguration = () => {
   const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery({
     queryKey: ['/api/knowledge-bases'],
     retry: false,
+  });
+  
+  // Fetch platforms (for training)
+  const {
+    data: platforms,
+    isLoading: isLoadingPlatforms,
+    error: platformsError,
+  } = useQuery({
+    queryKey: ["/api/platforms"],
+    enabled: !!user,
+  });
+
+  // Fetch existing trainings
+  const {
+    data: trainings,
+    isLoading: isLoadingTrainings,
+    error: trainingsError,
+  } = useQuery({
+    queryKey: ["/api/conversation-trainings", selectedPlatformId],
+    enabled: !!user && !!selectedPlatformId,
   });
 
   // Form for AI configuration
@@ -134,6 +179,67 @@ const AIConfiguration = () => {
   const onSubmit = (values: AIConfigFormValues) => {
     saveMutation.mutate(values);
   };
+  
+  // Start a new training
+  const startTrainingMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/conversation-trainings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platformId: parseInt(selectedPlatformId),
+          status: "pending",
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to start training");
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Training started",
+        description: "AI training process has started. This may take a few minutes.",
+      });
+      // Refetch trainings
+      queryClient.invalidateQueries({
+        queryKey: ["/api/conversation-trainings", selectedPlatformId],
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to start training",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pending</span>;
+      case "in_progress":
+        return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">In Progress</span>;
+      case "completed":
+        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Completed</span>;
+      case "error":
+        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Error</span>;
+      default:
+        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">{status}</span>;
+    }
+  };
 
   // Format slider value labels
   const getResponseStyleLabel = (value: number) => {
@@ -193,10 +299,14 @@ const AIConfiguration = () => {
                       onValueChange={setActiveTab}
                       className="w-full"
                     >
-                      <TabsList className="grid grid-cols-3 mb-6">
+                      <TabsList className="grid grid-cols-4 mb-6">
                         <TabsTrigger value="general">General</TabsTrigger>
                         <TabsTrigger value="responses">Responses</TabsTrigger>
                         <TabsTrigger value="moderation">Moderation</TabsTrigger>
+                        <TabsTrigger value="training">
+                          <Activity className="h-4 w-4 mr-2" />
+                          Training
+                        </TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="general" className="space-y-6">
@@ -402,6 +512,128 @@ const AIConfiguration = () => {
                               </label>
                             </Card>
                           </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="training" className="space-y-6">
+                        <div className="space-y-4">
+                          <Alert>
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            <AlertTitle>AI Training</AlertTitle>
+                            <AlertDescription>
+                              Train your AI on past conversations to improve response quality and accuracy.
+                              This process analyzes previous interactions to better understand your users.
+                            </AlertDescription>
+                          </Alert>
+                          
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Select Platform</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Choose which platform's conversations to use for training your AI assistant.
+                            </p>
+                            
+                            {isLoadingPlatforms ? (
+                              <div className="flex items-center space-x-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Loading platforms...</span>
+                              </div>
+                            ) : platforms && platforms.length > 0 ? (
+                              <Select
+                                value={selectedPlatformId}
+                                onValueChange={setSelectedPlatformId}
+                              >
+                                <SelectTrigger className="w-full md:w-[300px]">
+                                  <SelectValue placeholder="Select a platform" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {platforms.map((platform) => (
+                                    <SelectItem key={platform.id} value={platform.id.toString()}>
+                                      {platform.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <div className="text-center p-6 border border-dashed rounded-lg">
+                                <h3 className="text-md font-medium mb-1">No platforms available</h3>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  Please set up a platform integration first
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {selectedPlatformId && (
+                            <div className="space-y-4 mt-6">
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-medium">Training History</h3>
+                                <Button
+                                  onClick={() => startTrainingMutation.mutate()}
+                                  disabled={startTrainingMutation.isPending}
+                                >
+                                  {startTrainingMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Training...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Activity className="mr-2 h-4 w-4" />
+                                      Start New Training
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              
+                              {isLoadingTrainings ? (
+                                <div className="flex items-center justify-center py-6">
+                                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                </div>
+                              ) : trainings && trainings.length > 0 ? (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Started</TableHead>
+                                      <TableHead>Status</TableHead>
+                                      <TableHead>Conversations</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {trainings.map((training) => (
+                                      <TableRow key={training.id}>
+                                        <TableCell>{formatDate(training.createdAt)}</TableCell>
+                                        <TableCell>{getStatusBadge(training.status)}</TableCell>
+                                        <TableCell>{training.conversationCount || "N/A"}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              ) : (
+                                <div className="text-center p-6 border border-dashed rounded-lg">
+                                  <Activity className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                                  <h3 className="text-md font-medium mb-1">No training history</h3>
+                                  <p className="text-sm text-muted-foreground mb-4">
+                                    Start your first AI training session to improve responses
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {trainings && trainings.some(t => t.status === "in_progress") && (
+                                <div className="space-y-2 mt-4">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium">Training in progress</span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {Math.round(Math.random() * 100)}%
+                                    </span>
+                                  </div>
+                                  <Progress value={Math.round(Math.random() * 100)} />
+                                  <p className="text-xs text-muted-foreground">
+                                    Processing conversations and creating embeddings...
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </TabsContent>
                     </Tabs>

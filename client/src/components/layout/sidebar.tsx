@@ -39,11 +39,6 @@ const mainItems: SidebarItem[] = [
     path: "/ai-configuration"
   },
   {
-    icon: <Activity className="h-5 w-5 mr-3" />,
-    label: "Train AI",
-    path: "/train-ai"
-  },
-  {
     icon: <Clipboard className="h-5 w-5 mr-3" />,
     label: "Templates",
     path: "/templates"

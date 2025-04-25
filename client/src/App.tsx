@@ -7,7 +7,6 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Conversations from "@/pages/conversations";
 import AiConfiguration from "@/pages/ai-configuration";
-import TrainAIPage from "@/pages/train-ai-page";
 import Templates from "@/pages/templates";
 import WebsiteIntegration from "@/pages/integrations/website";
 import TelegramIntegration from "@/pages/integrations/telegram";
@@ -94,7 +93,6 @@ function Router() {
         <ProtectedRoute path="/dashboard" component={Dashboard} />
         <ProtectedRoute path="/conversations" component={Conversations} />
         <ProtectedRoute path="/ai-configuration" component={AiConfiguration} />
-        <ProtectedRoute path="/train-ai" component={TrainAIPage} />
         <ProtectedRoute path="/templates" component={Templates} />
         <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
         <ProtectedRoute path="/integrations/telegram" component={TelegramIntegration} />
