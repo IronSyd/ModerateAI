@@ -58,7 +58,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Save, FileBadge, Bot, MessageSquare, MessageSquareMore, Upload, Database, Check, AlertCircle, Activity, SendHorizontal } from "lucide-react";
+import { Loader2, Save, FileBadge, Bot, MessageSquare, Upload, Database, Check, AlertCircle, Activity, SendHorizontal } from "lucide-react";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 
@@ -88,14 +88,48 @@ const AIConfiguration = () => {
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<number | null>(null);
   const [selectedPlatformId, setSelectedPlatformId] = useState<string>("");
 
+  // Define types for API responses
+  interface AIConfig {
+    id: number;
+    name: string;
+    responseStyle: number;
+    responseLength: number;
+    moderationStrictness: number;
+    isActive: boolean;
+    model: string;
+    systemPrompt?: string;
+  }
+
+  interface KnowledgeBase {
+    id: number;
+    name: string;
+    description?: string;
+    documentCount?: number;
+    isActive: boolean;
+  }
+
+  interface Platform {
+    id: number;
+    name: string;
+    type: string;
+  }
+
+  interface Training {
+    id: number;
+    createdAt: string;
+    status: string;
+    conversationCount?: number;
+    platformId: number;
+  }
+
   // Fetch active AI configuration
-  const { data: activeConfig, isLoading: isLoadingConfig } = useQuery({
+  const { data: activeConfig, isLoading: isLoadingConfig } = useQuery<AIConfig>({
     queryKey: ['/api/ai-configurations/active'],
     retry: false,
   });
 
   // Fetch knowledge bases
-  const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery({
+  const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery<KnowledgeBase[]>({
     queryKey: ['/api/knowledge-bases'],
     retry: false,
   });
@@ -105,7 +139,7 @@ const AIConfiguration = () => {
     data: platforms,
     isLoading: isLoadingPlatforms,
     error: platformsError,
-  } = useQuery({
+  } = useQuery<Platform[]>({
     queryKey: ["/api/platforms"],
     enabled: !!user,
   });
@@ -115,7 +149,7 @@ const AIConfiguration = () => {
     data: trainings,
     isLoading: isLoadingTrainings,
     error: trainingsError,
-  } = useQuery({
+  } = useQuery<Training[]>({
     queryKey: ["/api/conversation-trainings", selectedPlatformId],
     enabled: !!user && !!selectedPlatformId,
   });
@@ -546,7 +580,7 @@ const AIConfiguration = () => {
                                   <SelectValue placeholder="Select a platform" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {platforms.map((platform) => (
+                                  {platforms && platforms.map((platform: Platform) => (
                                     <SelectItem key={platform.id} value={platform.id.toString()}>
                                       {platform.name}
                                     </SelectItem>
@@ -564,7 +598,7 @@ const AIConfiguration = () => {
                                     variant="outline" 
                                     onClick={() => window.location.href = "/integrations/discord"}
                                   >
-                                    <MessageSquareMore className="h-4 w-4 mr-2" />
+                                    <MessageSquare className="h-4 w-4 mr-2" />
                                     Discord Integration
                                   </Button>
                                   <Button 
@@ -615,7 +649,7 @@ const AIConfiguration = () => {
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {trainings.map((training) => (
+                                    {trainings.map((training: Training) => (
                                       <TableRow key={training.id}>
                                         <TableCell>{formatDate(training.createdAt)}</TableCell>
                                         <TableCell>{getStatusBadge(training.status)}</TableCell>
@@ -634,7 +668,7 @@ const AIConfiguration = () => {
                                 </div>
                               )}
                               
-                              {trainings && trainings.some(t => t.status === "in_progress") && (
+                              {trainings && trainings.some((t: Training) => t.status === "in_progress") && (
                                 <div className="space-y-2 mt-4">
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm font-medium">Training in progress</span>
