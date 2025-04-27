@@ -335,13 +335,13 @@ const AIConfiguration = () => {
   return (
     <div>
       {!user && (
-        <Card className="mb-6 border-sky-100 bg-sky-50">
+        <Card className="mb-6 border-sky-200 bg-sky-200">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-sky-500" />
+              <AlertCircle className="h-5 w-5 mr-2 text-sky-700" />
               <div>
-                <h3 className="font-medium">Authentication Required</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-medium text-sky-900">Authentication Required</h3>
+                <p className="text-sm text-sky-800">
                   Please log in to save configuration changes and access all features.
                 </p>
               </div>
