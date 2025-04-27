@@ -826,6 +826,11 @@ const AIConfiguration = () => {
                     variant="outline" 
                     className="w-full mb-4"
                     onClick={() => {
+                      if (!user) {
+                        setShowAuthDialog(true);
+                        return;
+                      }
+
                       const activeKb = knowledgeBases && knowledgeBases[0];
                       if (activeKb) {
                         setSelectedKnowledgeBaseId(activeKb.id);
@@ -839,16 +844,40 @@ const AIConfiguration = () => {
                       }
                     }}
                   >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Add Knowledge Content
+                    {!user ? (
+                      <>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Login to Add Content
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Add Knowledge Content
+                      </>
+                    )}
                   </Button>
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => setShowCreateKbDialog(true)}
+                    onClick={() => {
+                      if (!user) {
+                        setShowAuthDialog(true);
+                        return;
+                      }
+                      setShowCreateKbDialog(true);
+                    }}
                   >
-                    <Database className="mr-2 h-4 w-4" />
-                    Create New Knowledge Base
+                    {!user ? (
+                      <>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Login to Create Knowledge Base
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Create New Knowledge Base
+                      </>
+                    )}
                   </Button>
                   
                   {/* Document Upload Dialog */}
