@@ -335,10 +335,10 @@ const AIConfiguration = () => {
   return (
     <div>
       {!user && (
-        <Card className="mb-6 border-blue-100 bg-blue-50">
+        <Card className="mb-6 border-sky-100 bg-sky-50">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-blue-600" />
+              <AlertCircle className="h-5 w-5 mr-2 text-sky-500" />
               <div>
                 <h3 className="font-medium">Authentication Required</h3>
                 <p className="text-sm text-muted-foreground">
