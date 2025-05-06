@@ -156,6 +156,13 @@ const newArticles: HelpArticle[] = [
 export function HelpMenu({ onClose }: { onClose: () => void }) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeTab, setActiveTab] = React.useState<'popular' | 'categories' | 'new'>('popular');
+  const [, navigate] = useLocation();
+  
+  // Function to navigate to help center
+  const navigateToHelpCenter = () => {
+    navigate("/help");
+    onClose();
+  };
   
   return (
     <div className="relative z-50">
