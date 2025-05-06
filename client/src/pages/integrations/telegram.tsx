@@ -854,14 +854,22 @@ const TelegramIntegration = () => {
                 </Table>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline">
+            <CardFooter className="flex justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  // Refresh groups action
+                  toast({
+                    title: "Refreshing groups",
+                    description: "Checking for new Telegram groups where your bot is a member."
+                  });
+                  // Refresh platform data
+                  queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+                }}
+              >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh Groups
-              </Button>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Group
               </Button>
             </CardFooter>
           </Card>
