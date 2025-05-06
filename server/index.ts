@@ -99,7 +99,7 @@ async function initializeDemoData() {
         systemPrompt: "You are a helpful customer support assistant. Be concise and professional."
       });
       
-      // Create default platforms
+      // Create default website platform
       await storage.createPlatform({
         name: "Website Chat",
         type: "website",
@@ -109,26 +109,41 @@ async function initializeDemoData() {
         authToken: null
       });
       
-      // Create Telegram platform
-      await storage.createPlatform({
-        name: "Telegram Bot",
-        type: "telegram",
-        status: "not_connected",
-        userId: demoUser.id,
-        config: {
-          welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
-          groupMode: true,
-          botCommands: [
-            { command: "help", description: "Show help information" },
-            { command: "about", description: "About this bot" }
-          ]
-        },
-        authToken: null
-      });
-      
-      log("Demo data initialized successfully");
+      log("Demo user created successfully");
     } else {
       log("Demo user already exists");
+    }
+    
+    // Always ensure Telegram platform exists for the demo user
+    if (demoUser) {
+      // Check if Telegram platform exists for this user
+      const platforms = await storage.getPlatformsByUserId(demoUser.id);
+      const telegramPlatform = platforms.find(p => p.type === "telegram");
+      
+      if (!telegramPlatform) {
+        log("Creating Telegram platform for existing user");
+        
+        // Create Telegram platform
+        await storage.createPlatform({
+          name: "Telegram Bot",
+          type: "telegram",
+          status: "not_connected",
+          userId: demoUser.id,
+          config: {
+            welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
+            groupMode: true,
+            botCommands: [
+              { command: "help", description: "Show help information" },
+              { command: "about", description: "About this bot" }
+            ]
+          },
+          authToken: null
+        });
+        
+        log("Telegram platform created successfully");
+      } else {
+        log("Telegram platform already exists");
+      }
     }
   } catch (error: any) {
     log(`Error initializing demo data: ${error.message}`);

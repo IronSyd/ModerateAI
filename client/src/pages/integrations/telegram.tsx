@@ -209,7 +209,50 @@ const TelegramIntegration = () => {
       return;
     }
     
+    // If the Telegram platform wasn't found, refresh the platforms list
     if (!telegramPlatformId) {
+      try {
+        console.log("Telegram platform not found, refreshing platforms list");
+        const response = await fetch('/api/platforms', {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const platforms = await response.json();
+          console.log("Fetched platforms:", platforms);
+          
+          const telegramPlatform = platforms.find(p => p.type === 'telegram');
+          
+          if (telegramPlatform) {
+            // We found the platform after refresh
+            toast({
+              title: "Platform found",
+              description: "Telegram platform has been initialized",
+            });
+            // Update local state and continue
+            queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+            setTimeout(() => {
+              // Give a moment for the query to refresh, then try again
+              toast({
+                title: "Please try again",
+                description: "Please try connecting the bot again",
+              });
+            }, 1000);
+            return;
+          } else {
+            // Still no platform after refresh
+            toast({
+              title: "Error",
+              description: "Telegram platform not found. Please refresh the page or contact support.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error refreshing platforms:", error);
+      }
+      
       toast({
         title: "Error",
         description: "Telegram platform not initialized. Please refresh the page.",
