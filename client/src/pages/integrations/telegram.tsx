@@ -468,12 +468,8 @@ const TelegramIntegration = () => {
     }
   };
 
-  // Mock groups and channels for the demo
-  const telegramGroups = [
-    { id: 1, name: "Product Support", members: 245, status: "active", lastActive: "2 hours ago" },
-    { id: 2, name: "Community Chat", members: 1203, status: "active", lastActive: "5 minutes ago" },
-    { id: 3, name: "Announcement Channel", members: 587, status: "pending", lastActive: "1 day ago" }
-  ];
+  // Empty groups list since the bot isn't in any groups yet
+  const telegramGroups: { id: number; name: string; members: number; status: string; lastActive: string }[] = [];
 
   // Show auth dialog if not logged in
   useEffect(() => {
