@@ -83,17 +83,31 @@ const TelegramIntegration = () => {
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
-  // Fetch platform data
-  const { data: platform, isLoading } = useQuery({
-    queryKey: ['/api/platforms/2'], // Assuming Telegram platform has ID 2
+  // Fetch all platforms first to find the Telegram platform
+  const { data: platforms, isLoading: platformsLoading } = useQuery({
+    queryKey: ['/api/platforms'],
     retry: false,
     enabled: !!user, // Only fetch if user is logged in
+  });
+
+  // Find the Telegram platform from the list
+  const telegramPlatform = Array.isArray(platforms) 
+    ? platforms.find(p => p.type === 'telegram') 
+    : null;
+  
+  const telegramPlatformId = telegramPlatform?.id || 0;
+  
+  // Fetch specific platform data
+  const { data: platform, isLoading } = useQuery({
+    queryKey: [`/api/platforms/${telegramPlatformId}`],
+    retry: false,
+    enabled: !!user && !!telegramPlatformId, // Only fetch if user is logged in and we have the ID
   });
 
   // Connect Telegram bot
   const connectBotMutation = useMutation({
     mutationFn: async (token: string) => {
-      return apiRequest("PATCH", `/api/platforms/2`, {
+      return apiRequest("PATCH", `/api/platforms/${telegramPlatformId}`, {
         name: "Telegram Bot",
         authToken: token,
         status: "active",
@@ -108,7 +122,7 @@ const TelegramIntegration = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
       setIsTokenDialogOpen(false);
       toast({
@@ -128,13 +142,13 @@ const TelegramIntegration = () => {
   // Disconnect Telegram bot
   const disconnectBotMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("PATCH", `/api/platforms/2`, {
+      return apiRequest("PATCH", `/api/platforms/${telegramPlatformId}`, {
         status: "not_connected",
         authToken: null
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
       setIsDisconnectDialogOpen(false);
       toast({
@@ -154,12 +168,12 @@ const TelegramIntegration = () => {
   // Update bot configuration
   const updateBotConfigMutation = useMutation({
     mutationFn: async (config: any) => {
-      return apiRequest("PATCH", `/api/platforms/2`, {
+      return apiRequest("PATCH", `/api/platforms/${telegramPlatformId}`, {
         config
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
       toast({
         title: "Success",
         description: "Bot configuration updated successfully.",
@@ -195,11 +209,20 @@ const TelegramIntegration = () => {
       return;
     }
     
+    if (!telegramPlatformId) {
+      toast({
+        title: "Error",
+        description: "Telegram platform not initialized. Please refresh the page.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Use direct fetch API to ensure credentials are included
     try {
       setIsConnectingBot(true);
       
-      const response = await fetch('/api/platforms/2', {
+      const response = await fetch(`/api/platforms/${telegramPlatformId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // This is crucial for sending cookies with the request
@@ -224,7 +247,7 @@ const TelegramIntegration = () => {
       if (response.ok) {
         // Success
         setIsTokenDialogOpen(false);
-        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
         queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
         
         toast({
@@ -273,9 +296,18 @@ const TelegramIntegration = () => {
       return;
     }
     
+    if (!telegramPlatformId) {
+      toast({
+        title: "Error",
+        description: "Telegram platform not initialized. Please refresh the page.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       // Use direct fetch API with credentials to ensure authentication
-      const response = await fetch('/api/platforms/2', {
+      const response = await fetch(`/api/platforms/${telegramPlatformId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -289,7 +321,7 @@ const TelegramIntegration = () => {
       
       if (response.ok) {
         setIsDisconnectDialogOpen(false);
-        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
         queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
         
         toast({

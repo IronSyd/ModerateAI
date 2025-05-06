@@ -99,13 +99,30 @@ async function initializeDemoData() {
         systemPrompt: "You are a helpful customer support assistant. Be concise and professional."
       });
       
-      // Create default platform
+      // Create default platforms
       await storage.createPlatform({
         name: "Website Chat",
         type: "website",
         status: "active",
         userId: demoUser.id,
         config: {},
+        authToken: null
+      });
+      
+      // Create Telegram platform
+      await storage.createPlatform({
+        name: "Telegram Bot",
+        type: "telegram",
+        status: "not_connected",
+        userId: demoUser.id,
+        config: {
+          welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
+          groupMode: true,
+          botCommands: [
+            { command: "help", description: "Show help information" },
+            { command: "about", description: "About this bot" }
+          ]
+        },
         authToken: null
       });
       
