@@ -656,11 +656,11 @@ const TelegramIntegration = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Bot Name:</span>
-                          <span className="text-sm font-medium">ModerateAI Assistant</span>
+                          <span className="text-sm font-medium">ModAI Test Bot</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Username:</span>
-                          <span className="text-sm font-medium">@ModerateAI_Bot</span>
+                          <span className="text-sm font-medium">@ModAI_test_bot</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Status:</span>
@@ -680,12 +680,12 @@ const TelegramIntegration = () => {
                       </p>
                       <div className="flex space-x-2">
                         <Input 
-                          value="https://t.me/ModerateAI_Bot" 
+                          value="https://t.me/ModAI_test_bot" 
                           readOnly 
                           className="bg-card"
                         />
                         <Button variant="outline" onClick={() => {
-                          navigator.clipboard.writeText("https://t.me/ModerateAI_Bot");
+                          navigator.clipboard.writeText("https://t.me/ModAI_test_bot");
                           toast({
                             title: "Link copied",
                             description: "Bot link copied to clipboard",
@@ -706,7 +706,7 @@ const TelegramIntegration = () => {
                         </div>
                         <div>
                           <p className="text-sm text-gray-700">
-                            <span className="font-medium">Add your bot to groups</span> - Invite @ModerateAI_Bot to your Telegram groups
+                            <span className="font-medium">Add your bot to groups</span> - Invite @ModAI_test_bot to your Telegram groups
                           </p>
                         </div>
                       </div>
