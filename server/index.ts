@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 // Function to hash passwords
 const scryptAsync = promisify(scrypt);
@@ -59,12 +61,18 @@ async function initializeDemoData() {
     let demoUser = await storage.getUserByUsername("demo");
     
     if (recreateDemo && demoUser) {
-      // Delete existing demo user to fix password issue
-      log("Recreating demo user with properly hashed password");
+      // Update the existing demo user's password directly
+      log("Fixing demo user password");
       
-      // We need to use direct SQL for this since we're in a migration/fix scenario
-      await db.execute(sql`DELETE FROM users WHERE username = 'demo'`);
-      demoUser = undefined;
+      // Create a properly hashed password
+      const hashedPassword = await hashPassword("demo123");
+      
+      // Update the user directly through storage
+      await db.update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.username, "demo"));
+      
+      log("Demo user password updated");
     }
     
     if (!demoUser) {

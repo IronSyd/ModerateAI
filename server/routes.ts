@@ -24,6 +24,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication with Passport.js
   setupAuth(app);
   
+  // TEMPORARY: Fix demo user password for testing
+  app.get("/api/fix-demo-password", async (req, res) => {
+    try {
+      const { hashPassword } = await import("./auth");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const { db } = await import("./db");
+      
+      const hashedPassword = await hashPassword("demo123");
+      
+      await db.update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.username, "demo"));
+      
+      res.json({ success: true, message: "Demo password fixed" });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+  
   // Auth middleware to check if the user is authenticated
   const authMiddleware = (req: Request, res: Response, next: Function) => {
     if (!req.isAuthenticated() || !req.user) {
