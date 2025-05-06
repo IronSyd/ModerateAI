@@ -242,7 +242,7 @@ const DiscordIntegration = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Discord Integration</h1>
+
           <p className="text-muted-foreground">Connect your AI assistant to Discord servers and channels</p>
         </div>
         <Badge 

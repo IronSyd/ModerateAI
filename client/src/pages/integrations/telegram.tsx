@@ -204,7 +204,6 @@ const TelegramIntegration = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Telegram Integration</h1>
           <p className="text-muted-foreground">Connect your AI assistant to Telegram groups and chats</p>
         </div>
         <Badge 
