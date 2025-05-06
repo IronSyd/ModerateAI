@@ -9,6 +9,7 @@ import Conversations from "@/pages/conversations";
 import AiConfiguration from "@/pages/ai-configuration";
 import Templates from "@/pages/templates";
 import WebsiteIntegration from "@/pages/integrations/website";
+import WebsiteDemoPage from "@/pages/integrations/website-demo";
 import TelegramIntegration from "@/pages/integrations/telegram";
 import DiscordIntegration from "@/pages/integrations/discord";
 import Team from "@/pages/team";
@@ -95,6 +96,7 @@ function Router() {
         <ProtectedRoute path="/ai-configuration" component={AiConfiguration} />
         <ProtectedRoute path="/templates" component={Templates} />
         <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
+        <ProtectedRoute path="/integrations/website-demo" component={WebsiteDemoPage} />
         <ProtectedRoute path="/integrations/telegram" component={TelegramIntegration} />
         <ProtectedRoute path="/integrations/discord" component={DiscordIntegration} />
         <ProtectedRoute path="/team" component={Team} />

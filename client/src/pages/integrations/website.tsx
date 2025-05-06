@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 import {
   Card,
@@ -316,10 +317,12 @@ const WebsiteIntegration = () => {
                           to the ModerateAI platform.
                         </p>
                         <div className="flex space-x-4">
-                          <Button variant="outline">
-                            <Globe className="mr-2 h-4 w-4" />
-                            Visit Demo Page
-                          </Button>
+                          <Link href="/integrations/website-demo">
+                            <Button variant="outline">
+                              <Globe className="mr-2 h-4 w-4" />
+                              Visit Demo Page
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     </>
