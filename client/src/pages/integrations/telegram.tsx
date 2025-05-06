@@ -73,16 +73,19 @@ import {
 
 const TelegramIntegration = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("setup");
   const [isConnectingBot, setIsConnectingBot] = useState(false);
   const [token, setToken] = useState("");
   const [isTokenDialogOpen, setIsTokenDialogOpen] = useState(false);
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   // Fetch platform data
   const { data: platform, isLoading } = useQuery({
     queryKey: ['/api/platforms/2'], // Assuming Telegram platform has ID 2
     retry: false,
+    enabled: !!user, // Only fetch if user is logged in
   });
 
   // Connect Telegram bot
