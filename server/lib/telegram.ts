@@ -83,30 +83,49 @@ export async function initializeBot(platformId: number, token: string): Promise<
         // Show typing indicator
         activatedBot.sendChatAction(msg.chat.id, 'typing');
         
-        // Get AI response
-        const activeConfig = await storage.getActiveAiConfiguration(1); // Using demo user ID for now
-        const knowledgeBase = await storage.getActiveKnowledgeBase(1); // Using demo user ID for now
-        
-        // Get conversation history
-        const messages = await storage.getMessagesByConversationId(conversation.id);
-        
-        // Generate AI response
-        const aiResponse = await generateAIResponse(
-          msg.text,
-          activeConfig?.systemPrompt || 'You are a helpful assistant.',
-          messages.slice(-10) // Use last 10 messages for context
-        );
-        
-        // Send response
-        await activatedBot.sendMessage(msg.chat.id, aiResponse);
-        
-        // Store AI response in database
-        await storage.createMessage({
-          conversationId: conversation.id,
-          content: aiResponse,
-          sender: 'ai',
-          metadata: null
-        });
+        try {
+          // Get AI response - wrap in try/catch to handle any DB issues
+          const activeConfig = await storage.getActiveAiConfiguration(1); // Using demo user ID for now
+          const knowledgeBase = await storage.getActiveKnowledgeBase(1); // Using demo user ID for now
+          
+          // Get conversation history
+          const messages = await storage.getMessagesByConversationId(conversation.id);
+          
+          // Convert the messages to the format expected by the AI
+          const conversationHistory = messages.slice(-10).map(msg => ({
+            role: msg.sender === "user" ? "user" : "assistant",
+            content: msg.content
+          }));
+          
+          // Default system prompt if none is configured
+          const systemPrompt = activeConfig?.systemPrompt || 'You are a helpful assistant.';
+          
+          // Generate AI response with proper parameters
+          const aiResponse = await generateAIResponse(
+            msg.text,
+            conversationHistory,
+            systemPrompt,
+            activeConfig?.responseStyle || 50,
+            activeConfig?.responseLength || 50
+          );
+          
+          // Send response
+          await activatedBot.sendMessage(msg.chat.id, aiResponse);
+          
+          // Store AI response in database
+          await storage.createMessage({
+            conversationId: conversation.id,
+            content: aiResponse,
+            sender: 'ai',
+            metadata: null
+          });
+        } catch (error) {
+          console.error(`Error generating AI response: ${error}`);
+          // Send a fallback response if AI generation failed
+          await activatedBot.sendMessage(msg.chat.id, 
+            "I'm sorry, I'm having trouble processing your message right now. Please try again later.");
+          return;
+        }
         
       } catch (error) {
         console.error('Error handling Telegram message:', error);
