@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, Bell, HelpCircle, User } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
@@ -7,8 +7,10 @@ import { NotificationMenu } from "../notifications/notification-menu";
 import { HelpMenu } from "../help/help-menu";
 import { Logo } from "@/components/logo";
 import { useAdminUser } from "@/hooks/use-admin-user";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const Header = () => {
   const isMobile = useMobile();
@@ -17,6 +19,7 @@ const Header = () => {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const { isAdminUser, adminUser } = useAdminUser();
+  const { unreadCount, hasNewNotifications } = useNotifications();
   
   // Get page title based on current route
   const getPageTitle = () => {
@@ -101,14 +104,21 @@ const Header = () => {
           )}
           <div className="relative">
             <button 
-              className="text-muted-foreground hover:text-foreground relative" 
+              className={cn(
+                "text-muted-foreground hover:text-foreground relative",
+                hasNewNotifications && "animate-pulse text-primary"
+              )}
               aria-label="Notifications"
               onClick={handleOpenNotification}
             >
               <Bell className="h-6 w-6" />
-              <Badge className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] min-w-[18px] h-[18px] flex items-center justify-center">
-                2
-              </Badge>
+              {unreadCount > 0 && (
+                <Badge 
+                  className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] min-w-[18px] h-[18px] flex items-center justify-center"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
             </button>
             {notificationOpen && (
               <NotificationMenu onClose={() => setNotificationOpen(false)} />

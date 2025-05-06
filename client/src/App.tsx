@@ -21,6 +21,7 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { AuthProvider } from "@/hooks/use-auth";
 import { AdminUserProvider } from "@/hooks/use-admin-user";
+import { NotificationsProvider } from "@/hooks/use-notifications";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 // Dashboard layout with sidebar and header
@@ -113,8 +114,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AdminUserProvider>
-          <Router />
-          <Toaster />
+          <NotificationsProvider>
+            <Router />
+            <Toaster />
+          </NotificationsProvider>
         </AdminUserProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -9,70 +9,23 @@ import {
   X
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-type Notification = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
-  type: 'message' | 'moderation' | 'system';
-};
-
-const demoNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'New message received',
-    description: 'A new message from user John Doe requires attention.',
-    time: '2 minutes ago',
-    read: false,
-    type: 'message'
-  },
-  {
-    id: '2',
-    title: 'Content automatically moderated',
-    description: 'A message was flagged for inappropriate content in Discord channel.',
-    time: '30 minutes ago',
-    read: false,
-    type: 'moderation'
-  },
-  {
-    id: '3',
-    title: 'System update completed',
-    description: 'ModerateAI has been updated to version 2.1.0',
-    time: '2 hours ago',
-    read: true,
-    type: 'system'
-  },
-  {
-    id: '4',
-    title: 'Training complete',
-    description: 'Your custom AI model training has been completed.',
-    time: 'Yesterday',
-    read: true,
-    type: 'system'
-  }
-];
+import { useNotifications, Notification, NotificationType } from "@/hooks/use-notifications";
 
 export function NotificationMenu({ onClose }: { onClose: () => void }) {
-  const [notifications, setNotifications] = React.useState<Notification[]>(demoNotifications);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { 
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNewNotificationsIndicator
+  } = useNotifications();
   
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-  };
+  // When opening the menu, clear the "new notifications" indicator
+  React.useEffect(() => {
+    dismissNewNotificationsIndicator();
+  }, [dismissNewNotificationsIndicator]);
   
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-  };
-  
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case 'message':
         return <MessageSquare className="h-5 w-5 text-blue-500" />;
@@ -143,7 +96,25 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
           )}
         </div>
         
-        <div className="p-2 border-t bg-muted/50 text-center">
+        <div className="p-2 border-t bg-muted/50 flex justify-between">
+          <button 
+            className="text-sm text-primary hover:text-primary/80 font-medium"
+            onClick={() => {
+              // Demo function to add a new notification
+              const { addNotification } = useNotifications();
+              const types: NotificationType[] = ['message', 'moderation', 'system'];
+              const randomType = types[Math.floor(Math.random() * types.length)];
+              
+              addNotification({
+                title: `New ${randomType} notification`,
+                description: `This is a test ${randomType} notification added at ${new Date().toLocaleTimeString()}`,
+                type: randomType
+              });
+            }}
+          >
+            Add Test Notification
+          </button>
+          
           <button 
             className="text-sm text-primary hover:text-primary/80 font-medium"
             onClick={onClose}
