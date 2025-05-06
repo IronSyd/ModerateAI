@@ -3,6 +3,16 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { storage } from "./storage";
 import { db } from "./db";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+// Function to hash passwords
+const scryptAsync = promisify(scrypt);
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 const app = express();
 app.use(express.json());
@@ -41,13 +51,28 @@ app.use((req, res, next) => {
 // Initialize database with demo data
 async function initializeDemoData() {
   try {
+    // Check if we need to recreate the demo user with properly hashed password
+    // This is a one-time fix for the demo environment
+    const recreateDemo = process.env.RECREATE_DEMO === "true" || true; // Force recreation for now
+    
     // Check if demo user exists
     let demoUser = await storage.getUserByUsername("demo");
+    
+    if (recreateDemo && demoUser) {
+      // Delete existing demo user to fix password issue
+      log("Recreating demo user with properly hashed password");
+      
+      // We need to use direct SQL for this since we're in a migration/fix scenario
+      await db.execute(sql`DELETE FROM users WHERE username = 'demo'`);
+      demoUser = undefined;
+    }
+    
     if (!demoUser) {
       log("Creating demo user");
+      const hashedPassword = await hashPassword("demo123");
       demoUser = await storage.createUser({
         username: "demo",
-        password: "demo123",
+        password: hashedPassword,
         email: "demo@example.com",
         fullName: "Demo User",
         role: "admin"
@@ -79,7 +104,7 @@ async function initializeDemoData() {
     } else {
       log("Demo user already exists");
     }
-  } catch (error) {
+  } catch (error: any) {
     log(`Error initializing demo data: ${error.message}`);
   }
 }
