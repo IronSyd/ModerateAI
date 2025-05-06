@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { 
   Search, 
   BookOpen, 
@@ -157,70 +157,93 @@ const newArticles: HelpArticle[] = [
 
 // Article Card Component
 function ArticleCard({ article }: { article: HelpArticle }) {
+  const [, navigate] = useLocation();
+  
   return (
-    <Link href={`/help/article/${article.id}`}>
-      <div className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group">
-        <div className="flex items-start">
-          <BookOpen className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-          <div className="min-w-0 flex-grow">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-foreground group-hover:text-primary truncate">
-                {article.title}
-              </h3>
-              
-              {article.new && (
-                <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">
-                  New
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{article.preview}</p>
+    <div 
+      className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
+      onClick={() => navigate(`/help/article/${article.id}`)}
+    >
+      <div className="flex items-start">
+        <BookOpen className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
+        <div className="min-w-0 flex-grow">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-foreground group-hover:text-primary truncate">
+              {article.title}
+            </h3>
+            
+            {article.new && (
+              <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">
+                New
+              </Badge>
+            )}
           </div>
-          <ChevronRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{article.preview}</p>
         </div>
+        <ChevronRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
       </div>
-    </Link>
+    </div>
   );
 }
 
 // Category Card Component
 function CategoryCard({ category }: { category: HelpCategory }) {
+  const [, navigate] = useLocation();
+  
   return (
-    <Link href={`/help?category=${category.id}`}>
-      <div className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group">
-        <div className="flex items-start">
-          <div className="mr-3 flex-shrink-0">
-            {category.icon}
-          </div>
-          <div className="min-w-0 flex-grow">
-            <h3 className="font-medium text-foreground group-hover:text-primary">
-              {category.title}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {category.description}
-            </p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
+    <div 
+      className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
+      onClick={() => navigate(`/help?category=${category.id}`)}
+    >
+      <div className="flex items-start">
+        <div className="mr-3 flex-shrink-0">
+          {category.icon}
         </div>
+        <div className="min-w-0 flex-grow">
+          <h3 className="font-medium text-foreground group-hover:text-primary">
+            {category.title}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            {category.description}
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
       </div>
-    </Link>
+    </div>
   );
 }
 
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [, params] = useLocation();
+  // Use window.location to access the URL query string
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  const [, navigate] = useLocation();
   
   // Parse the URL query parameters
   React.useEffect(() => {
-    if (params && params.includes('category=')) {
-      const categoryParam = params.split('category=')[1]?.split('&')[0] || null;
-      setSelectedCategory(categoryParam);
-    } else {
-      setSelectedCategory(null);
-    }
-  }, [params]);
+    // Function to parse the URL
+    const updateCategoryFromUrl = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const category = urlParams.get('category');
+      
+      if (category) {
+        setSelectedCategory(category);
+      } else {
+        setSelectedCategory(null);
+      }
+    };
+    
+    // Initial call
+    updateCategoryFromUrl();
+    
+    // Set up event listener for URL changes
+    window.addEventListener('popstate', updateCategoryFromUrl);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', updateCategoryFromUrl);
+    };
+  }, []);
   
   // Get all articles from all categories
   const allArticles = React.useMemo(() => {
@@ -239,11 +262,26 @@ export default function HelpCenterPage() {
     return helpCategories.find(c => c.id === selectedCategory);
   }, [selectedCategory]);
   
-  // Filter articles by category if selected
+  // Filter articles by category and search query
   const filteredArticles = React.useMemo(() => {
-    if (!selectedCategory) return allArticles;
-    return allArticles.filter(article => article.category === selectedCategory);
-  }, [selectedCategory, allArticles]);
+    let filtered = allArticles;
+    
+    // Filter by category if selected
+    if (selectedCategory) {
+      filtered = filtered.filter(article => article.category === selectedCategory);
+    }
+    
+    // Filter by search query if provided
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(article => 
+        article.title.toLowerCase().includes(query) || 
+        article.preview.toLowerCase().includes(query)
+      );
+    }
+    
+    return filtered;
+  }, [selectedCategory, searchQuery, allArticles]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-0 pb-8">
@@ -259,10 +297,23 @@ export default function HelpCenterPage() {
           <Input
             type="search"
             placeholder="Search help articles..."
-            className="pl-10 py-6 text-lg bg-background/80 border-primary/20 focus:border-primary"
+            className="pl-10 pr-10 py-6 text-lg bg-background/80 border-primary/20 focus:border-primary"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
       
@@ -281,7 +332,7 @@ export default function HelpCenterPage() {
             size="sm" 
             onClick={() => {
               // Clear the filter - navigate back to main help center
-              window.history.pushState({}, '', '/help');
+              navigate('/help');
               setSelectedCategory(null);
             }}
           >
@@ -290,7 +341,30 @@ export default function HelpCenterPage() {
         </div>
       )}
       
-      {selectedCategory ? (
+      {/* If user is searching, show search results */}
+      {searchQuery.trim() ? (
+        <div className="mb-12">
+          <div className="flex items-center mb-4">
+            <h2 className="text-2xl font-semibold">
+              Search results for "{searchQuery}"
+            </h2>
+          </div>
+          
+          {filteredArticles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-muted/20 rounded-lg border border-border">
+              <p className="text-muted-foreground">
+                No articles found matching your search. Try different keywords.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : selectedCategory ? (
         /* Category Selected - Show Filtered Articles */
         <div className="mb-12">
           <div className="flex items-center mb-4">
