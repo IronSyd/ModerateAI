@@ -23,7 +23,7 @@ const initialNotifications: Notification[] = [
     time: '2 minutes ago',
     read: false,
     type: 'message',
-    link: '/dashboard/messages/123'
+    link: '/conversations'
   },
   {
     id: '2',
@@ -41,7 +41,7 @@ const initialNotifications: Notification[] = [
     time: '2 hours ago',
     read: true,
     type: 'system',
-    link: '/settings/updates'
+    link: '/settings'
   },
   {
     id: '4',
@@ -50,7 +50,7 @@ const initialNotifications: Notification[] = [
     time: 'Yesterday',
     read: true,
     type: 'system',
-    link: '/ai-models'
+    link: '/ai-configuration'
   }
 ];
 

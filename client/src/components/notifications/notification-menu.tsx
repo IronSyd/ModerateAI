@@ -136,7 +136,7 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
               let link = '/dashboard';
               
               if (randomType === 'message') {
-                link = '/dashboard/messages';
+                link = '/conversations';
               } else if (randomType === 'moderation') {
                 link = '/integrations/telegram';
               } else if (randomType === 'system') {
