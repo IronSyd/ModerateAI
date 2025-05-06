@@ -237,7 +237,6 @@ const WebsiteIntegration = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Website Integration</h1>
           <p className="text-muted-foreground">Configure and deploy your website chat widget</p>
         </div>
         <Badge variant={platform?.status === "active" ? "success" : "outline"} className="capitalize">
