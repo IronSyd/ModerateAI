@@ -103,6 +103,8 @@ function Router() {
         <ProtectedRoute path="/team" component={Team} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/activity" component={ActivityPage} />
+        <ProtectedRoute path="/help" component={React.lazy(() => import('@/pages/help'))} />
+        <ProtectedRoute path="/help/article/:articleId" component={React.lazy(() => import('@/pages/help/article'))} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
