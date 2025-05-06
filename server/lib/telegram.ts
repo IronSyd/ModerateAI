@@ -120,10 +120,18 @@ export async function initializeBot(platformId: number, token: string): Promise<
             metadata: null
           });
         } catch (error) {
-          console.error(`Error generating AI response: ${error}`);
-          // Send a fallback response if AI generation failed
-          await activatedBot.sendMessage(msg.chat.id, 
-            "I'm sorry, I'm having trouble processing your message right now. Please try again later.");
+          console.error(`Error generating AI response:`, error);
+          
+          // Create a more detailed error message for debugging
+          let errorMessage = "I'm sorry, I'm having trouble processing your message right now.";
+          
+          if (process.env.NODE_ENV === 'development') {
+            // Only show detailed errors in development
+            errorMessage += " Error: " + (error instanceof Error ? error.message : String(error));
+          }
+          
+          // Send a fallback response with more details in development
+          await activatedBot.sendMessage(msg.chat.id, errorMessage);
           return;
         }
         

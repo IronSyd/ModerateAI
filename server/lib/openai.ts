@@ -20,6 +20,8 @@ export async function generateAIResponse(
 ): Promise<string> {
   try {
     console.log(`[generateAIResponse] Generating response for message: "${message.substring(0, 50)}..."`);
+    console.log(`[generateAIResponse] System prompt: "${systemPrompt.substring(0, 50)}..."`);
+    console.log(`[generateAIResponse] Conversation history length: ${conversationHistory.length}`);
     
     // Convert conversation history to OpenAI format
     const formattedHistory = conversationHistory.map(msg => ({
@@ -28,7 +30,7 @@ export async function generateAIResponse(
     }));
     
     // Apply response style to system prompt
-    const styledPrompt = applyResponseStyle(systemPrompt, responseStyle);
+    const styledPrompt = applyResponseStyle(systemPrompt || 'You are a helpful AI assistant.', responseStyle);
     
     // Create the messages array
     const messages = [
@@ -36,6 +38,8 @@ export async function generateAIResponse(
       ...formattedHistory,
       { role: "user", content: message }
     ];
+    
+    console.log(`[generateAIResponse] Using model: gpt-4o, with ${messages.length} messages`);
     
     // Get response from OpenAI
     const response = await openai.chat.completions.create({
@@ -45,9 +49,17 @@ export async function generateAIResponse(
       temperature: calculateTemperature(responseStyle)
     });
     
+    console.log(`[generateAIResponse] Response received successfully`);
+    
     return response.choices[0].message.content || "I apologize, but I couldn't generate a response at this time.";
   } catch (error) {
     console.error("Error generating AI response:", error);
+    if (error instanceof Error) {
+      console.error(`Error details: ${error.message}`);
+      if ('cause' in error) {
+        console.error(`Error cause:`, error.cause);
+      }
+    }
     throw error;
   }
 }
