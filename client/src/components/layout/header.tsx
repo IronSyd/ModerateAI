@@ -33,6 +33,8 @@ const Header = () => {
     if (location === "/team") return "Team";
     if (location === "/settings") return "Settings";
     if (location === "/activity") return "Activity Log";
+    // Don't show title for help center pages
+    if (location === "/help" || location.startsWith("/help/")) return "";
     
     // Get the current path without the leading slash
     const path = location.replace(/^\//, '');

@@ -211,22 +211,24 @@ export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Help Center</h1>
-      <p className="text-muted-foreground mb-8">
-        Find guides, tutorials, and answers to common questions
-      </p>
-      
-      {/* Search */}
-      <div className="relative max-w-xl mb-8">
-        <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search help articles..."
-          className="pl-10 py-6 text-lg"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+    <div className="max-w-5xl mx-auto px-4 pt-0 pb-8">
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-8 mb-10">
+        <h1 className="text-3xl font-bold mb-3">Help Center</h1>
+        <p className="text-muted-foreground text-lg mb-6 max-w-2xl">
+          Find guides, tutorials, and answers to common questions
+        </p>
+        
+        {/* Search */}
+        <div className="relative max-w-xl">
+          <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search help articles..."
+            className="pl-10 py-6 text-lg bg-background/80 border-primary/20 focus:border-primary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
       
       {/* Popular Articles */}
