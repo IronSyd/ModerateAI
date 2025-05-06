@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -8,6 +8,7 @@ import {
   trainOnConversations,
   generateImprovedSystemPrompt
 } from "./lib/openai";
+import { initializeBot, disconnectBot, initializeAllBots } from "./lib/telegram";
 import { setupAuth } from "./auth";
 import { 
   insertPlatformSchema, 
@@ -239,6 +240,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (platform.userId !== req.user.id) {
         return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      // Special handling for Telegram platform
+      if (platform.type === "telegram") {
+        // Check if we're activating with a token
+        if (req.body.status === "active" && req.body.authToken) {
+          console.log(`Attempting to connect Telegram bot for platform ${platformId}`);
+          
+          // Validate and initialize the bot
+          const result = await initializeBot(platformId, req.body.authToken);
+          
+          // If failed, return error
+          if (!result.success) {
+            return res.status(400).json({ 
+              message: result.message || "Failed to connect Telegram bot" 
+            });
+          }
+          
+          console.log(`Telegram bot connected successfully for platform ${platformId}`);
+        } 
+        // Check if we're disconnecting
+        else if (platform.status === "active" && req.body.status === "not_connected") {
+          console.log(`Disconnecting Telegram bot for platform ${platformId}`);
+          disconnectBot(platformId);
+        }
       }
 
       const updatedPlatform = await storage.updatePlatform(platformId, req.body);
