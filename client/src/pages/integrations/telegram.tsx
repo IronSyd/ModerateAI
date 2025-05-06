@@ -174,7 +174,7 @@ const TelegramIntegration = () => {
     },
   });
 
-  const handleConnectBot = () => {
+  const handleConnectBot = async () => {
     if (!token.trim()) {
       toast({
         title: "Error",
@@ -184,7 +184,81 @@ const TelegramIntegration = () => {
       return;
     }
     
-    connectBotMutation.mutate(token);
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in before connecting your Telegram bot",
+        variant: "destructive",
+      });
+      setIsTokenDialogOpen(false);
+      setShowAuthDialog(true);
+      return;
+    }
+    
+    // Use direct fetch API to ensure credentials are included
+    try {
+      setIsConnectingBot(true);
+      
+      const response = await fetch('/api/platforms/2', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // This is crucial for sending cookies with the request
+        body: JSON.stringify({
+          name: "Telegram Bot",
+          authToken: token,
+          status: "active",
+          config: {
+            welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
+            groupMode: true,
+            botCommands: [
+              { command: "help", description: "Show help information" },
+              { command: "about", description: "About this bot" }
+            ]
+          }
+        })
+      });
+      
+      // Log response details for debugging
+      console.log('Connect bot response status:', response.status);
+      
+      if (response.ok) {
+        // Success
+        setIsTokenDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+        
+        toast({
+          title: "Success",
+          description: "Telegram bot connected successfully!",
+        });
+      } else {
+        // Failed, try to get error message
+        let errorMessage = "Failed to connect Telegram bot. Please check your token and try again.";
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Use default error message if response parsing fails
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error connecting Telegram bot:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while connecting your Telegram bot.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnectingBot(false);
+    }
   };
 
   const handleDisconnectBot = () => {
@@ -212,6 +286,55 @@ const TelegramIntegration = () => {
     }
   }, [user]);
   
+  // Manual login function
+  const loginManually = async () => {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username: 'demo', password: 'demo123' })
+      });
+      
+      if (response.ok) {
+        const user = await response.json();
+        queryClient.setQueryData(['/api/user'], user);
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        
+        toast({
+          title: "Login successful",
+          description: "You're now logged in with the demo account.",
+        });
+        
+        // Check login status
+        const checkResponse = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        console.log('Login status check:', checkResponse.status, checkResponse.ok);
+        
+        if (checkResponse.ok) {
+          toast({
+            title: "Session verified",
+            description: "Your session is active and working.",
+          });
+        }
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Unable to log in with demo account. Check server logs.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login error",
+        description: "An error occurred during login.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div>
       {/* Authentication dialog */}
@@ -226,6 +349,31 @@ const TelegramIntegration = () => {
           });
         }}
       />
+      
+      {/* Debug login card - this will help with session issues */}
+      {!user && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center">
+                <Info className="h-5 w-5 mr-2 text-amber-600" />
+                <div>
+                  <h3 className="font-medium text-amber-800">Authentication Required</h3>
+                  <p className="text-sm text-amber-700">
+                    You need to log in to connect your Telegram bot. Click the button below to login with the demo account.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={loginManually}
+                className="w-full md:w-auto"
+              >
+                Login with Demo Account
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -722,9 +870,9 @@ const TelegramIntegration = () => {
             </Button>
             <Button 
               onClick={handleConnectBot} 
-              disabled={connectBotMutation.isPending || !user}
+              disabled={isConnectingBot || !user}
             >
-              {connectBotMutation.isPending ? (
+              {isConnectingBot ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Send className="mr-2 h-4 w-4" />
