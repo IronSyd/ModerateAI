@@ -190,7 +190,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Platforms
   app.get("/api/platforms", authMiddleware, async (req, res) => {
     try {
+      console.log(`Getting platforms for user ID: ${req.user.id}`);
       const platforms = await storage.getPlatformsByUserId(req.user.id);
+      console.log(`Retrieved ${platforms.length} platforms:`, platforms.map(p => `${p.id}: ${p.name} (${p.type})`));
       res.status(200).json(platforms);
     } catch (error) {
       console.error("Error fetching platforms:", error);
@@ -200,13 +202,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/platforms/:id", authMiddleware, async (req, res) => {
     try {
-      const platform = await storage.getPlatform(parseInt(req.params.id));
+      const platformId = parseInt(req.params.id);
+      console.log(`Getting platform ID: ${platformId} for user: ${req.user.id}`);
+      
+      const platform = await storage.getPlatform(platformId);
       if (!platform) {
+        console.log(`Platform ID ${platformId} not found`);
         return res.status(404).json({ message: "Platform not found" });
       }
+      
+      console.log(`Successfully retrieved platform: ${platform.name} (${platform.type})`);
       res.status(200).json(platform);
     } catch (error) {
-      console.error("Error fetching platform:", error);
+      console.error(`Error fetching platform ${req.params.id}:`, error);
       res.status(500).json({ message: "Error fetching platform" });
     }
   });

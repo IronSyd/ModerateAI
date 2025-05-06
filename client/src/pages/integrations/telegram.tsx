@@ -366,9 +366,18 @@ const TelegramIntegration = () => {
       return;
     }
     
+    if (!telegramPlatformId) {
+      toast({
+        title: "Error",
+        description: "Telegram platform not initialized. Please refresh the page.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       // Use direct fetch API with credentials to ensure authentication
-      const response = await fetch('/api/platforms/2', {
+      const response = await fetch(`/api/platforms/${telegramPlatformId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -383,7 +392,7 @@ const TelegramIntegration = () => {
       console.log('Update bot config response status:', response.status);
       
       if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
         
         toast({
           title: "Success",
@@ -443,7 +452,9 @@ const TelegramIntegration = () => {
       if (response.ok) {
         const user = await response.json();
         queryClient.setQueryData(['/api/user'], user);
-        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        
+        // Invalidate all platform queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
         
         toast({
           title: "Login successful",
