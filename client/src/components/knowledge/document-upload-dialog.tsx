@@ -333,7 +333,7 @@ export function DocumentUploadDialog({
                   accept=".txt,.md,.csv,.json,.pdf"
                   onChange={handleFileChange}
                   disabled={isUploading}
-                  className="mt-1"
+                  className="mt-1 cursor-pointer"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Supported formats: .txt, .md, .csv, .json, .pdf
