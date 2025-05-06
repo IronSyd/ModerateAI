@@ -261,15 +261,127 @@ const TelegramIntegration = () => {
     }
   };
 
-  const handleDisconnectBot = () => {
-    disconnectBotMutation.mutate();
+  const handleDisconnectBot = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You need to log in to disconnect your Telegram bot",
+        variant: "destructive",
+      });
+      setIsDisconnectDialogOpen(false);
+      setShowAuthDialog(true);
+      return;
+    }
+    
+    try {
+      // Use direct fetch API with credentials to ensure authentication
+      const response = await fetch('/api/platforms/2', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          status: "not_connected",
+          authToken: null
+        })
+      });
+      
+      console.log('Disconnect bot response status:', response.status);
+      
+      if (response.ok) {
+        setIsDisconnectDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+        
+        toast({
+          title: "Success",
+          description: "Telegram bot disconnected successfully.",
+        });
+      } else {
+        let errorMessage = "Failed to disconnect Telegram bot.";
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Use default error message
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error disconnecting Telegram bot:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while disconnecting your Telegram bot.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const updateBotConfig = (config: any) => {
-    updateBotConfigMutation.mutate({
-      ...platform?.config,
-      ...config
-    });
+  const updateBotConfig = async (configUpdate: any) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You need to log in to update bot settings",
+        variant: "destructive",
+      });
+      setShowAuthDialog(true);
+      return;
+    }
+    
+    try {
+      // Use direct fetch API with credentials to ensure authentication
+      const response = await fetch('/api/platforms/2', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          config: {
+            ...platform?.config,
+            ...configUpdate
+          }
+        })
+      });
+      
+      console.log('Update bot config response status:', response.status);
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/platforms/2'] });
+        
+        toast({
+          title: "Success",
+          description: "Bot settings updated successfully.",
+        });
+      } else {
+        let errorMessage = "Failed to update bot settings.";
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Use default error message
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating bot settings:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating bot settings.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Mock groups and channels for the demo
@@ -588,7 +700,20 @@ const TelegramIntegration = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       Paste the API token from BotFather to connect your Telegram bot to ModerateAI:
                     </p>
-                    <Button onClick={() => setIsTokenDialogOpen(true)}>
+                    <Button 
+                      onClick={() => {
+                        if (!user) {
+                          toast({
+                            title: "Login Required",
+                            description: "You need to log in before connecting a Telegram bot",
+                            variant: "destructive"
+                          });
+                          setShowAuthDialog(true);
+                        } else {
+                          setIsTokenDialogOpen(true);
+                        }
+                      }}
+                    >
                       <Send className="mr-2 h-4 w-4" />
                       Connect Telegram Bot
                     </Button>
@@ -898,11 +1023,7 @@ const TelegramIntegration = () => {
               onClick={handleDisconnectBot}
               className="bg-red-500 hover:bg-red-600"
             >
-              {disconnectBotMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
+              <Trash2 className="mr-2 h-4 w-4" />
               Disconnect Bot
             </AlertDialogAction>
           </AlertDialogFooter>
