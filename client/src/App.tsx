@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, lazy, Suspense } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,6 +23,10 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { AdminUserProvider } from "@/hooks/use-admin-user";
 import { NotificationsProvider } from "@/hooks/use-notifications";
 import { ProtectedRoute } from "@/lib/protected-route";
+
+// Lazy-loaded help pages
+const HelpCenter = lazy(() => import('@/pages/help'));
+const HelpArticle = lazy(() => import('@/pages/help/article'));
 
 // Dashboard layout with sidebar and header
 function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -103,8 +107,16 @@ function Router() {
         <ProtectedRoute path="/team" component={Team} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/activity" component={ActivityPage} />
-        <ProtectedRoute path="/help" component={React.lazy(() => import('@/pages/help'))} />
-        <ProtectedRoute path="/help/article/:articleId" component={React.lazy(() => import('@/pages/help/article'))} />
+        <ProtectedRoute path="/help">
+          <Suspense fallback={<div className="p-8 text-center">Loading Help Center...</div>}>
+            <HelpCenter />
+          </Suspense>
+        </ProtectedRoute>
+        <ProtectedRoute path="/help/article/:articleId">
+          <Suspense fallback={<div className="p-8 text-center">Loading Article...</div>}>
+            <HelpArticle />
+          </Suspense>
+        </ProtectedRoute>
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

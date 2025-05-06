@@ -2,16 +2,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import React from "react";
 
-export function ProtectedRoute({
-  path,
-  component: Component,
-}: {
+type ProtectedRouteProps = {
   path: string;
-  component: () => React.JSX.Element;
-}) {
+  component?: () => React.JSX.Element;
+  children?: React.ReactNode;
+};
+
+export function ProtectedRoute({ path, component: Component, children }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
-  const { isAdminUser, adminUser } = useAdminUser();
+  const { isAdminUser } = useAdminUser();
 
   return (
     <Route path={path}>
@@ -20,7 +21,7 @@ export function ProtectedRoute({
           <Loader2 className="h-8 w-8 animate-spin text-border" />
         </div>
       ) : user || isAdminUser ? (
-        <Component />
+        Component ? <Component /> : children
       ) : (
         <Redirect to="/auth" />
       )}

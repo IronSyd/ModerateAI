@@ -4,7 +4,7 @@ import { Menu, Bell, HelpCircle, User } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
-import { HelpMenu } from "../help/help-menu";
+import { HelpMenu } from "../help/help-menu-new";
 import { Logo } from "@/components/logo";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { useNotifications } from "@/hooks/use-notifications";

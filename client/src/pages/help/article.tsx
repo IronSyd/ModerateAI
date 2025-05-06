@@ -119,6 +119,172 @@ const articleContent: Record<string, {
         </p>
       </div>
     )
+  },
+  'ai-config': {
+    title: 'AI configuration basics',
+    category: 'Getting Started',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Understanding and configuring your AI's behavior is essential for providing 
+          effective support and moderation. This guide explains the key configuration options.
+        </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Response Style</h3>
+        <p>
+          You can customize how your AI responds to users by adjusting these settings:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li><strong>Tone</strong> - Choose from Professional, Friendly, or Casual</li>
+          <li><strong>Detail Level</strong> - Set how comprehensive responses should be</li>
+          <li><strong>Personality</strong> - Add specific personality traits to your AI</li>
+        </ul>
+        
+        <div className="bg-primary/10 p-4 rounded-md border border-primary/20 mt-6">
+          <h4 className="font-semibold text-primary flex items-center">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Best Practice
+          </h4>
+          <p className="text-sm mt-1">
+            Match your AI's tone to your brand voice. For customer support, a friendly professional
+            tone usually works best.
+          </p>
+        </div>
+        
+        <h3 className="text-xl font-semibold mt-6">Moderation Settings</h3>
+        <p>
+          Control what content your AI will filter or flag:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li><strong>Content Filtering</strong> - Block inappropriate language and content</li>
+          <li><strong>Spam Protection</strong> - Detect and handle repeated or spam messages</li>
+          <li><strong>Custom Rules</strong> - Create specific rules for your community's needs</li>
+        </ul>
+        
+        <h3 className="text-xl font-semibold mt-6">Knowledge Base</h3>
+        <p>
+          Your AI can pull information from your knowledge base to provide more accurate responses:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li>Go to AI Configuration → Knowledge Base</li>
+          <li>Upload documents or add URLs to websites with your information</li>
+          <li>The AI will automatically reference this information when responding to related questions</li>
+        </ol>
+      </div>
+    )
+  },
+  'telegram-bot': {
+    title: 'Creating a Telegram bot',
+    category: 'Platform Integration',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Connecting ModerateAI to Telegram allows you to bring AI-powered moderation and support
+          to your Telegram groups and channels. This guide walks you through the process.
+        </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 1: Create a Telegram bot</h3>
+        <p>
+          Before connecting to ModerateAI, you need to create a bot on Telegram:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li>Open Telegram and search for @BotFather</li>
+          <li>Start a chat with BotFather and send the command /newbot</li>
+          <li>Follow the instructions to name your bot</li>
+          <li>BotFather will give you an API token - save this for the next step</li>
+        </ol>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 2: Connect to ModerateAI</h3>
+        <p>
+          Now connect your Telegram bot to ModerateAI:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li>In ModerateAI, go to Integrations → Telegram</li>
+          <li>Enter your Telegram bot token in the configuration field</li>
+          <li>Click "Connect" to establish the connection</li>
+        </ol>
+        
+        <div className="bg-primary/10 p-4 rounded-md border border-primary/20 mt-6">
+          <h4 className="font-semibold text-primary flex items-center">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Important
+          </h4>
+          <p className="text-sm mt-1">
+            Keep your bot token secret. If compromised, anyone could control your bot.
+            You can reset it with BotFather if needed.
+          </p>
+        </div>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 3: Add your bot to groups</h3>
+        <p>
+          To use your bot in Telegram groups:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li>Open the Telegram group where you want to add the bot</li>
+          <li>Click on the group name at the top to open group info</li>
+          <li>Select "Add member" and search for your bot's username</li>
+          <li>Add the bot and give it admin privileges for moderation functions</li>
+        </ol>
+      </div>
+    )
+  },
+  'content-rules': {
+    title: 'Setting up content filtering rules',
+    category: 'Moderation',
+    content: (
+      <div className="space-y-4">
+        <p>
+          Content filtering is essential for maintaining a healthy community environment.
+          ModerateAI offers powerful tools to automatically detect and handle inappropriate content.
+        </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Default Filtering Categories</h3>
+        <p>
+          ModerateAI provides these pre-configured filtering categories:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li><strong>Profanity</strong> - Detects and filters offensive language</li>
+          <li><strong>Hate Speech</strong> - Identifies discriminatory or hateful content</li>
+          <li><strong>Personal Attacks</strong> - Catches insults and targeted harassment</li>
+          <li><strong>NSFW Content</strong> - Filters sexually explicit material</li>
+          <li><strong>Spam</strong> - Catches repetitive or promotional content</li>
+        </ul>
+        
+        <h3 className="text-xl font-semibold mt-6">Setting Moderation Levels</h3>
+        <p>
+          For each category, you can set one of these moderation levels:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li><strong>Off</strong> - No filtering for this category</li>
+          <li><strong>Low</strong> - Only catches clear violations</li>
+          <li><strong>Medium</strong> - Balanced approach (recommended)</li>
+          <li><strong>High</strong> - Strict filtering, may catch some edge cases</li>
+          <li><strong>Maximum</strong> - Zero tolerance, highest sensitivity</li>
+        </ul>
+        
+        <div className="bg-primary/10 p-4 rounded-md border border-primary/20 mt-6">
+          <h4 className="font-semibold text-primary flex items-center">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Tip
+          </h4>
+          <p className="text-sm mt-1">
+            Start with Medium settings and adjust based on your community needs. 
+            Too strict filtering may frustrate users, while too lenient may not protect your community.
+          </p>
+        </div>
+        
+        <h3 className="text-xl font-semibold mt-6">Creating Custom Rules</h3>
+        <p>
+          Beyond the default categories, you can create custom rules:
+        </p>
+        <ol className="list-decimal pl-6 space-y-2">
+          <li>Go to AI Configuration → Content Rules → Custom Rules</li>
+          <li>Click "Add New Rule" and provide a name</li>
+          <li>Define patterns to match (keywords, phrases, or regex)</li>
+          <li>Set the action to take when triggered (warn, delete, mute user, etc.)</li>
+        </ol>
+      </div>
+    )
   }
 };
 
