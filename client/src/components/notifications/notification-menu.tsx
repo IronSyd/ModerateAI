@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications, Notification, NotificationType } from "@/hooks/use-notifications";
+import { useLocation } from "wouter";
 
 export function NotificationMenu({ onClose }: { onClose: () => void }) {
   const { 
@@ -21,6 +22,8 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
     addNotification,
     clearAllNotifications
   } = useNotifications();
+  
+  const [, navigate] = useLocation();
   
   // When opening the menu, clear the "new notifications" indicator
   React.useEffect(() => {
@@ -88,7 +91,16 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
                 className={`p-3 border-b hover:bg-accent cursor-pointer flex items-start ${
                   !notification.read ? 'bg-primary/10' : ''
                 }`}
-                onClick={() => markAsRead(notification.id)}
+                onClick={() => {
+                  // Mark as read
+                  markAsRead(notification.id);
+                  
+                  // Navigate to the linked page if available
+                  if (notification.link) {
+                    navigate(notification.link);
+                    onClose(); // Close the notification menu
+                  }
+                }}
               >
                 <div className="mr-3">
                   {getNotificationIcon(notification.type)}
@@ -120,10 +132,22 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
               const randomType = types[Math.floor(Math.random() * types.length)];
               
               // Add the notification using the function from the hook we already initialized
+              // Create appropriate link based on notification type
+              let link = '/dashboard';
+              
+              if (randomType === 'message') {
+                link = '/dashboard/messages';
+              } else if (randomType === 'moderation') {
+                link = '/integrations/telegram';
+              } else if (randomType === 'system') {
+                link = '/settings';
+              }
+              
               addNotification({
                 title: `New ${randomType} notification`,
                 description: `This is a test ${randomType} notification added at ${new Date().toLocaleTimeString()}`,
-                type: randomType
+                type: randomType,
+                link: link
               });
             }}
           >

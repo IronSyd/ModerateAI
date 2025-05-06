@@ -11,6 +11,7 @@ export interface Notification {
   time: string;
   read: boolean;
   type: NotificationType;
+  link?: string; // Optional link to navigate to when clicked
 }
 
 // Initial dummy notifications
@@ -21,7 +22,8 @@ const initialNotifications: Notification[] = [
     description: 'A new message from user John Doe requires attention.',
     time: '2 minutes ago',
     read: false,
-    type: 'message'
+    type: 'message',
+    link: '/dashboard/messages/123'
   },
   {
     id: '2',
@@ -29,7 +31,8 @@ const initialNotifications: Notification[] = [
     description: 'A message was flagged for inappropriate content in Discord channel.',
     time: '30 minutes ago',
     read: false,
-    type: 'moderation'
+    type: 'moderation',
+    link: '/integrations/discord'
   },
   {
     id: '3',
@@ -37,7 +40,8 @@ const initialNotifications: Notification[] = [
     description: 'ModerateAI has been updated to version 2.1.0',
     time: '2 hours ago',
     read: true,
-    type: 'system'
+    type: 'system',
+    link: '/settings/updates'
   },
   {
     id: '4',
@@ -45,7 +49,8 @@ const initialNotifications: Notification[] = [
     description: 'Your custom AI model training has been completed.',
     time: 'Yesterday',
     read: true,
-    type: 'system'
+    type: 'system',
+    link: '/ai-models'
   }
 ];
 
