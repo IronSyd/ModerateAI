@@ -18,7 +18,8 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
     markAsRead,
     markAllAsRead,
     dismissNewNotificationsIndicator,
-    addNotification
+    addNotification,
+    clearAllNotifications
   } = useNotifications();
   
   // When opening the menu, clear the "new notifications" indicator
@@ -43,22 +44,35 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
     <div className="relative z-50">
       <div className="fixed inset-0" onClick={onClose}></div>
       <div className="absolute right-0 mt-2 w-80 bg-card rounded-md shadow-lg overflow-hidden border border-border">
-        <div className="p-3 border-b flex justify-between items-center">
-          <div className="flex items-center">
-            <h3 className="text-lg font-semibold">Notifications</h3>
-            {unreadCount > 0 && (
-              <Badge className="ml-2 bg-primary" variant="default">
-                {unreadCount} new
-              </Badge>
-            )}
+        <div className="p-3 border-b">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center">
+              <h3 className="text-lg font-semibold">Notifications</h3>
+              {unreadCount > 0 && (
+                <Badge className="ml-2 bg-primary" variant="default">
+                  {unreadCount} new
+                </Badge>
+              )}
+            </div>
+            <button 
+              onClick={markAllAsRead}
+              className="text-xs text-primary hover:text-primary/80"
+              disabled={unreadCount === 0}
+            >
+              Mark all as read
+            </button>
           </div>
-          <button 
-            onClick={markAllAsRead}
-            className="text-xs text-primary hover:text-primary/80"
-            disabled={unreadCount === 0}
-          >
-            Mark all as read
-          </button>
+          
+          <div className="flex justify-end">
+            <button 
+              onClick={clearAllNotifications}
+              className="text-xs text-destructive hover:text-destructive/80 flex items-center"
+              disabled={notifications.length === 0}
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear all notifications
+            </button>
+          </div>
         </div>
         
         <div className="max-h-[400px] overflow-y-auto">

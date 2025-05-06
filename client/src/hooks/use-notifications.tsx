@@ -54,6 +54,7 @@ interface NotificationsContextProps {
   unreadCount: number;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  clearAllNotifications: () => void;
   addNotification: (notification: Omit<Notification, 'id' | 'time' | 'read'>) => void;
   hasNewNotifications: boolean;
   dismissNewNotificationsIndicator: () => void;
@@ -128,6 +129,15 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // This is just a simulation for the demo
   };
 
+  // Clear all notifications
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    setHasNewNotifications(false);
+    
+    // In a real implementation, this would be an API call
+    // apiRequest('/api/notifications/clear-all', { method: 'POST' });
+  };
+  
   // Dismiss the new notifications indicator (pulsing effect)
   const dismissNewNotificationsIndicator = () => {
     setHasNewNotifications(false);
@@ -140,6 +150,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         unreadCount,
         markAsRead,
         markAllAsRead,
+        clearAllNotifications,
         addNotification,
         hasNewNotifications,
         dismissNewNotificationsIndicator
