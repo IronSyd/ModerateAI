@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation } from "wouter";
 import { 
   BookOpen, 
   ChevronRight, 
@@ -214,7 +215,8 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
                   key={article.id}
                   className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-start"
                   onClick={() => {
-                    // Would open article in a real app
+                    // Navigate to the article page
+                    navigate(`/help/article/${article.id}`);
                     onClose();
                   }}
                 >
@@ -236,7 +238,8 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
                   key={category.id}
                   className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-center"
                   onClick={() => {
-                    // Would open category in a real app
+                    // Navigate to help center with category filter
+                    navigate(`/help?category=${category.id}`);
                     onClose();
                   }}
                 >
@@ -261,7 +264,8 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
                   key={article.id}
                   className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-start"
                   onClick={() => {
-                    // Would open article in a real app
+                    // Navigate to the article page
+                    navigate(`/help/article/${article.id}`);
                     onClose();
                   }}
                 >
@@ -284,11 +288,11 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
             <h4 className="text-sm font-medium text-foreground">Need more help?</h4>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="text-sm" onClick={onClose}>
+            <Button variant="outline" className="text-sm" onClick={navigateToHelpCenter}>
               <MessageSquare className="h-4 w-4 mr-2" />
               Live Chat
             </Button>
-            <Button variant="outline" className="text-sm" onClick={onClose}>
+            <Button variant="outline" className="text-sm" onClick={navigateToHelpCenter}>
               <Headphones className="h-4 w-4 mr-2" />
               Support Ticket
             </Button>
