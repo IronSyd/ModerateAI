@@ -423,16 +423,28 @@ const TelegramIntegration = () => {
     }
     
     try {
+      console.log('Updating bot config with:', configUpdate);
+      
+      // Create a clean config object to avoid issues with undefined/null values
+      const currentConfig = platform?.config || {};
+      const newConfig = {
+        ...currentConfig,
+        // Ensure welcome message exists
+        welcomeMessage: currentConfig.welcomeMessage || "Hello! I'm your AI assistant. How can I help you today?",
+        // Add the moderation settings
+        contentFilteringEnabled: configUpdate.contentFilteringEnabled,
+        spamProtectionEnabled: configUpdate.spamProtectionEnabled,
+      };
+      
+      console.log('Final config being sent:', newConfig);
+      
       // Use direct fetch API with credentials to ensure authentication
       const response = await fetch(`/api/platforms/${telegramPlatformId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          config: {
-            ...platform?.config,
-            ...configUpdate
-          }
+          config: newConfig
         })
       });
       
@@ -449,10 +461,12 @@ const TelegramIntegration = () => {
         let errorMessage = "Failed to update bot settings.";
         try {
           const errorData = await response.json();
+          console.error('Error response:', errorData);
           if (errorData.message) {
             errorMessage = errorData.message;
           }
         } catch (e) {
+          console.error('Error parsing error response:', e);
           // Use default error message
         }
         
