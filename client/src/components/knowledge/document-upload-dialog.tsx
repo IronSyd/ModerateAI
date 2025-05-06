@@ -295,7 +295,7 @@ export function DocumentUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Knowledge</DialogTitle>
           <DialogDescription>
@@ -360,7 +360,7 @@ export function DocumentUploadDialog({
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Paste or type document content here"
                   disabled={isUploading || isFileReading}
-                  className="min-h-[200px] mt-1"
+                  className="min-h-[120px] mt-1"
                 />
               </div>
             </TabsContent>
@@ -408,7 +408,7 @@ export function DocumentUploadDialog({
               
               <div>
                 <Label>Preview Content</Label>
-                <div className="min-h-[150px] mt-1 border rounded-md p-3 text-sm bg-muted/50">
+                <div className="min-h-[100px] mt-1 border rounded-md p-3 text-sm bg-muted/50">
                   {isScrapingUrl ? (
                     <div className="flex flex-col items-center justify-center h-full">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -523,7 +523,7 @@ export function DocumentUploadDialog({
                   onChange={(e) => setQaAnswer(e.target.value)}
                   placeholder="Enter the detailed answer"
                   disabled={isUploading}
-                  className="min-h-[150px] mt-1"
+                  className="min-h-[100px] mt-1"
                 />
               </div>
             </TabsContent>
