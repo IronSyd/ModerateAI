@@ -82,6 +82,10 @@ const TelegramIntegration = () => {
   const [isTokenDialogOpen, setIsTokenDialogOpen] = useState(false);
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  
+  // Moderation state
+  const [contentFilteringEnabled, setContentFilteringEnabled] = useState(true);
+  const [spamProtectionEnabled, setSpamProtectionEnabled] = useState(true);
 
   // Fetch all platforms first to find the Telegram platform
   const { data: platforms, isLoading: platformsLoading } = useQuery({
@@ -477,6 +481,25 @@ const TelegramIntegration = () => {
       setShowAuthDialog(true);
     }
   }, [user]);
+  
+  // Initialize moderation settings from platform config
+  useEffect(() => {
+    if (platform?.config) {
+      // Set content filtering
+      setContentFilteringEnabled(
+        platform.config.contentFilteringEnabled !== undefined 
+          ? platform.config.contentFilteringEnabled 
+          : true
+      );
+      
+      // Set spam protection
+      setSpamProtectionEnabled(
+        platform.config.spamProtectionEnabled !== undefined 
+          ? platform.config.spamProtectionEnabled 
+          : true
+      );
+    }
+  }, [platform]);
   
   // Manual login function
   const loginManually = async () => {
@@ -973,32 +996,44 @@ const TelegramIntegration = () => {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Content Filtering</Label>
+                    <Label htmlFor="content-filtering">Content Filtering</Label>
                     <p className="text-sm text-muted-foreground">
                       Moderate inappropriate content
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    id="content-filtering"
+                    checked={contentFilteringEnabled} 
+                    onCheckedChange={setContentFilteringEnabled}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Spam Protection</Label>
+                    <Label htmlFor="spam-protection">Spam Protection</Label>
                     <p className="text-sm text-muted-foreground">
                       Detect and filter spam messages
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    id="spam-protection"
+                    checked={spamProtectionEnabled} 
+                    onCheckedChange={setSpamProtectionEnabled}
+                  />
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="ml-auto" onClick={() => {
-                toast({
-                  title: "Settings saved",
-                  description: "Your bot settings have been updated"
-                });
-              }}>
+              <Button 
+                className="ml-auto" 
+                onClick={() => {
+                  // Save the moderation settings
+                  updateBotConfig({
+                    contentFilteringEnabled: contentFilteringEnabled,
+                    spamProtectionEnabled: spamProtectionEnabled
+                  });
+                }}
+              >
                 <Save className="mr-2 h-4 w-4" />
                 Save Changes
               </Button>
