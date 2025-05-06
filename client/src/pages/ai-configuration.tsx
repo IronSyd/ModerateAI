@@ -830,6 +830,29 @@ const AIConfiguration = () => {
                         setShowAuthDialog(true);
                         return;
                       }
+                      setShowCreateKbDialog(true);
+                    }}
+                  >
+                    {!user ? (
+                      <>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Create Knowledge Base
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Create Knowledge Base
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      if (!user) {
+                        setShowAuthDialog(true);
+                        return;
+                      }
 
                       const activeKb = knowledgeBases && knowledgeBases[0];
                       if (activeKb) {
@@ -847,35 +870,12 @@ const AIConfiguration = () => {
                     {!user ? (
                       <>
                         <LogIn className="mr-2 h-4 w-4" />
-                        Login to Add Content
+                        Add Content
                       </>
                     ) : (
                       <>
                         <Upload className="mr-2 h-4 w-4" />
-                        Add Knowledge Content
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      if (!user) {
-                        setShowAuthDialog(true);
-                        return;
-                      }
-                      setShowCreateKbDialog(true);
-                    }}
-                  >
-                    {!user ? (
-                      <>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Login to Create Knowledge Base
-                      </>
-                    ) : (
-                      <>
-                        <Database className="mr-2 h-4 w-4" />
-                        Create New Knowledge Base
+                        Add Content
                       </>
                     )}
                   </Button>
