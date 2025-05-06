@@ -7,6 +7,7 @@ import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { initializeAllBots } from "./lib/telegram";
 
 // Function to hash passwords
 const scryptAsync = promisify(scrypt);
@@ -150,5 +151,10 @@ async function initializeDemoData() {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Initialize any active Telegram bots
+    initializeAllBots()
+      .then(() => log('Initialized active Telegram bots'))
+      .catch(err => log(`Error initializing Telegram bots: ${err.message}`));
   });
 })();
