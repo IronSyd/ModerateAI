@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthDialog } from "@/components/auth-dialog";
 
 import {
   Card,
@@ -203,8 +205,28 @@ const TelegramIntegration = () => {
     { id: 3, name: "Announcement Channel", members: 587, status: "pending", lastActive: "1 day ago" }
   ];
 
+  // Show auth dialog if not logged in
+  useEffect(() => {
+    if (!user) {
+      setShowAuthDialog(true);
+    }
+  }, [user]);
+  
   return (
     <div>
+      {/* Authentication dialog */}
+      <AuthDialog 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog}
+        onLoginSuccess={() => {
+          // After login, query will automatically re-fetch
+          toast({
+            title: "Login successful",
+            description: "You're now logged in and can connect your Telegram bot.",
+          });
+        }}
+      />
+      
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-muted-foreground">Connect your AI assistant to Telegram groups and chats</p>
@@ -667,13 +689,41 @@ const TelegramIntegration = () => {
                 <Lock className="h-3 w-3 mr-1" />
                 Your token is securely stored and encrypted
               </p>
+              
+              {!user && (
+                <div className="mt-3 rounded-md bg-amber-50 p-3 border border-amber-200">
+                  <div className="flex">
+                    <Info className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-medium text-amber-800">Login Required</h4>
+                      <p className="text-xs text-amber-700 mt-1">
+                        You need to log in before connecting your Telegram bot.
+                      </p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="mt-2"
+                        onClick={() => {
+                          setIsTokenDialogOpen(false);
+                          setShowAuthDialog(true);
+                        }}
+                      >
+                        Log in now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsTokenDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConnectBot} disabled={connectBotMutation.isPending}>
+            <Button 
+              onClick={handleConnectBot} 
+              disabled={connectBotMutation.isPending || !user}
+            >
               {connectBotMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
