@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   Search, 
   BookOpen, 
@@ -186,7 +186,7 @@ function ArticleCard({ article }: { article: HelpArticle }) {
 // Category Card Component
 function CategoryCard({ category }: { category: HelpCategory }) {
   return (
-    <Link href={`/help/category/${category.id}`}>
+    <Link href={`/help?category=${category.id}`}>
       <div className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group">
         <div className="flex items-start">
           <div className="mr-3 flex-shrink-0">
@@ -209,10 +209,45 @@ function CategoryCard({ category }: { category: HelpCategory }) {
 
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [, params] = useLocation();
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
   
+  // Parse the URL query parameters
+  React.useEffect(() => {
+    if (params && params.includes('category=')) {
+      const categoryParam = params.split('category=')[1]?.split('&')[0] || null;
+      setSelectedCategory(categoryParam);
+    } else {
+      setSelectedCategory(null);
+    }
+  }, [params]);
+  
+  // Get all articles from all categories
+  const allArticles = React.useMemo(() => {
+    const articles: HelpArticle[] = [];
+    helpCategories.forEach(category => {
+      if (category.articles) {
+        articles.push(...category.articles);
+      }
+    });
+    return articles;
+  }, []);
+  
+  // Find selected category
+  const selectedCategoryData = React.useMemo(() => {
+    if (!selectedCategory) return null;
+    return helpCategories.find(c => c.id === selectedCategory);
+  }, [selectedCategory]);
+  
+  // Filter articles by category if selected
+  const filteredArticles = React.useMemo(() => {
+    if (!selectedCategory) return allArticles;
+    return allArticles.filter(article => article.category === selectedCategory);
+  }, [selectedCategory, allArticles]);
+
   return (
     <div className="max-w-5xl mx-auto px-4 pt-0 pb-8">
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-8 mb-10">
+      <div className="bg-gradient-to-r from-primary/20 to-background border border-primary/10 rounded-xl p-8 mb-10">
         <h1 className="text-3xl font-bold mb-3">Help Center</h1>
         <p className="text-muted-foreground text-lg mb-6 max-w-2xl">
           Find guides, tutorials, and answers to common questions
@@ -231,50 +266,106 @@ export default function HelpCenterPage() {
         </div>
       </div>
       
-      {/* Popular Articles */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold">Popular Articles</h2>
-          <Link href="/help/popular">
-            <Button variant="ghost" className="text-primary">
-              View all
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
+      {/* Selected Category Banner */}
+      {selectedCategoryData && (
+        <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 mb-8 flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="mr-3">{selectedCategoryData.icon}</div>
+            <div>
+              <h2 className="font-semibold text-lg">{selectedCategoryData.title}</h2>
+              <p className="text-sm text-muted-foreground">{selectedCategoryData.description}</p>
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              // Clear the filter - navigate back to main help center
+              window.history.pushState({}, '', '/help');
+              setSelectedCategory(null);
+            }}
+          >
+            Clear Filter
+          </Button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {popularArticles.slice(0, 4).map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
-      </div>
+      )}
       
-      {/* Categories */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Browse by Category</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {helpCategories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
+      {selectedCategory ? (
+        /* Category Selected - Show Filtered Articles */
+        <div className="mb-12">
+          <div className="flex items-center mb-4">
+            <h2 className="text-2xl font-semibold">Articles in {selectedCategoryData?.title}</h2>
+          </div>
+          
+          {filteredArticles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-muted/20 rounded-lg border border-border">
+              <p className="text-muted-foreground">
+                No articles found in this category.
+              </p>
+            </div>
+          )}
         </div>
-      </div>
-      
-      {/* New Articles */}
-      <div className="mb-12">
-        <div className="flex items-center mb-4">
-          <h2 className="text-2xl font-semibold">New Articles</h2>
-          <Badge className="ml-3 bg-green-900/20 text-green-500 hover:bg-green-900/30">
-            New
-          </Badge>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {newArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
-      </div>
+      ) : (
+        /* No Category Selected - Show Default Content */
+        <>
+          {/* Popular Articles */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Popular Articles</h2>
+              <Button 
+                variant="ghost" 
+                className="text-primary"
+                onClick={() => {
+                  // Instead of navigating to another page, we could
+                  // implement filtering functionality here in the future
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                View all
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {popularArticles.slice(0, 4).map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </div>
+          
+          {/* Categories */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold mb-4">Browse by Category</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {helpCategories.map((category) => (
+                <CategoryCard key={category.id} category={category} />
+              ))}
+            </div>
+          </div>
+          
+          {/* New Articles */}
+          <div className="mb-12">
+            <div className="flex items-center mb-4">
+              <h2 className="text-2xl font-semibold">New Articles</h2>
+              <Badge className="ml-3 bg-green-900/20 text-green-500 hover:bg-green-900/30">
+                New
+              </Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {newArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
       
       <Separator className="my-12" />
       

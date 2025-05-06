@@ -337,7 +337,7 @@ export default function HelpArticlePage() {
         </Link>
       </div>
       
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-6 mb-6">
+      <div className="bg-gradient-to-r from-primary/20 to-background border border-primary/10 rounded-xl p-6 mb-6">
         <h1 className="text-3xl font-bold">{article.title}</h1>
         <div className="flex items-center mt-2 text-muted-foreground text-sm">
           <BookOpen className="h-4 w-4 mr-1" />
