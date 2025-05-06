@@ -17,7 +17,8 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
     unreadCount,
     markAsRead,
     markAllAsRead,
-    dismissNewNotificationsIndicator
+    dismissNewNotificationsIndicator,
+    addNotification
   } = useNotifications();
   
   // When opening the menu, clear the "new notifications" indicator
@@ -100,11 +101,11 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
           <button 
             className="text-sm text-primary hover:text-primary/80 font-medium"
             onClick={() => {
-              // Demo function to add a new notification
-              const { addNotification } = useNotifications();
+              // Create a random notification
               const types: NotificationType[] = ['message', 'moderation', 'system'];
               const randomType = types[Math.floor(Math.random() * types.length)];
               
+              // Add the notification using the function from the hook we already initialized
               addNotification({
                 title: `New ${randomType} notification`,
                 description: `This is a test ${randomType} notification added at ${new Date().toLocaleTimeString()}`,
