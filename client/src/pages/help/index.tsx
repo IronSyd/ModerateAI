@@ -219,29 +219,38 @@ export default function HelpCenterPage() {
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
   const [, navigate] = useLocation();
   
+  // State to track if viewing all articles
+  const [viewingAllArticles, setViewingAllArticles] = React.useState(false);
+  
   // Parse the URL query parameters
   React.useEffect(() => {
     // Function to parse the URL
-    const updateCategoryFromUrl = () => {
+    const updateFromUrl = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const category = urlParams.get('category');
+      const viewAll = urlParams.get('all');
       
       if (category) {
         setSelectedCategory(category);
+        setViewingAllArticles(false);
+      } else if (viewAll === 'true') {
+        setSelectedCategory(null);
+        setViewingAllArticles(true);
       } else {
         setSelectedCategory(null);
+        setViewingAllArticles(false);
       }
     };
     
     // Initial call
-    updateCategoryFromUrl();
+    updateFromUrl();
     
     // Set up event listener for URL changes
-    window.addEventListener('popstate', updateCategoryFromUrl);
+    window.addEventListener('popstate', updateFromUrl);
     
     // Cleanup
     return () => {
-      window.removeEventListener('popstate', updateCategoryFromUrl);
+      window.removeEventListener('popstate', updateFromUrl);
     };
   }, []);
   
@@ -364,6 +373,37 @@ export default function HelpCenterPage() {
             </div>
           )}
         </div>
+      ) : viewingAllArticles ? (
+        /* All Articles View */
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">All Help Articles</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                // Go back to the main help page
+                navigate('/help');
+              }}
+            >
+              Back to Help Center
+            </Button>
+          </div>
+          
+          {allArticles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-muted/20 rounded-lg border border-border">
+              <p className="text-muted-foreground">
+                No articles found.
+              </p>
+            </div>
+          )}
+        </div>
       ) : selectedCategory ? (
         /* Category Selected - Show Filtered Articles */
         <div className="mb-12">
@@ -396,9 +436,10 @@ export default function HelpCenterPage() {
                 variant="ghost" 
                 className="text-primary"
                 onClick={() => {
-                  // Instead of navigating to another page, we could
-                  // implement filtering functionality here in the future
+                  // Show all articles in a dedicated section
                   window.scrollTo({ top: 0, behavior: 'smooth' });
+                  // Set query to show all articles
+                  navigate('/help?all=true');
                 }}
               >
                 View all
