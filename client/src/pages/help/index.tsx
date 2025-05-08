@@ -215,44 +215,19 @@ function CategoryCard({ category }: { category: HelpCategory }) {
 
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
-  // Use window.location to access the URL query string
-  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   
-  // State to track if viewing all articles
-  const [viewingAllArticles, setViewingAllArticles] = React.useState(false);
+  // Parse URL parameters on each render
+  const params = new URLSearchParams(window.location.search);
+  const selectedCategory = params.get('category');
+  const viewingAllArticles = params.get('all') === 'true';
   
-  // Parse the URL query parameters
-  React.useEffect(() => {
-    // Function to parse the URL
-    const updateFromUrl = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const category = urlParams.get('category');
-      const viewAll = urlParams.get('all');
-      
-      if (category) {
-        setSelectedCategory(category);
-        setViewingAllArticles(false);
-      } else if (viewAll === 'true') {
-        setSelectedCategory(null);
-        setViewingAllArticles(true);
-      } else {
-        setSelectedCategory(null);
-        setViewingAllArticles(false);
-      }
-    };
-    
-    // Initial call
-    updateFromUrl();
-    
-    // Set up event listener for URL changes
-    window.addEventListener('popstate', updateFromUrl);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('popstate', updateFromUrl);
-    };
-  }, []);
+  // Function to navigate while immediately updating the view
+  const navigateTo = (path: string) => {
+    navigate(path);
+    // Force a re-render to update the UI immediately
+    setTimeout(() => window.dispatchEvent(new Event('popstate')), 0);
+  };
   
   // Get all articles from all categories
   const allArticles = React.useMemo(() => {
@@ -342,7 +317,6 @@ export default function HelpCenterPage() {
             onClick={() => {
               // Clear the filter - navigate back to main help center
               navigate('/help');
-              setSelectedCategory(null);
             }}
           >
             Clear Filter
