@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 import {
   Card,
@@ -78,10 +80,25 @@ import { SiDiscord } from "react-icons/si";
 
 const DiscordIntegration = () => {
   const { toast } = useToast();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("setup");
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [isCompleteSetupDialogOpen, setIsCompleteSetupDialogOpen] = useState(false);
   const [authCode, setAuthCode] = useState("");
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access Discord integration features.",
+        variant: "destructive",
+      });
+      setLocation("/auth");
+    }
+  }, [user, isAuthLoading, toast, setLocation]);
 
   // Fetch platform data
   const { data: platform, isLoading } = useQuery({
@@ -92,6 +109,9 @@ const DiscordIntegration = () => {
   // Start Discord bot setup
   const startSetupMutation = useMutation({
     mutationFn: async () => {
+      // Add console logs to debug the Discord client ID
+      console.log("Discord Client ID:", import.meta.env.VITE_DISCORD_CLIENT_ID);
+      
       return apiRequest("PATCH", `/api/platforms/3`, {
         name: "Discord Bot",
         status: "setup_required",
@@ -105,13 +125,28 @@ const DiscordIntegration = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
-      window.open(`https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_CLIENT_ID}&permissions=8&scope=bot%20applications.commands`, "_blank");
+      
+      // Check if Discord client ID is available
+      const discordClientId = import.meta.env.VITE_DISCORD_CLIENT_ID;
+      if (!discordClientId) {
+        toast({
+          title: "Configuration Error",
+          description: "Discord Client ID is missing. Please check your environment settings.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Open Discord authorization window
+      window.open(`https://discord.com/api/oauth2/authorize?client_id=${discordClientId}&permissions=8&scope=bot%20applications.commands`, "_blank");
+      
       toast({
         title: "Setup started",
         description: "Please complete the Discord authorization process.",
       });
     },
     onError: (error) => {
+      console.error("Discord setup error:", error);
       toast({
         title: "Error",
         description: "Failed to start Discord setup. Please try again.",
@@ -207,6 +242,18 @@ const DiscordIntegration = () => {
   });
 
   const handleStartSetup = () => {
+    // Check if user is authenticated
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add Discord integration.",
+        variant: "destructive",
+      });
+      setLocation("/auth");
+      return;
+    }
+    
+    // Start the setup process
     startSetupMutation.mutate();
   };
 
