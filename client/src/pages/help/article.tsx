@@ -4,6 +4,7 @@ import { ChevronLeft, HelpCircle, BookOpen, Printer, Share } from "lucide-react"
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useReadArticles } from "@/hooks/use-read-articles";
 
 // Basic article content for demo purposes
 const articleContent: Record<string, {
@@ -262,13 +263,19 @@ export default function HelpArticlePage() {
   const params = useParams();
   const articleId = params.articleId;
   const [article, setArticle] = useState<typeof articleContent[string] | null>(null);
+  const { markArticleAsRead } = useReadArticles();
   
   useEffect(() => {
     // In a real app, this would be an API call to fetch the article
     if (articleId && articleContent[articleId]) {
       setArticle(articleContent[articleId]);
+      
+      // Mark article as read when it's viewed
+      if (articleId) {
+        markArticleAsRead(articleId);
+      }
     }
-  }, [articleId]);
+  }, [articleId, markArticleAsRead]);
   
   if (!article) {
     return (
