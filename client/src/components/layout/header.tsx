@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Bell, HelpCircle, User } from "lucide-react";
+import { Menu, Bell, HelpCircle, User, Moon, Sun } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
@@ -8,7 +8,9 @@ import { HelpMenu } from "../help/help-menu-new";
 import { Logo } from "@/components/logo";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useTheme } from "@/hooks/use-theme";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,7 @@ const Header = () => {
   const [helpOpen, setHelpOpen] = useState(false);
   const { isAdminUser, adminUser } = useAdminUser();
   const { unreadCount, hasNewNotifications } = useNotifications();
+  const { theme, setTheme, isDarkMode } = useTheme();
   
   // Get page title based on current route
   const getPageTitle = () => {
@@ -85,6 +88,30 @@ const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* Theme toggle button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(isDarkMode ? "light" : "dark")}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Toggle theme"
+                >
+                  {isDarkMode ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isDarkMode ? "Switch to light mode" : "Switch to dark mode"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
           {isAdminUser && (
             <TooltipProvider>
               <Tooltip>

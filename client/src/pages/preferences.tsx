@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
 
 import {
   Card,
@@ -24,10 +25,10 @@ import { Loader2, Moon, Sun, Globe } from "lucide-react";
 const PreferencesPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme, isLoading: isThemeLoading } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
 
   // Preference states
-  const [theme, setTheme] = useState<string>("system");
   const [language, setLanguage] = useState<string>("en");
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [actionNotifications, setActionNotifications] = useState<boolean>(true);
@@ -37,7 +38,10 @@ const PreferencesPage = () => {
   const savePreferences = async () => {
     try {
       setIsLoading(true);
-      // In a real app, this would save the user preferences through an API call
+      
+      // Theme is saved automatically when changed through the ThemeProvider
+      
+      // In a real app, this would save the other user preferences through an API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({
         title: "Preferences saved",

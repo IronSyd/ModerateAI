@@ -25,6 +25,7 @@ import Header from "@/components/layout/header";
 import { AuthProvider } from "@/hooks/use-auth";
 import { AdminUserProvider } from "@/hooks/use-admin-user";
 import { NotificationsProvider } from "@/hooks/use-notifications";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 // Lazy-loaded help pages
@@ -134,10 +135,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AdminUserProvider>
-          <NotificationsProvider>
-            <Router />
-            <Toaster />
-          </NotificationsProvider>
+          <ThemeProvider>
+            <NotificationsProvider>
+              <Router />
+              <Toaster />
+            </NotificationsProvider>
+          </ThemeProvider>
         </AdminUserProvider>
       </AuthProvider>
     </QueryClientProvider>
