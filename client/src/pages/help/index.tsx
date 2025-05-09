@@ -351,7 +351,14 @@ export default function HelpCenterPage() {
 
     // Filter by category if selected
     if (selectedCategory) {
-      filtered = filtered.filter(article => article.category === selectedCategory);
+      // Directly use the selected category's articles
+      const category = helpCategories.find(c => c.id === selectedCategory);
+      if (category && category.articles) {
+        return category.articles;
+      } else {
+        console.log(`Category ${selectedCategory} not found or has no articles`);
+        return [];
+      }
     }
 
     // Filter by search query if provided
@@ -364,7 +371,7 @@ export default function HelpCenterPage() {
     }
 
     return filtered;
-  }, [selectedCategory, searchQuery, allArticles]);
+  }, [selectedCategory, searchQuery, allArticles, helpCategories]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-0 pb-8">
