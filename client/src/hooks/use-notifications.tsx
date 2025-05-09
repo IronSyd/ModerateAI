@@ -74,35 +74,50 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  // Mock API call - in a real app, this would fetch notifications from the server
-  const { data: fetchedNotifications } = useQuery({
-    queryKey: ['/api/notifications'],
-    queryFn: async () => {
-      // In a real implementation, this would be an API call
-      return initialNotifications;
-    },
-    // Only refresh every 30 seconds to avoid too many refreshes
-    refetchInterval: 30000,
-  });
-
-  // Update notifications when fetched
+  // Instead of fetching notifications every 30 seconds, we'll use localStorage to persist the read state
   useEffect(() => {
-    if (fetchedNotifications) {
-      setNotifications(fetchedNotifications);
-      // If there are unread notifications, show the indicator
-      if (fetchedNotifications.some(n => !n.read)) {
-        setHasNewNotifications(true);
+    // Try to get notifications from localStorage
+    const storedNotifications = localStorage.getItem('notifications');
+    if (storedNotifications) {
+      try {
+        const parsedNotifications = JSON.parse(storedNotifications);
+        setNotifications(parsedNotifications);
+        
+        // Only set hasNewNotifications if there are unread notifications
+        if (parsedNotifications.some((n: Notification) => !n.read)) {
+          setHasNewNotifications(true);
+        } else {
+          setHasNewNotifications(false);
+        }
+      } catch (e) {
+        // If there's an error parsing, use initial notifications
+        console.error('Error parsing stored notifications', e);
+        setNotifications(initialNotifications);
       }
+    } else {
+      // If nothing in storage, use initial notifications
+      setNotifications(initialNotifications);
     }
-  }, [fetchedNotifications]);
+  }, []);
+
+  // Save notifications to localStorage
+  const saveNotificationsToStorage = (updatedNotifications: Notification[]) => {
+    try {
+      localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+    } catch (e) {
+      console.error('Error saving notifications to localStorage', e);
+    }
+  };
 
   // Mark a notification as read
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
+    setNotifications(prev => {
+      const updated = prev.map(notification => 
         notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
+      );
+      saveNotificationsToStorage(updated);
+      return updated;
+    });
     
     // In a real implementation, this would be an API call
     // apiRequest(`/api/notifications/${id}/read`, { method: 'POST' });
@@ -110,9 +125,11 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Mark all notifications as read
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
+    setNotifications(prev => {
+      const updated = prev.map(notification => ({ ...notification, read: true }));
+      saveNotificationsToStorage(updated);
+      return updated;
+    });
     
     // In a real implementation, this would be an API call
     // apiRequest('/api/notifications/read-all', { method: 'POST' });
@@ -127,7 +144,11 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       read: false
     };
     
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications(prev => {
+      const updated = [newNotification, ...prev];
+      saveNotificationsToStorage(updated);
+      return updated;
+    });
     setHasNewNotifications(true);
     
     // In a real implementation, this would be handled by push notifications or websockets
@@ -138,6 +159,9 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearAllNotifications = () => {
     setNotifications([]);
     setHasNewNotifications(false);
+    
+    // Clear notifications in localStorage
+    localStorage.removeItem('notifications');
     
     // In a real implementation, this would be an API call
     // apiRequest('/api/notifications/clear-all', { method: 'POST' });
