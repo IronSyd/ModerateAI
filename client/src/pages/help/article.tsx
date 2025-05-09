@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { ChevronLeft, HelpCircle, BookOpen, Printer, Share } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -264,6 +264,8 @@ export default function HelpArticlePage() {
   const articleId = params.articleId;
   const [article, setArticle] = useState<typeof articleContent[string] | null>(null);
   const { markArticleAsRead } = useReadArticles();
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState<'yes' | 'no' | null>(null);
+  const [, navigate] = useLocation();
   
   useEffect(() => {
     // In a real app, this would be an API call to fetch the article
@@ -275,7 +277,10 @@ export default function HelpArticlePage() {
         markArticleAsRead(articleId);
       }
     }
-  }, [articleId, markArticleAsRead]);
+    
+    // Reset feedback state when article changes
+    setFeedbackSubmitted(null);
+  }, [articleId, markArticleAsRead, navigate]);
   
   if (!article) {
     return (
@@ -323,11 +328,30 @@ export default function HelpArticlePage() {
       </div>
       
       <div className="flex justify-end mb-6 space-x-2">
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => window.print()}
+        >
           <Printer className="h-4 w-4 mr-1" />
           Print
         </Button>
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            // Create a temporary input to copy the current URL
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            
+            // Show an alert (in a real app, this would be a toast notification)
+            alert('Link copied to clipboard!');
+          }}
+        >
           <Share className="h-4 w-4 mr-1" />
           Share
         </Button>
@@ -359,10 +383,39 @@ export default function HelpArticlePage() {
       
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Was this article helpful?</h3>
-        <div className="flex justify-center space-x-2">
-          <Button variant="outline">Yes, thanks!</Button>
-          <Button variant="outline">No, I need more help</Button>
-        </div>
+        
+        {feedbackSubmitted ? (
+          <div className="py-2 px-4 bg-muted rounded-md inline-block">
+            {feedbackSubmitted === 'yes' ? (
+              <p className="text-green-500">Thank you for your feedback!</p>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-foreground">We're sorry this article wasn't helpful.</p>
+                <Button variant="default" size="sm" onClick={() => navigate('/help')}>
+                  Browse other articles
+                </Button>
+                <Button variant="outline" size="sm" className="ml-2">
+                  Contact support
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex justify-center space-x-2">
+            <Button 
+              variant="outline"
+              onClick={() => setFeedbackSubmitted('yes')}
+            >
+              Yes, thanks!
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setFeedbackSubmitted('no')}
+            >
+              No, I need more help
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
