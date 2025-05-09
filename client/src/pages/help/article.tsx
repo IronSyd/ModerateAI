@@ -381,47 +381,57 @@ export default function HelpArticlePage() {
       
       <Separator className="my-8" />
       
-      <div className="text-center">
+      <div className="text-center" data-feedback-section>
         <h3 className="text-lg font-semibold mb-2">Was this article helpful?</h3>
         
-        {feedbackSubmitted ? (
-          <div className="py-2 px-4 bg-muted rounded-md inline-block">
-            {feedbackSubmitted === 'yes' ? (
-              <p className="text-green-500">Thank you for your feedback!</p>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-foreground">We're sorry this article wasn't helpful.</p>
-                <Button variant="default" size="sm" onClick={() => navigate('/help')}>
-                  Browse other articles
-                </Button>
-                <Button variant="outline" size="sm" className="ml-2">
-                  Contact support
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex justify-center space-x-2">
-            <Button 
-              variant="outline"
-              onClick={() => {
-                alert('Thank you for your feedback!');
-                setFeedbackSubmitted('yes');
-              }}
-            >
-              Yes, thanks!
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                alert('Sorry this article was not helpful.');
-                setFeedbackSubmitted('no');
-              }}
-            >
-              No, I need more help
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-center space-x-2">
+          <Button 
+            variant="outline"
+            onClick={() => {
+              // Just display the thank you message directly instead of an alert
+              const thankYouMessage = document.createElement('p');
+              thankYouMessage.className = 'text-green-500 mt-2';
+              thankYouMessage.textContent = 'Thank you for your feedback!';
+              
+              // Find the feedback section and append the message
+              const feedbackSection = document.querySelector('[data-feedback-section]');
+              if (feedbackSection) {
+                // Clear any existing messages
+                const existingMessage = feedbackSection.querySelector('p.mt-2');
+                if (existingMessage) {
+                  existingMessage.remove();
+                }
+                
+                feedbackSection.appendChild(thankYouMessage);
+              }
+            }}
+          >
+            Yes, thanks!
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              // Just display the help message directly instead of an alert
+              const helpMessage = document.createElement('p');
+              helpMessage.className = 'text-foreground mt-2';
+              helpMessage.textContent = 'We\'re sorry this article wasn\'t helpful. Please try browsing other articles or contact support.';
+              
+              // Find the feedback section and append the message
+              const feedbackSection = document.querySelector('[data-feedback-section]');
+              if (feedbackSection) {
+                // Clear any existing messages
+                const existingMessage = feedbackSection.querySelector('p.mt-2');
+                if (existingMessage) {
+                  existingMessage.remove();
+                }
+                
+                feedbackSection.appendChild(helpMessage);
+              }
+            }}
+          >
+            No, I need more help
+          </Button>
+        </div>
       </div>
     </div>
   );
