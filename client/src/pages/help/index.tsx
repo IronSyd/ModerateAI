@@ -169,7 +169,7 @@ function ArticleCard({ article, onNavigate }: { article: HelpArticle, onNavigate
             <h3 className="font-medium text-foreground group-hover:text-primary truncate">
               {article.title}
             </h3>
-            
+
             {article.new && (
               <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">
                 New
@@ -212,19 +212,19 @@ function CategoryCard({ category, onNavigate }: { category: HelpCategory, onNavi
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [location, navigate] = useLocation();
-  
+
   // Parse URL parameters on each render
   const params = new URLSearchParams(window.location.search);
   const selectedCategory = params.get('category');
   const viewingAllArticles = params.get('all') === 'true';
-  
+
   // Function to navigate while immediately updating the view
   const navigateTo = (path: string) => {
     navigate(path);
     // Force a re-render to update the UI immediately
     setTimeout(() => window.dispatchEvent(new Event('popstate')), 0);
   };
-  
+
   // Get all articles from all categories
   const allArticles = React.useMemo(() => {
     const articles: HelpArticle[] = [];
@@ -235,22 +235,22 @@ export default function HelpCenterPage() {
     });
     return articles;
   }, []);
-  
+
   // Find selected category
   const selectedCategoryData = React.useMemo(() => {
     if (!selectedCategory) return null;
     return helpCategories.find(c => c.id === selectedCategory);
   }, [selectedCategory]);
-  
+
   // Filter articles by category and search query
   const filteredArticles = React.useMemo(() => {
     let filtered = allArticles;
-    
+
     // Filter by category if selected
     if (selectedCategory) {
       filtered = filtered.filter(article => article.category === selectedCategory);
     }
-    
+
     // Filter by search query if provided
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -259,7 +259,7 @@ export default function HelpCenterPage() {
         article.preview.toLowerCase().includes(query)
       );
     }
-    
+
     return filtered;
   }, [selectedCategory, searchQuery, allArticles]);
 
@@ -270,7 +270,7 @@ export default function HelpCenterPage() {
         <p className="text-muted-foreground text-lg mb-6 max-w-2xl">
           Find guides, tutorials, and answers to common questions
         </p>
-        
+
         {/* Search */}
         <div className="relative max-w-xl">
           <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
@@ -296,7 +296,7 @@ export default function HelpCenterPage() {
           )}
         </div>
       </div>
-      
+
       {/* Selected Category Banner */}
       {selectedCategoryData && (
         <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 mb-8 flex items-center justify-between">
@@ -319,7 +319,7 @@ export default function HelpCenterPage() {
           </Button>
         </div>
       )}
-      
+
       {/* If user is searching, show search results */}
       {searchQuery.trim() ? (
         <div className="mb-12">
@@ -328,7 +328,7 @@ export default function HelpCenterPage() {
               Search results for "{searchQuery}"
             </h2>
           </div>
-          
+
           {filteredArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredArticles.map((article) => (
@@ -359,7 +359,7 @@ export default function HelpCenterPage() {
               Back to Help Center
             </Button>
           </div>
-          
+
           {allArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allArticles.map((article) => (
@@ -380,7 +380,7 @@ export default function HelpCenterPage() {
           <div className="flex items-center mb-4">
             <h2 className="text-2xl font-semibold">Articles in {selectedCategoryData?.title}</h2>
           </div>
-          
+
           {filteredArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredArticles.map((article) => (
@@ -416,14 +416,14 @@ export default function HelpCenterPage() {
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {popularArticles.slice(0, 4).map((article) => (
                 <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
           </div>
-          
+
           {/* Categories */}
           <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-4">Browse by Category</h2>
@@ -433,7 +433,7 @@ export default function HelpCenterPage() {
               ))}
             </div>
           </div>
-          
+
           {/* New Articles */}
           <div className="mb-12">
             <div className="flex items-center mb-4">
@@ -442,7 +442,7 @@ export default function HelpCenterPage() {
                 New
               </Badge>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {newArticles.map((article) => (
                 <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
@@ -451,16 +451,16 @@ export default function HelpCenterPage() {
           </div>
         </>
       )}
-      
+
       <Separator className="my-12" />
-      
+
       {/* Need more help */}
       <div className="text-center max-w-2xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">Need more help?</h2>
         <p className="text-muted-foreground mb-6">
           If you couldn't find what you were looking for, our support team is ready to help.
         </p>
-        
+
         <div className="flex justify-center space-x-4">
           <Button className="flex items-center" size="lg">
             <MessageCircle className="h-5 w-5 mr-2" />
