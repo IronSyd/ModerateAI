@@ -88,25 +88,101 @@ const helpCategories: HelpCategory[] = [
     id: 'ai-configuration',
     title: 'AI Configuration',
     description: 'Optimize AI responses',
-    icon: <MessageCircle className="h-5 w-5 text-purple-500" />
+    icon: <MessageCircle className="h-5 w-5 text-purple-500" />,
+    articles: [
+      {
+        id: 'ai-training',
+        title: 'Training a custom AI model',
+        category: 'ai-configuration',
+        preview: 'How to use your data to improve AI responses'
+      },
+      {
+        id: 'analytics-dashboard',
+        title: 'User Analytics Dashboard',
+        category: 'ai-configuration',
+        preview: 'How to track and analyze user interactions with your AI',
+        new: true
+      },
+      {
+        id: 'response-templates',
+        title: 'Creating AI Response Templates',
+        category: 'ai-configuration',
+        preview: 'How to design effective response patterns for your AI'
+      }
+    ]
   },
   {
     id: 'moderation',
     title: 'Content Moderation',
     description: 'Set up moderation rules',
-    icon: <ShieldAlert className="h-5 w-5 text-orange-500" />
+    icon: <ShieldAlert className="h-5 w-5 text-orange-500" />,
+    articles: [
+      {
+        id: 'content-rules',
+        title: 'Setting up content filtering rules',
+        category: 'moderation',
+        preview: 'Create custom rules for content moderation'
+      },
+      {
+        id: 'custom-responses',
+        title: 'Custom Response Templates',
+        category: 'moderation',
+        preview: 'Setting up personalized response templates for different scenarios',
+        new: true
+      },
+      {
+        id: 'banned-words',
+        title: 'Managing banned words and phrases',
+        category: 'moderation',
+        preview: 'How to set up and maintain your banned content list'
+      },
+      {
+        id: 'moderation-levels',
+        title: 'Understanding moderation levels',
+        category: 'moderation',
+        preview: 'How to set appropriate strictness for different platforms'
+      }
+    ]
   },
   {
     id: 'videos',
     title: 'Video Tutorials',
     description: 'Watch step-by-step guides',
-    icon: <VideoIcon className="h-5 w-5 text-red-500" />
+    icon: <VideoIcon className="h-5 w-5 text-red-500" />,
+    articles: [
+      {
+        id: 'intro-video',
+        title: 'Introduction to ModerateAI',
+        category: 'videos',
+        preview: 'A complete overview of the platform features'
+      },
+      {
+        id: 'telegram-video',
+        title: 'Setting up Telegram integration',
+        category: 'videos',
+        preview: 'Video guide for connecting your Telegram bot'
+      }
+    ]
   },
   {
     id: 'support',
     title: 'Support',
     description: 'Get help from our team',
-    icon: <Headphones className="h-5 w-5 text-gray-500" />
+    icon: <Headphones className="h-5 w-5 text-gray-500" />,
+    articles: [
+      {
+        id: 'contact-support',
+        title: 'How to contact support',
+        category: 'support',
+        preview: 'Different ways to get help from our support team'
+      },
+      {
+        id: 'billing-support',
+        title: 'Billing and subscription help',
+        category: 'support',
+        preview: 'Answers to common billing questions'
+      }
+    ]
   }
 ];
 
@@ -135,6 +211,20 @@ const popularArticles: HelpArticle[] = [
     title: 'Setting up content filtering rules',
     category: 'moderation',
     preview: 'Create custom rules for content moderation'
+  },
+  {
+    id: 'telegram-integration', 
+    title: 'Telegram Bot Integration',
+    category: 'platform-integration',
+    preview: 'How to setup and configure your Telegram bot with ModerateAI',
+    popular: true
+  },
+  {
+    id: 'discord-integration',
+    title: 'Discord Server Integration',
+    category: 'platform-integration',
+    preview: 'How to connect and moderate Discord servers with AI-powered tools',
+    popular: true
   }
 ];
 
@@ -151,6 +241,20 @@ const newArticles: HelpArticle[] = [
     title: 'Team roles and permissions',
     category: 'getting-started',
     preview: 'Managing access for your team members',
+    new: true
+  },
+  {
+    id: 'analytics-dashboard',
+    title: 'User Analytics Dashboard',
+    category: 'ai-configuration',
+    preview: 'How to track and analyze user interactions with your AI',
+    new: true
+  },
+  {
+    id: 'custom-responses',
+    title: 'Custom Response Templates',
+    category: 'moderation',
+    preview: 'Setting up personalized response templates for different scenarios',
     new: true
   }
 ];
@@ -216,7 +320,6 @@ export default function HelpCenterPage() {
   // Parse URL parameters on each render
   const params = new URLSearchParams(window.location.search);
   const selectedCategory = params.get('category');
-  const viewingAllArticles = params.get('all') === 'true';
 
   // Function to navigate while immediately updating the view
   const navigateTo = (path: string) => {
@@ -343,37 +446,6 @@ export default function HelpCenterPage() {
             </div>
           )}
         </div>
-      ) : viewingAllArticles ? (
-        /* All Articles View */
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">All Help Articles</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                // Go back to the main help page
-                navigateTo('/help');
-              }}
-            >
-              Back to Help Center
-            </Button>
-          </div>
-
-          {allArticles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-muted/20 rounded-lg border border-border">
-              <p className="text-muted-foreground">
-                No articles found.
-              </p>
-            </div>
-          )}
-        </div>
       ) : selectedCategory ? (
         /* Category Selected - Show Filtered Articles */
         <div className="mb-12">
@@ -400,23 +472,12 @@ export default function HelpCenterPage() {
         <>
           {/* Popular Articles */}
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center mb-4">
               <h2 className="text-2xl font-semibold">Popular Articles</h2>
-              <Button 
-                variant="ghost" 
-                className="text-primary"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  navigateTo('/help?all=true');
-                }}
-              >
-                View all
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {popularArticles.slice(0, 4).map((article) => (
+              {popularArticles.map((article) => (
                 <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
