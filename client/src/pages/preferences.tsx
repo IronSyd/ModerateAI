@@ -56,21 +56,18 @@ const PreferencesPage = () => {
 
   if (!user) {
     return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center h-96">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
+      <div className="flex justify-center items-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="py-6 space-y-6">
-        <h1 className="text-3xl font-bold">Preferences</h1>
-        <p className="text-muted-foreground">
-          Manage your user preferences and settings.
-        </p>
+    <div className="py-6 space-y-6">
+      <h1 className="text-3xl font-bold">Preferences</h1>
+      <p className="text-muted-foreground">
+        Manage your user preferences and settings.
+      </p>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
@@ -232,7 +229,6 @@ const PreferencesPage = () => {
           </Button>
         </div>
       </div>
-    </DashboardLayout>
   );
 };
 

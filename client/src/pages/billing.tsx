@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Loader2, Check, CreditCard, Download, Info } from "lucide-react";
 
 const BillingPage = () => {
@@ -70,21 +69,18 @@ const BillingPage = () => {
 
   if (!user) {
     return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center h-96">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
+      <div className="flex justify-center items-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="py-6 space-y-6">
-        <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-        <p className="text-muted-foreground">
-          Manage your subscription, payment methods, and billing history.
-        </p>
+    <div className="py-6 space-y-6">
+      <h1 className="text-3xl font-bold">Billing & Subscription</h1>
+      <p className="text-muted-foreground">
+        Manage your subscription, payment methods, and billing history.
+      </p>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="border-b rounded-none justify-start mb-4">
@@ -307,7 +303,6 @@ const BillingPage = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
   );
 };
 
