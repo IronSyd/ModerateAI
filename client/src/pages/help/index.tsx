@@ -406,9 +406,7 @@ export default function HelpCenterPage() {
                 variant="ghost" 
                 className="text-primary"
                 onClick={() => {
-                  // Show all articles in a dedicated section
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-                  // Set query to show all articles
                   navigateTo('/help?all=true');
                 }}
               >
