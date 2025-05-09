@@ -328,7 +328,23 @@ export default function HelpArticlePage() {
       
       <Separator className="mb-6" />
       
-      <div className="prose prose-blue max-w-none dark:prose-invert">
+      <div className="prose prose-blue max-w-none dark:prose-invert 
+        prose-p:text-foreground 
+        prose-headings:text-foreground 
+        prose-strong:text-foreground 
+        prose-strong:font-bold
+        prose-li:text-foreground
+        prose-a:text-primary
+        prose-code:text-foreground
+        prose-code:bg-primary/10
+        prose-code:rounded
+        prose-code:px-1
+        prose-code:py-0.5
+        prose-table:text-foreground
+        prose-th:text-foreground
+        prose-td:text-foreground
+        prose-td:border-primary/20
+        prose-th:border-primary/20">
         {article.content}
       </div>
       
