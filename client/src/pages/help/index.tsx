@@ -332,7 +332,7 @@ export default function HelpCenterPage() {
           {filteredArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
           ) : (
@@ -384,7 +384,7 @@ export default function HelpCenterPage() {
           {filteredArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
           ) : (
@@ -419,7 +419,7 @@ export default function HelpCenterPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {popularArticles.slice(0, 4).map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
           </div>
@@ -429,7 +429,7 @@ export default function HelpCenterPage() {
             <h2 className="text-2xl font-semibold mb-4">Browse by Category</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {helpCategories.map((category) => (
-                <CategoryCard key={category.id} category={category} />
+                <CategoryCard key={category.id} category={category} onNavigate={navigateTo} />
               ))}
             </div>
           </div>
@@ -445,7 +445,7 @@ export default function HelpCenterPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {newArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
           </div>
