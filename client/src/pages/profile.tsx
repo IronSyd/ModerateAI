@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 const profileSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -46,6 +46,9 @@ const ProfilePage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string>("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -109,6 +112,65 @@ const ProfilePage = () => {
     }
   };
   
+  const handlePhotoUpload = () => {
+    // Trigger the hidden file input when the button is clicked
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPEG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB in size",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setUploadingPhoto(true);
+    
+    // Create a URL for the file to display it immediately
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setProfilePhoto(result);
+      
+      // Simulate an API call to upload the photo
+      setTimeout(() => {
+        setUploadingPhoto(false);
+        toast({
+          title: "Photo uploaded",
+          description: "Your profile photo has been updated successfully.",
+        });
+      }, 1500);
+    };
+    reader.onerror = () => {
+      setUploadingPhoto(false);
+      toast({
+        title: "Error",
+        description: "There was an error uploading your photo.",
+        variant: "destructive",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+  
   if (!user) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -127,17 +189,47 @@ const ProfilePage = () => {
           <div className="md:w-1/4">
             <Card>
               <CardContent className="p-6 text-center">
-                <Avatar className="w-24 h-24 mx-auto mb-4">
+                <Avatar className="w-24 h-24 mx-auto mb-4 relative group">
                   <AvatarImage 
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
+                    src={profilePhoto}
                     alt={user.fullName || user.username} 
                   />
                   <AvatarFallback className="text-2xl">{(user.fullName || user.username).charAt(0)}</AvatarFallback>
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-white" />
+                    </div>
+                  )}
                 </Avatar>
                 <h2 className="text-xl font-bold">{user.fullName || user.username}</h2>
                 <p className="text-sm text-muted-foreground">{user.role}</p>
                 <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-                <Button className="mt-4 w-full" variant="outline">Upload New Photo</Button>
+                <Button 
+                  className="mt-4 w-full" 
+                  variant="outline" 
+                  onClick={handlePhotoUpload}
+                  disabled={uploadingPhoto}
+                >
+                  {uploadingPhoto ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload New Photo
+                    </>
+                  )}
+                </Button>
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
               </CardContent>
             </Card>
           </div>
