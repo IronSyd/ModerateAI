@@ -156,13 +156,11 @@ const newArticles: HelpArticle[] = [
 ];
 
 // Article Card Component
-function ArticleCard({ article }: { article: HelpArticle }) {
-  const [, navigate] = useLocation();
-  
+function ArticleCard({ article, onNavigate }: { article: HelpArticle, onNavigate: (path: string) => void }) {
   return (
     <div 
       className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
-      onClick={() => navigate(`/help/article/${article.id}`)}
+      onClick={() => onNavigate(`/help/article/${article.id}`)}
     >
       <div className="flex items-start">
         <BookOpen className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
@@ -187,13 +185,11 @@ function ArticleCard({ article }: { article: HelpArticle }) {
 }
 
 // Category Card Component
-function CategoryCard({ category }: { category: HelpCategory }) {
-  const [, navigate] = useLocation();
-  
+function CategoryCard({ category, onNavigate }: { category: HelpCategory, onNavigate: (path: string) => void }) {
   return (
     <div 
       className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
-      onClick={() => navigate(`/help?category=${category.id}`)}
+      onClick={() => onNavigate(`/help?category=${category.id}`)}
     >
       <div className="flex items-start">
         <div className="mr-3 flex-shrink-0">
@@ -316,7 +312,7 @@ export default function HelpCenterPage() {
             size="sm" 
             onClick={() => {
               // Clear the filter - navigate back to main help center
-              navigate('/help');
+              navigateTo('/help');
             }}
           >
             Clear Filter
@@ -357,7 +353,7 @@ export default function HelpCenterPage() {
               size="sm" 
               onClick={() => {
                 // Go back to the main help page
-                navigate('/help');
+                navigateTo('/help');
               }}
             >
               Back to Help Center
@@ -413,7 +409,7 @@ export default function HelpCenterPage() {
                   // Show all articles in a dedicated section
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                   // Set query to show all articles
-                  navigate('/help?all=true');
+                  navigateTo('/help?all=true');
                 }}
               >
                 View all
