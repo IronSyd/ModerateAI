@@ -15,6 +15,9 @@ import DiscordIntegration from "@/pages/integrations/discord";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import ActivityPage from "@/pages/activity";
+import ProfilePage from "@/pages/profile";
+import PreferencesPage from "@/pages/preferences";
+import BillingPage from "@/pages/billing";
 import LandingPage from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
 import Sidebar from "@/components/layout/sidebar";
@@ -107,6 +110,9 @@ function Router() {
         <ProtectedRoute path="/team" component={Team} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/activity" component={ActivityPage} />
+        <ProtectedRoute path="/profile" component={ProfilePage} />
+        <ProtectedRoute path="/preferences" component={PreferencesPage} />
+        <ProtectedRoute path="/billing" component={BillingPage} />
         <ProtectedRoute path="/help">
           <Suspense fallback={<div className="p-8 text-center">Loading Help Center...</div>}>
             <HelpCenter />
