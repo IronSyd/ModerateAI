@@ -708,7 +708,7 @@ const TelegramIntegration = () => {
 
                     <div>
                       <h3 className="text-lg font-medium mb-3">Use Your Bot</h3>
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p className="text-sm text-foreground mb-4">
                         To use your bot, share the following link with users or add your bot to groups:
                       </p>
                       <div className="flex space-x-2">
@@ -738,7 +738,7 @@ const TelegramIntegration = () => {
                           1
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Add your bot to groups</span> - Invite @ModAI_test_bot to your Telegram groups
                           </p>
                         </div>
@@ -748,7 +748,7 @@ const TelegramIntegration = () => {
                           2
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Make the bot an admin</span> - Grant admin privileges for full functionality
                           </p>
                         </div>
@@ -758,7 +758,7 @@ const TelegramIntegration = () => {
                           3
                         </div>
                         <div>
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             <span className="font-medium">Configure responses</span> - Customize how your bot responds in the Settings tab
                           </p>
                         </div>
@@ -876,7 +876,7 @@ const TelegramIntegration = () => {
                             {group.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-gray-500">{group.lastActive}</TableCell>
+                        <TableCell className="text-foreground">{group.lastActive}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm">
                             Settings
