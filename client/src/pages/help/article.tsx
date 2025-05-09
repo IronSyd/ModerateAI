@@ -404,13 +404,19 @@ export default function HelpArticlePage() {
           <div className="flex justify-center space-x-2">
             <Button 
               variant="outline"
-              onClick={() => setFeedbackSubmitted('yes')}
+              onClick={() => {
+                alert('Thank you for your feedback!');
+                setFeedbackSubmitted('yes');
+              }}
             >
               Yes, thanks!
             </Button>
             <Button 
               variant="outline"
-              onClick={() => setFeedbackSubmitted('no')}
+              onClick={() => {
+                alert('Sorry this article was not helpful.');
+                setFeedbackSubmitted('no');
+              }}
             >
               No, I need more help
             </Button>
