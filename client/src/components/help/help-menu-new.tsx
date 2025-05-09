@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useReadArticles } from "@/hooks/use-read-articles";
 
 type HelpCategory = {
   id: string;
@@ -259,26 +260,35 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
           {activeTab === 'new' && (
             <div className="p-3 space-y-3">
               <h4 className="text-sm font-medium text-muted-foreground">NEWLY ADDED</h4>
-              {newArticles.map((article) => (
-                <button 
-                  key={article.id}
-                  className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-start"
-                  onClick={() => {
-                    // Navigate to the article page
-                    navigate(`/help/article/${article.id}`);
-                    onClose();
-                  }}
-                >
-                  <BookOpen className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center">
-                      <h5 className="font-medium text-foreground">{article.title}</h5>
-                      <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">New</Badge>
+              {newArticles.map((article) => {
+                // Check if article has been read
+                const { hasReadArticle } = useReadArticles();
+                const isRead = hasReadArticle(article.id);
+                
+                return (
+                  <button 
+                    key={article.id}
+                    className="w-full text-left p-3 hover:bg-accent rounded-md cursor-pointer flex items-start"
+                    onClick={() => {
+                      // Navigate to the article page
+                      navigate(`/help/article/${article.id}`);
+                      onClose();
+                    }}
+                  >
+                    <BookOpen className="h-5 w-5 text-muted-foreground mr-3 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center">
+                        <h5 className="font-medium text-foreground">{article.title}</h5>
+                        {/* Only show the "New" badge if article has not been read */}
+                        {!isRead && (
+                          <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">New</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{article.preview}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{article.preview}</p>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

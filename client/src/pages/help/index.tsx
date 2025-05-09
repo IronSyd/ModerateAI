@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useReadArticles } from "@/hooks/use-read-articles";
 
 // Types from help-menu.tsx
 type HelpCategory = {
@@ -261,6 +262,13 @@ const newArticles: HelpArticle[] = [
 
 // Article Card Component
 function ArticleCard({ article, onNavigate }: { article: HelpArticle, onNavigate: (path: string) => void }) {
+  // Use the read articles hook to check if this article has been read
+  const { hasReadArticle } = useReadArticles();
+  const isRead = hasReadArticle(article.id);
+  
+  // Only show the "New" badge if the article is marked as new AND has not been read
+  const showNewBadge = article.new && !isRead;
+  
   return (
     <div 
       className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
@@ -274,7 +282,7 @@ function ArticleCard({ article, onNavigate }: { article: HelpArticle, onNavigate
               {article.title}
             </h3>
 
-            {article.new && (
+            {showNewBadge && (
               <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">
                 New
               </Badge>
