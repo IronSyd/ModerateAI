@@ -363,7 +363,7 @@ export default function HelpCenterPage() {
           {allArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
               ))}
             </div>
           ) : (
