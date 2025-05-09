@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
 
 import {
   Card,
@@ -24,10 +25,10 @@ import { Loader2, Moon, Sun, Globe } from "lucide-react";
 const PreferencesPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { theme: currentTheme, setTheme, isLoading: themeLoading } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
 
   // Preference states
-  const [theme, setTheme] = useState<string>("system");
   const [language, setLanguage] = useState<string>("en");
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [actionNotifications, setActionNotifications] = useState<boolean>(true);
@@ -80,29 +81,38 @@ const PreferencesPage = () => {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>Theme</Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-4">
                   <Button
                     onClick={() => setTheme("light")}
-                    variant={theme === "light" ? "default" : "outline"}
-                    className="justify-start"
+                    variant={currentTheme === "light" ? "default" : "outline"}
+                    className={`flex flex-row justify-center items-center h-12 w-full ${
+                      currentTheme === "light" ? "bg-primary text-white" : "bg-transparent"
+                    }`}
+                    disabled={themeLoading}
                   >
-                    <Sun className="h-4 w-4 mr-2" />
+                    <Sun className="h-5 w-5 mr-2" />
                     Light
                   </Button>
                   <Button
                     onClick={() => setTheme("dark")}
-                    variant={theme === "dark" ? "default" : "outline"}
-                    className="justify-start"
+                    variant={currentTheme === "dark" ? "default" : "outline"}
+                    className={`flex flex-row justify-center items-center h-12 w-full ${
+                      currentTheme === "dark" ? "bg-primary text-white" : "bg-transparent"
+                    }`}
+                    disabled={themeLoading}
                   >
-                    <Moon className="h-4 w-4 mr-2" />
+                    <Moon className="h-5 w-5 mr-2" />
                     Dark
                   </Button>
                   <Button
                     onClick={() => setTheme("system")}
-                    variant={theme === "system" ? "default" : "outline"}
-                    className="justify-start"
+                    variant={currentTheme === "system" ? "default" : "outline"}
+                    className={`flex flex-row justify-center items-center h-12 w-full ${
+                      currentTheme === "system" ? "bg-primary text-white" : "bg-transparent"
+                    }`}
+                    disabled={themeLoading}
                   >
-                    <Globe className="h-4 w-4 mr-2" />
+                    <Globe className="h-5 w-5 mr-2" />
                     System
                   </Button>
                 </div>
