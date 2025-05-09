@@ -390,14 +390,14 @@ export default function HelpArticlePage() {
             onClick={() => {
               // Just display the thank you message directly instead of an alert
               const thankYouMessage = document.createElement('p');
-              thankYouMessage.className = 'text-green-500 mt-2';
+              thankYouMessage.className = 'text-green-500 mt-4 py-2 px-4 bg-green-900/10 rounded inline-block';
               thankYouMessage.textContent = 'Thank you for your feedback!';
               
               // Find the feedback section and append the message
               const feedbackSection = document.querySelector('[data-feedback-section]');
               if (feedbackSection) {
                 // Clear any existing messages
-                const existingMessage = feedbackSection.querySelector('p.mt-2');
+                const existingMessage = feedbackSection.querySelector('p.mt-4');
                 if (existingMessage) {
                   existingMessage.remove();
                 }
@@ -413,14 +413,14 @@ export default function HelpArticlePage() {
             onClick={() => {
               // Just display the help message directly instead of an alert
               const helpMessage = document.createElement('p');
-              helpMessage.className = 'text-foreground mt-2';
-              helpMessage.textContent = 'We\'re sorry this article wasn\'t helpful. Please try browsing other articles or contact support.';
+              helpMessage.className = 'text-foreground mt-4 py-2 px-4 bg-muted/50 rounded inline-block';
+              helpMessage.textContent = 'We\'re sorry this article wasn\'t helpful. Please try to contact support.';
               
               // Find the feedback section and append the message
               const feedbackSection = document.querySelector('[data-feedback-section]');
               if (feedbackSection) {
                 // Clear any existing messages
-                const existingMessage = feedbackSection.querySelector('p.mt-2');
+                const existingMessage = feedbackSection.querySelector('p.mt-4');
                 if (existingMessage) {
                   existingMessage.remove();
                 }
