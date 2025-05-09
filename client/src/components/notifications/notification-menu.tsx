@@ -123,7 +123,7 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
           )}
         </div>
         
-        <div className="p-2 border-t bg-muted/50 flex justify-between">
+        <div className="p-2 border-t bg-muted/50 flex justify-center">
           <button 
             className="text-sm text-primary hover:text-primary/80 font-medium"
             onClick={() => {
@@ -152,13 +152,6 @@ export function NotificationMenu({ onClose }: { onClose: () => void }) {
             }}
           >
             Add Test Notification
-          </button>
-          
-          <button 
-            className="text-sm text-primary hover:text-primary/80 font-medium"
-            onClick={onClose}
-          >
-            View all notifications
           </button>
         </div>
       </div>
