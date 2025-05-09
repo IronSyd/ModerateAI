@@ -290,10 +290,22 @@ function ArticleCard({ article, onNavigate }: { article: HelpArticle, onNavigate
 
 // Category Card Component
 function CategoryCard({ category, onNavigate }: { category: HelpCategory, onNavigate: (path: string) => void }) {
+  const handleCategoryClick = () => {
+    // If there are articles, go to the first article
+    if (category.articles && category.articles.length > 0) {
+      // For simplicity, let's go to the most popular or first article
+      const firstArticle = category.articles.find(a => a.popular) || category.articles[0];
+      onNavigate(`/help/article/${firstArticle.id}`);
+    } else {
+      // Fallback
+      onNavigate('/help');
+    }
+  };
+
   return (
     <div 
       className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
-      onClick={() => onNavigate(`/help?category=${category.id}`)}
+      onClick={handleCategoryClick}
     >
       <div className="flex items-start">
         <div className="mr-3 flex-shrink-0">
