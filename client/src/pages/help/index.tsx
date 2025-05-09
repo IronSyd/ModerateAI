@@ -548,11 +548,113 @@ export default function HelpCenterPage() {
         </p>
 
         <div className="flex justify-center space-x-4">
-          <Button className="flex items-center" size="lg">
+          <Button 
+            className="flex items-center" 
+            size="lg"
+            onClick={() => {
+              const liveChatModal = document.createElement('div');
+              liveChatModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+              liveChatModal.innerHTML = `
+                <div class="bg-card p-6 rounded-lg shadow-lg max-w-md w-full">
+                  <h3 class="text-xl font-semibold mb-4">Live Chat</h3>
+                  <p class="mb-4">Our support agents are online and ready to help you.</p>
+                  <div class="bg-muted p-4 rounded mb-4">
+                    <p class="text-sm text-muted-foreground">Support agent will be with you shortly...</p>
+                  </div>
+                  <div class="flex justify-end">
+                    <button class="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90" id="close-live-chat">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(liveChatModal);
+              
+              // Add event listener to close button
+              document.getElementById('close-live-chat')?.addEventListener('click', () => {
+                liveChatModal.remove();
+              });
+            }}
+          >
             <MessageCircle className="h-5 w-5 mr-2" />
             Live Chat
           </Button>
-          <Button variant="outline" size="lg">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={() => {
+              const contactModal = document.createElement('div');
+              contactModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+              contactModal.innerHTML = `
+                <div class="bg-card p-6 rounded-lg shadow-lg max-w-md w-full">
+                  <h3 class="text-xl font-semibold mb-4">Contact Support</h3>
+                  <p class="mb-4">Please fill out the form below and we'll get back to you as soon as possible.</p>
+                  <div class="space-y-4 mb-4">
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Email</label>
+                      <input type="email" class="w-full px-3 py-2 border rounded bg-background" placeholder="your@email.com" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Issue</label>
+                      <select class="w-full px-3 py-2 border rounded bg-background">
+                        <option>Technical issue</option>
+                        <option>Billing question</option>
+                        <option>Feature request</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Message</label>
+                      <textarea class="w-full px-3 py-2 border rounded bg-background" rows="3" placeholder="Describe your issue..."></textarea>
+                    </div>
+                  </div>
+                  <div class="flex justify-end space-x-2">
+                    <button class="px-4 py-2 border border-border rounded hover:bg-accent" id="cancel-contact">
+                      Cancel
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90" id="submit-contact">
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(contactModal);
+              
+              // Add event listeners to buttons
+              document.getElementById('cancel-contact')?.addEventListener('click', () => {
+                contactModal.remove();
+              });
+              
+              document.getElementById('submit-contact')?.addEventListener('click', () => {
+                const successMessage = document.createElement('div');
+                successMessage.className = 'bg-green-500/10 text-green-500 p-3 rounded mt-4';
+                successMessage.textContent = 'Your request has been submitted. We\'ll get back to you soon!';
+                
+                const form = contactModal.querySelector('.space-y-4');
+                if (form) {
+                  form.innerHTML = '';
+                  form.appendChild(successMessage);
+                  
+                  // Change button text
+                  const submitButton = document.getElementById('submit-contact');
+                  if (submitButton) {
+                    submitButton.textContent = 'Close';
+                    submitButton.addEventListener('click', () => {
+                      contactModal.remove();
+                    }, { once: true });
+                  }
+                  
+                  // Remove cancel button
+                  const cancelButton = document.getElementById('cancel-contact');
+                  if (cancelButton) {
+                    cancelButton.remove();
+                  }
+                }
+              });
+            }}
+          >
             <Headphones className="h-5 w-5 mr-2" />
             Contact Support
           </Button>
