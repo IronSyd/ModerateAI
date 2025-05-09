@@ -105,7 +105,7 @@ const DiscordIntegration = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
-      window.open("https://discord.com/api/oauth2/authorize?client_id=1234567890&permissions=8&scope=bot%20applications.commands", "_blank");
+      window.open(`https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_CLIENT_ID}&permissions=8&scope=bot%20applications.commands`, "_blank");
       toast({
         title: "Setup started",
         description: "Please complete the Discord authorization process.",
