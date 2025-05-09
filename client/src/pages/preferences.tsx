@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Loader2, Moon, Sun, Globe } from "lucide-react";
 
 const PreferencesPage = () => {

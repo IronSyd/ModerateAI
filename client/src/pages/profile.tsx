@@ -25,7 +25,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
@@ -112,20 +111,17 @@ const ProfilePage = () => {
   
   if (!user) {
     return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center h-96">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
+      <div className="flex justify-center items-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
   
   return (
-    <DashboardLayout>
-      <div className="py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Profile Settings</h1>
-        </div>
+    <div className="py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Profile Settings</h1>
+      </div>
         
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-1/4">
@@ -286,7 +282,6 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 };
 
