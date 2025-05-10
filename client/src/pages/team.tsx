@@ -137,7 +137,7 @@ const RolesAndPermissionsContent = () => {
             </div>
             <div>
               <h3 className="text-lg font-medium">{role.name}</h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-800 font-medium">
                 {role.description}
               </p>
             </div>
