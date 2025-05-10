@@ -311,11 +311,23 @@ const Team = () => {
     },
   });
 
-  // Invite team member mutation - would connect to real API in production
+  // Invite team member mutation
   const inviteMemberMutation = useMutation({
     mutationFn: async (data: { email: string; role: string }) => {
-      // Simulate API call
-      return new Promise<void>((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch('/api/team/invite', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send invitation');
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -324,11 +336,13 @@ const Team = () => {
       });
       setIsInviteDialogOpen(false);
       setInviteData({ email: "", role: "moderator" });
+      // Refresh the team members list to show the pending invitation
+      refetchMembers();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to send invitation",
+        description: error.message || "Failed to send invitation",
         variant: "destructive",
       });
     },
@@ -337,21 +351,35 @@ const Team = () => {
   // Delete team member mutation
   const deleteMemberMutation = useMutation({
     mutationFn: async (id: number) => {
-      // Simulate API call
-      return new Promise<void>((resolve) => setTimeout(resolve, 1000));
+      // For actual users, we would have a different endpoint
+      // For invitations, we use the cancel invitation endpoint
+      const response = await fetch(`/api/team/invite/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove team member');
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
         title: "Team member removed",
-        description: `${selectedMember?.name} has been removed from your team`,
+        description: selectedMember?.status === "invited" 
+          ? `Invitation to ${selectedMember?.email} has been cancelled` 
+          : `${selectedMember?.name} has been removed from your team`,
       });
       setIsDeleteDialogOpen(false);
       setSelectedMember(null);
+      // Refresh the team members list
+      refetchMembers();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to remove team member",
+        description: error.message || "Failed to remove team member",
         variant: "destructive",
       });
     },

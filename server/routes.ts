@@ -59,6 +59,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const teamMembers = await storage.getAllUsers();
       
+      // Get pending invitations
+      const pendingInvitations = await storage.getPendingTeamInvitations();
+      
       // Map users to team members format
       const formattedMembers = teamMembers.map(user => ({
         id: user.id,
@@ -69,9 +72,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastActive: user.id === req.user?.id ? "Just now" : "Recently"
       }));
       
-      res.json(formattedMembers);
+      // Map pending invitations to team members format
+      const invitedMembers = pendingInvitations.map(invitation => ({
+        id: invitation.id,
+        name: "",
+        email: invitation.email,
+        role: invitation.role,
+        status: "invited", // Invitation status
+        lastActive: "Never", // Never logged in
+        invitedAt: invitation.createdAt
+      }));
+      
+      // Combine active members and pending invitations
+      const combinedMembers = [...formattedMembers, ...invitedMembers];
+      
+      res.json(combinedMembers);
     } catch (error: any) {
       console.error("Error fetching team members:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Send team invitation API endpoint
+  app.post("/api/team/invite", authMiddleware, async (req, res) => {
+    try {
+      const { email, role } = req.body;
+      
+      if (!email || !role) {
+        return res.status(400).json({ message: "Email and role are required" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      
+      // Check if there's already a pending invitation for this email
+      const existingInvitations = await storage.getTeamInvitationsByEmail(email);
+      const pendingInvitation = existingInvitations.find(inv => inv.status === "pending");
+      
+      if (pendingInvitation) {
+        return res.status(400).json({ message: "There's already a pending invitation for this email" });
+      }
+      
+      // Create invitation with 7-day expiration
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+      
+      const invitation = await storage.createTeamInvitation({
+        email,
+        role,
+        invitedBy: req.user!.id,
+        expiresAt
+      });
+      
+      // Get the inviter's name for the email
+      const inviter = await storage.getUser(req.user!.id);
+      
+      // Generate invite link
+      const baseUrl = process.env.BASE_URL || `http://localhost:5000`;
+      const inviteLink = `${baseUrl}/accept-invitation?token=${invitation.token}`;
+      
+      // Send invitation email
+      const { sendInvitationEmail } = await import("./emailService");
+      const emailSent = await sendInvitationEmail(
+        email,
+        "ModerateAI Team", // Team name
+        inviter?.fullName || "The team at ModerateAI", // Inviter name
+        role,
+        inviteLink
+      );
+      
+      if (!emailSent) {
+        // Email sending failed, but invitation was created
+        console.error(`Failed to send invitation email to ${email}`);
+        return res.status(500).json({ 
+          message: "Invitation created but email failed to send",
+          invitation
+        });
+      }
+      
+      res.status(201).json({
+        message: "Invitation sent successfully",
+        invitation
+      });
+    } catch (error: any) {
+      console.error("Error sending team invitation:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Cancel/delete invitation API endpoint
+  app.delete("/api/team/invite/:id", authMiddleware, async (req, res) => {
+    try {
+      const invitationId = parseInt(req.params.id);
+      
+      if (isNaN(invitationId)) {
+        return res.status(400).json({ message: "Invalid invitation ID" });
+      }
+      
+      const invitation = await storage.getTeamInvitation(invitationId);
+      
+      if (!invitation) {
+        return res.status(404).json({ message: "Invitation not found" });
+      }
+      
+      // Only the inviter or an admin can cancel an invitation
+      if (invitation.invitedBy !== req.user!.id && req.user!.role !== "admin") {
+        return res.status(403).json({ message: "You don't have permission to cancel this invitation" });
+      }
+      
+      const deleted = await storage.deleteTeamInvitation(invitationId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete invitation" });
+      }
+      
+      res.json({ message: "Invitation cancelled successfully" });
+    } catch (error: any) {
+      console.error("Error cancelling team invitation:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Accept invitation endpoint
+  app.get("/api/team/accept-invitation/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      const invitation = await storage.getTeamInvitationByToken(token);
+      
+      if (!invitation) {
+        return res.status(404).json({ message: "Invitation not found" });
+      }
+      
+      if (invitation.status !== "pending") {
+        return res.status(400).json({ message: `Invitation is ${invitation.status}` });
+      }
+      
+      const now = new Date();
+      if (invitation.expiresAt < now) {
+        return res.status(400).json({ message: "Invitation has expired" });
+      }
+      
+      // Return invitation details so the frontend can show a registration form
+      res.json({
+        email: invitation.email,
+        role: invitation.role,
+        token: invitation.token
+      });
+    } catch (error: any) {
+      console.error("Error accepting invitation:", error);
       res.status(500).json({ message: error.message });
     }
   });
