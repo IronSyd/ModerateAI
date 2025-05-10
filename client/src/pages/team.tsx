@@ -483,30 +483,30 @@ const Team = () => {
     switch (status) {
       case "active":
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
-            Active
+          <div className="flex items-center font-medium">
+            <span className="inline-block h-3 w-3 rounded-full bg-green-500 mr-2 align-middle"></span>
+            <span>Active</span>
           </div>
         );
       case "invited":
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>
-            Invited
+          <div className="flex items-center font-medium">
+            <span className="inline-block h-3 w-3 rounded-full bg-yellow-500 mr-2 align-middle"></span>
+            <span>Invited</span>
           </div>
         );
       case "disabled":
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
-            Disabled
+          <div className="flex items-center font-medium">
+            <span className="inline-block h-3 w-3 rounded-full bg-gray-500 mr-2 align-middle"></span>
+            <span>Disabled</span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
-            {status}
+          <div className="flex items-center font-medium">
+            <span className="inline-block h-3 w-3 rounded-full bg-gray-500 mr-2 align-middle"></span>
+            <span>{status}</span>
           </div>
         );
     }
