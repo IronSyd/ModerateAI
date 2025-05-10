@@ -516,10 +516,6 @@ const Settings = () => {
             <Bell className="h-4 w-4 mr-2" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="billing">
-            <CreditCard className="h-4 w-4 mr-2" />
-            Billing
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="account" className="space-y-6">
