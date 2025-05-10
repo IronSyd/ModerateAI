@@ -1,11 +1,9 @@
 import { useLocation } from "wouter";
-import { MoreVertical, User, Settings, CreditCard, LogOut } from "lucide-react";
+import { MoreVertical, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,13 +26,9 @@ const UserProfile = () => {
           title: "Logged out",
           description: "You have been successfully logged out.",
         });
-        setLocation("/");
+        setLocation("/auth");
       }
     });
-  };
-  
-  const navigateTo = (path: string) => {
-    setLocation(path);
   };
   
   return (
@@ -59,21 +53,6 @@ const UserProfile = () => {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigateTo("/settings?tab=account")}>
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigateTo("/settings?tab=notifications")}>
-            <Settings className="mr-2 h-4 w-4" />
-            Preferences
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigateTo("/settings?tab=billing")}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Log out
