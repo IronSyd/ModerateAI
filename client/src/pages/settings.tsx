@@ -362,11 +362,7 @@ const Settings = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2 space-y-6">
         <TabsList>
           <TabsTrigger value="account">
             <User className="h-4 w-4 mr-2" />
