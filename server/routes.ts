@@ -151,9 +151,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!emailSent) {
         // Email sending failed, but invitation was created
         console.error(`Failed to send invitation email to ${email}`);
-        return res.status(500).json({ 
-          message: "Invitation created but email failed to send",
-          invitation
+        
+        // Return a partial success status code (207) instead of an error (500)
+        // This indicates that the invitation was saved but email delivery failed
+        return res.status(207).json({ 
+          message: "Invitation created but email delivery failed. You may need to share the invitation link manually.",
+          invitation,
+          emailDelivered: false,
+          status: "partial_success"
         });
       }
       
@@ -164,6 +169,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error sending team invitation:", error);
       res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Get invitation by token (for public access to view invitation details)
+  app.get("/api/team/invite/token/:token", async (req, res) => {
+    try {
+      const token = req.params.token;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token is required" });
+      }
+      
+      const invitation = await storage.getTeamInvitationByToken(token);
+      
+      if (!invitation) {
+        return res.status(404).json({ message: "Invitation not found or has expired" });
+      }
+      
+      // Check if invitation has expired
+      if (invitation.expiresAt < new Date()) {
+        return res.status(410).json({ message: "This invitation has expired" });
+      }
+      
+      // Don't return the token in the response for security reasons
+      const { token: _, ...safeInvitation } = invitation;
+      
+      res.json({
+        message: "Invitation found",
+        invitation: safeInvitation
+      });
+    } catch (error: any) {
+      console.error("Error retrieving invitation:", error);
+      res.status(500).json({ message: error.message || "Failed to retrieve invitation" });
+    }
+  });
+
+  // Get invitation link (for administrators/inviters)
+  app.get("/api/team/invite/:id/link", authMiddleware, async (req, res) => {
+    try {
+      const invitationId = parseInt(req.params.id);
+      
+      if (isNaN(invitationId)) {
+        return res.status(400).json({ message: "Invalid invitation ID" });
+      }
+      
+      const invitation = await storage.getTeamInvitation(invitationId);
+      
+      if (!invitation) {
+        return res.status(404).json({ message: "Invitation not found" });
+      }
+      
+      // Only the inviter or an admin can view the invitation link
+      if (invitation.invitedBy !== req.user!.id && req.user!.role !== "admin") {
+        return res.status(403).json({ message: "You don't have permission to view this invitation link" });
+      }
+      
+      // Check if invitation has expired
+      if (invitation.expiresAt < new Date()) {
+        return res.status(410).json({ message: "This invitation has expired" });
+      }
+      
+      // Generate invite link
+      const baseUrl = process.env.BASE_URL || `http://localhost:5000`;
+      const inviteLink = `${baseUrl}/accept-invitation?token=${invitation.token}`;
+      
+      res.json({
+        message: "Invitation link retrieved",
+        inviteLink,
+        invitation: {
+          id: invitation.id,
+          email: invitation.email,
+          role: invitation.role,
+          status: invitation.status,
+          createdAt: invitation.createdAt,
+          expiresAt: invitation.expiresAt
+        }
+      });
+    } catch (error: any) {
+      console.error("Error retrieving invitation link:", error);
+      res.status(500).json({ message: error.message || "Failed to retrieve invitation link" });
     }
   });
   

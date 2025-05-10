@@ -322,18 +322,38 @@ const Team = () => {
         }
       });
       
+      // Handle special status code for partial success (invitation created but email failed)
+      if (response.status === 207) {
+        const responseData = await response.json();
+        return { ...responseData, partialSuccess: true };
+      }
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to send invitation');
       }
       
-      return await response.json();
+      // Regular success case
+      const responseData = await response.json();
+      return { ...responseData, partialSuccess: false };
     },
-    onSuccess: () => {
-      toast({
-        title: "Invitation sent",
-        description: `Invitation email sent to ${inviteData.email}`,
-      });
+    onSuccess: (data) => {
+      if (data.partialSuccess) {
+        // Invitation created but email failed to send
+        toast({
+          title: "Invitation created",
+          description: "The invitation was created but the email couldn't be sent. Click 'View Invitation' on the team member to share the link manually.",
+          variant: "default",
+          duration: 6000,
+        });
+      } else {
+        // Normal success case
+        toast({
+          title: "Invitation sent",
+          description: `Invitation email sent to ${inviteData.email}`,
+        });
+      }
+      
       setIsInviteDialogOpen(false);
       setInviteData({ email: "", role: "moderator" });
       // Refresh the team members list to show the pending invitation
