@@ -146,8 +146,17 @@ const Settings = () => {
     timezone: "UTC",
   });
 
+  // Define notification settings type
+  type NotificationSettings = {
+    emailNotifications: boolean;
+    inAppNotifications: boolean;
+    marketingEmails: boolean;
+    weeklyDigest: boolean;
+    alertNotifications: boolean;
+  };
+  
   // Default notification settings
-  const defaultNotificationSettings = {
+  const defaultNotificationSettings: NotificationSettings = {
     emailNotifications: true,
     inAppNotifications: true,
     marketingEmails: false,
@@ -155,8 +164,11 @@ const Settings = () => {
     alertNotifications: true,
   };
   
-  // Notification settings state
-  const [notificationSettings, setNotificationSettings] = useState({...defaultNotificationSettings});
+  // Load notification settings from localStorage or use defaults
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('notificationSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {...defaultNotificationSettings};
+  });
 
   // API settings state
   const [apiSettings, setApiSettings] = useState({
@@ -185,7 +197,10 @@ const Settings = () => {
   // Save notification settings
   const saveNotificationsMutation = useMutation({
     mutationFn: async (data: typeof notificationSettings) => {
-      // Simulate API call
+      // Save to localStorage
+      localStorage.setItem('notificationSettings', JSON.stringify(data));
+      
+      // Simulate API call - in a real app, this would send to the backend
       return new Promise<void>((resolve) => setTimeout(resolve, 1000));
     },
     onSuccess: () => {
@@ -330,7 +345,12 @@ const Settings = () => {
   };
 
   const handleResetNotifications = () => {
+    // Reset state to defaults
     setNotificationSettings({...defaultNotificationSettings});
+    
+    // Remove from localStorage
+    localStorage.removeItem('notificationSettings');
+    
     toast({
       title: "Defaults restored",
       description: "Notification settings have been reset to defaults",
@@ -615,7 +635,7 @@ const Settings = () => {
                     <Switch 
                       id="emailNotifications" 
                       checked={notificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))}
+                      onCheckedChange={(checked) => setNotificationSettings((prev: NotificationSettings) => ({ ...prev, emailNotifications: checked }))}
                     />
                   </div>
                   
@@ -629,7 +649,7 @@ const Settings = () => {
                     <Switch 
                       id="marketingEmails" 
                       checked={notificationSettings.marketingEmails}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, marketingEmails: checked }))}
+                      onCheckedChange={(checked) => setNotificationSettings((prev: NotificationSettings) => ({ ...prev, marketingEmails: checked }))}
                     />
                   </div>
                   
@@ -643,7 +663,7 @@ const Settings = () => {
                     <Switch 
                       id="weeklyDigest" 
                       checked={notificationSettings.weeklyDigest}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, weeklyDigest: checked }))}
+                      onCheckedChange={(checked) => setNotificationSettings((prev: NotificationSettings) => ({ ...prev, weeklyDigest: checked }))}
                     />
                   </div>
                 </div>
@@ -664,7 +684,7 @@ const Settings = () => {
                     <Switch 
                       id="inAppNotifications" 
                       checked={notificationSettings.inAppNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, inAppNotifications: checked }))}
+                      onCheckedChange={(checked) => setNotificationSettings((prev: NotificationSettings) => ({ ...prev, inAppNotifications: checked }))}
                     />
                   </div>
                   
@@ -678,7 +698,7 @@ const Settings = () => {
                     <Switch 
                       id="alertNotifications" 
                       checked={notificationSettings.alertNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, alertNotifications: checked }))}
+                      onCheckedChange={(checked) => setNotificationSettings((prev: NotificationSettings) => ({ ...prev, alertNotifications: checked }))}
                     />
                   </div>
                 </div>
