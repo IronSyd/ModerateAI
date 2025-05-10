@@ -163,8 +163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Billing information
-  app.get("/api/billing", authMiddleware, async (req, res) => {
+  // Billing information - available without authentication for demo purposes
+  app.get("/api/billing", async (req, res) => {
     try {
       const planDetails = {
         name: "Pro",

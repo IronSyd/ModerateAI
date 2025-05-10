@@ -669,7 +669,32 @@ const Settings = () => {
             <CardContent className="space-y-6">
               {/* Fetch billing data using React Query */}
               {(() => {
-                const { data: billingData, isLoading, isError } = useQuery({
+                // Define types for the billing API response
+                interface BillingPlan {
+                  name: string;
+                  status: string;
+                  price: number;
+                  renewalDate: string;
+                  nextPaymentDate: string;
+                  aiResponsesLimit: number;
+                  aiResponsesUsed: number;
+                  activeIntegrations: number;
+                }
+                
+                interface Invoice {
+                  id: string;
+                  date: string;
+                  description: string;
+                  amount: string;
+                  status: string;
+                }
+                
+                interface BillingData {
+                  plan: BillingPlan;
+                  invoices: Invoice[];
+                }
+                
+                const { data: billingData, isLoading, isError } = useQuery<BillingData>({
                   queryKey: ['/api/billing'],
                   retry: false,
                 });
@@ -682,7 +707,7 @@ const Settings = () => {
                   );
                 }
                 
-                if (isError) {
+                if (isError || !billingData) {
                   return (
                     <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 text-red-700 dark:text-red-400">
                       <AlertTriangle className="h-5 w-5 inline-block mr-2" />
@@ -693,7 +718,7 @@ const Settings = () => {
                 
                 const { plan, invoices } = billingData;
                 
-                const formatDate = (dateString) => {
+                const formatDate = (dateString: string): string => {
                   const date = new Date(dateString);
                   return date.toLocaleDateString('en-US', { 
                     month: 'short',
@@ -799,7 +824,7 @@ const Settings = () => {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                              {invoices.map((invoice) => (
+                              {invoices.map((invoice: Invoice) => (
                                 <tr key={invoice.id}>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {formatDate(invoice.date)}
