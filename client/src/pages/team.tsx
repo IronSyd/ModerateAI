@@ -300,6 +300,7 @@ const Team = () => {
   // Update roles mutation
   const updateRolesMutation = useMutation({
     mutationFn: async (updatedRoles: Role[]) => {
+      console.log('Sending roles data:', updatedRoles);
       const response = await fetch('/api/team/roles', {
         method: 'POST',
         headers: {
@@ -309,10 +310,14 @@ const Team = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update roles');
+        const errorText = await response.text();
+        console.error('Failed to update roles:', errorText);
+        throw new Error(`Failed to update roles: ${errorText}`);
       }
       
-      return await response.json();
+      const responseData = await response.json();
+      console.log('Update response:', responseData);
+      return responseData;
     },
     onSuccess: () => {
       toast({
