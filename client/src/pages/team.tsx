@@ -67,6 +67,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Link,
+  Copy,
+  AlertTriangle,
 } from "lucide-react";
 
 type TeamMember = {
@@ -888,47 +891,70 @@ const Team = () => {
 
       {/* Invitation Link Dialog */}
       <Dialog open={isInviteLinkDialogOpen} onOpenChange={setIsInviteLinkDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invitation Link</DialogTitle>
+            <DialogTitle>Team Invitation Created</DialogTitle>
             <DialogDescription>
-              Share this link with the team member to accept the invitation.
+              Share this secure link with your team member. They can use it to join your team.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 my-4">
-            <div className="bg-gray-50 p-3 rounded-md border overflow-x-auto">
-              <code className="text-sm break-all">{inviteLink}</code>
+          
+          <div className="space-y-6 my-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Link className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-sm font-medium">Unique invitation link</div>
             </div>
-            <div className="flex space-x-2">
+            
+            <div className="bg-secondary/20 p-3 rounded-lg border border-border overflow-hidden relative">
+              <p className="text-sm break-all pr-10">{inviteLink}</p>
+              <Button 
+                size="sm" 
+                variant="ghost"
+                className="absolute right-1 top-1.5 h-8 w-8 p-0"
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteLink);
+                  toast({
+                    title: "Link copied",
+                    description: "Invitation link copied to clipboard",
+                    duration: 2000,
+                  });
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">Copy</span>
+              </Button>
+            </div>
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm">
+              <div className="flex gap-2 items-center mb-2">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="font-medium">Important</span>
+              </div>
+              <p>This link expires in 7 days and can only be used once. Anyone with this link can join your team with the selected role.</p>
+            </div>
+            
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button 
                 onClick={() => {
                   navigator.clipboard.writeText(inviteLink);
                   toast({
-                    title: "Copied to clipboard",
-                    description: "The invitation link has been copied to your clipboard",
+                    title: "Link copied",
+                    description: "Invitation link copied to clipboard",
+                    duration: 2000,
                   });
                 }}
-                className="w-full"
+                className="flex-1"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-4 w-4 mr-2" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" 
-                  />
-                </svg>
-                Copy to Clipboard
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Link
               </Button>
+              
               <Button 
                 variant="outline" 
                 onClick={() => setIsInviteLinkDialogOpen(false)}
+                className="flex-1"
               >
                 Close
               </Button>
