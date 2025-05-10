@@ -67,7 +67,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Trash2,
-  FileJson,
   Plus,
   LogOut,
   Eye,
@@ -93,7 +92,6 @@ const Settings = () => {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("account");
   const [showPassword, setShowPassword] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
   
   // Password change form
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
@@ -308,13 +306,7 @@ const Settings = () => {
     saveNotificationsMutation.mutate(notificationSettings);
   };
 
-  const handleSaveApiSettings = () => {
-    saveApiSettingsMutation.mutate(apiSettings);
-  };
-
-  const handleGenerateApiKey = () => {
-    generateApiKeyMutation.mutate();
-  };
+  // Removed API handler functions
 
   const handleDeleteAccount = () => {
     deleteAccountMutation.mutate();
@@ -664,178 +656,7 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="api" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Settings</CardTitle>
-              <CardDescription>
-                Manage your API keys and webhook configurations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">API Keys</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="apiKey">API Key</Label>
-                  <div className="flex space-x-2">
-                    <div className="relative flex-1">
-                      <Input 
-                        id="apiKey" 
-                        value={apiSettings.apiKey} 
-                        type={showApiKey ? "text" : "password"}
-                        readOnly 
-                        className="font-mono text-sm pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                        aria-label={showApiKey ? "Hide API key" : "Show API key"}
-                      >
-                        {showApiKey ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                    <Button 
-                      variant="outline"
-                      onClick={handleGenerateApiKey}
-                      disabled={generateApiKeyMutation.isPending}
-                    >
-                      {generateApiKeyMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        "Regenerate"
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Use this API key to authenticate requests to the ModerateAI API
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Webhook Configuration</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="enableWebhooks">Enable Webhooks</Label>
-                    <Switch 
-                      id="enableWebhooks" 
-                      checked={apiSettings.enableWebhooks}
-                      onCheckedChange={(checked) => setApiSettings(prev => ({ ...prev, enableWebhooks: checked }))}
-                    />
-                  </div>
-                  
-                  <div className="mt-4 space-y-2">
-                    <Label htmlFor="webhookUrl">Webhook URL</Label>
-                    <Input 
-                      id="webhookUrl" 
-                      placeholder="https://your-server.com/webhook" 
-                      value={apiSettings.webhookUrl}
-                      onChange={(e) => setApiSettings(prev => ({ ...prev, webhookUrl: e.target.value }))}
-                      disabled={!apiSettings.enableWebhooks}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      We'll send POST requests to this URL when events occur
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="webhook-events">Webhook Events</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="event-conversation" className="rounded" defaultChecked />
-                      <label htmlFor="event-conversation" className="text-sm">
-                        Conversation events
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="event-moderation" className="rounded" defaultChecked />
-                      <label htmlFor="event-moderation" className="text-sm">
-                        Moderation actions
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="event-integration" className="rounded" defaultChecked />
-                      <label htmlFor="event-integration" className="text-sm">
-                        Integration changes
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="event-team" className="rounded" />
-                      <label htmlFor="event-team" className="text-sm">
-                        Team member changes
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">API Settings</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="enableLogging">Request Logging</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Log API requests for debugging
-                      </p>
-                    </div>
-                    <Switch 
-                      id="enableLogging" 
-                      checked={apiSettings.enableLogging}
-                      onCheckedChange={(checked) => setApiSettings(prev => ({ ...prev, enableLogging: checked }))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rateLimit">Rate Limit (requests per minute)</Label>
-                    <Select 
-                      value={apiSettings.rateLimit}
-                      onValueChange={(value) => setApiSettings(prev => ({ ...prev, rateLimit: value }))}
-                    >
-                      <SelectTrigger id="rateLimit">
-                        <SelectValue placeholder="Select rate limit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="60">60</SelectItem>
-                        <SelectItem value="100">100</SelectItem>
-                        <SelectItem value="500">500</SelectItem>
-                        <SelectItem value="1000">1,000</SelectItem>
-                        <SelectItem value="unlimited">Unlimited</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between items-center border-t px-6 py-4">
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Download API Docs
-              </Button>
-              <Button 
-                onClick={handleSaveApiSettings} 
-                disabled={saveApiSettingsMutation.isPending}
-              >
-                {saveApiSettingsMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                Save API Settings
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+        {/* API TabsContent removed */}
 
         <TabsContent value="billing" className="space-y-6">
           <Card>
