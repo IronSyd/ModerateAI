@@ -277,6 +277,82 @@ INV-003,2023-04-12,ModerateAI Pro Plan - Monthly,$79.00,Paid`;
       res.status(500).json({ message: "Error cancelling subscription" });
     }
   });
+  
+  // Upgrade plan
+  app.get("/api/billing/plans", async (req, res) => {
+    try {
+      // In a real application, this would fetch available plans from a database or Stripe
+      const plans = [
+        {
+          id: "basic",
+          name: "Basic",
+          price: 49,
+          features: [
+            "15,000 AI responses/month",
+            "Basic moderation rules",
+            "Website and Telegram integration",
+            "Email support"
+          ]
+        },
+        {
+          id: "pro",
+          name: "Pro",
+          price: 79,
+          features: [
+            "100,000 AI responses/month",
+            "Advanced moderation rules",
+            "All platform integrations",
+            "Priority support",
+            "Custom response templates"
+          ]
+        },
+        {
+          id: "enterprise",
+          name: "Enterprise",
+          price: 199,
+          features: [
+            "Unlimited AI responses",
+            "Custom AI model training",
+            "Enterprise-grade security",
+            "Dedicated account manager",
+            "API access",
+            "Custom integrations"
+          ]
+        }
+      ];
+      
+      res.status(200).json({ plans });
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+      res.status(500).json({ message: "Error fetching available plans" });
+    }
+  });
+  
+  // Upgrade subscription
+  app.post("/api/billing/upgrade", async (req, res) => {
+    try {
+      const { planId } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ message: "Plan ID is required" });
+      }
+      
+      // In a real application, this would connect to Stripe or another payment processor
+      // to upgrade the subscription
+      
+      // Simulate a successful upgrade
+      setTimeout(() => {
+        res.status(200).json({ 
+          success: true,
+          message: "Plan successfully upgraded. The changes will be reflected in your next billing cycle."
+        });
+      }, 500); // Small delay to simulate processing
+      
+    } catch (error) {
+      console.error("Error upgrading plan:", error);
+      res.status(500).json({ message: "Error upgrading plan" });
+    }
+  });
 
   // Recent activity
   app.get("/api/dashboard/recent-activity", authMiddleware, async (req, res) => {

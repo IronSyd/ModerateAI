@@ -56,6 +56,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Save,
   User,
   Bell,
@@ -328,6 +337,164 @@ const Settings = () => {
   // Handle password change
   const handleChangePassword = (data: z.infer<typeof passwordSchema>) => {
     changePasswordMutation.mutate(data);
+  };
+  
+  // UpgradePlanContent component for the upgrade dialog
+  interface UpgradePlanContentProps {
+    currentPlan: string;
+  }
+  
+  const UpgradePlanContent = ({ currentPlan }: UpgradePlanContentProps) => {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [plans, setPlans] = useState<Array<{
+      id: string;
+      name: string;
+      price: number;
+      features: string[];
+    }>>([]);
+    
+    // Fetch available plans
+    useEffect(() => {
+      fetch('/api/billing/plans')
+        .then(response => response.json())
+        .then(data => {
+          setPlans(data.plans);
+        })
+        .catch(error => {
+          console.error('Error fetching plans:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load available plans",
+            variant: "destructive",
+          });
+        });
+    }, [toast]);
+    
+    // Handle plan selection
+    const handlePlanSelect = (planId: string) => {
+      setSelectedPlan(planId);
+    };
+    
+    // Handle upgrade
+    const handleUpgrade = () => {
+      if (!selectedPlan) {
+        toast({
+          title: "Please select a plan",
+          description: "Select a plan to continue with the upgrade",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      apiRequest("POST", "/api/billing/upgrade", { planId: selectedPlan })
+        .then(res => res.json())
+        .then(data => {
+          setIsLoading(false);
+          if (data.success) {
+            toast({
+              title: "Plan Upgraded",
+              description: data.message,
+            });
+            // Invalidate the billing data to refresh it
+            queryClient.invalidateQueries({ queryKey: ['/api/billing'] });
+            // Close the dialog - this requires a dialog context or a callback to be passed to the component
+            // For now, we'll rely on the user closing it manually
+          } else {
+            toast({
+              title: "Error",
+              description: data.message || "Failed to upgrade plan",
+              variant: "destructive",
+            });
+          }
+        })
+        .catch(error => {
+          setIsLoading(false);
+          toast({
+            title: "Error",
+            description: "Failed to upgrade plan. Please try again.",
+            variant: "destructive",
+          });
+          console.error('Plan upgrade error:', error);
+        });
+    };
+    
+    return (
+      <div className="py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map(plan => (
+            <div 
+              key={plan.id}
+              className={`border rounded-lg p-6 cursor-pointer transition-all ${
+                selectedPlan === plan.id 
+                  ? 'ring-2 ring-primary border-primary bg-primary/5' 
+                  : 'hover:border-primary hover:shadow-sm'
+              } ${
+                currentPlan === plan.name 
+                  ? 'relative overflow-hidden' 
+                  : ''
+              }`}
+              onClick={() => handlePlanSelect(plan.id)}
+            >
+              {currentPlan === plan.name && (
+                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 transform translate-x-1/4 -translate-y-1/4 rotate-45 shadow-sm">
+                  Current
+                </div>
+              )}
+              <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold">${plan.price}</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto">
+                <Button 
+                  variant={currentPlan === plan.name ? "outline" : "default"} 
+                  className="w-full"
+                  disabled={currentPlan === plan.name}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (currentPlan !== plan.name) {
+                      handlePlanSelect(plan.id);
+                    }
+                  }}
+                >
+                  {currentPlan === plan.name ? 'Current Plan' : 'Select Plan'}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <DialogFooter className="mt-6">
+          <Button
+            type="button"
+            variant="default"
+            disabled={!selectedPlan || isLoading || selectedPlan === plans.find(p => p.name === currentPlan)?.id}
+            onClick={handleUpgrade}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Upgrading...
+              </>
+            ) : (
+              'Confirm Upgrade'
+            )}
+          </Button>
+        </DialogFooter>
+      </div>
+    );
   };
 
   return (
@@ -743,9 +910,22 @@ const Settings = () => {
                             Billed monthly • Renews on {formatDate(plan.renewalDate)}
                           </p>
                         </div>
-                        <Button>
-                          Upgrade Plan
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button>
+                              Upgrade Plan
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-3xl">
+                            <DialogHeader>
+                              <DialogTitle>Upgrade Your Plan</DialogTitle>
+                              <DialogDescription>
+                                Choose the plan that best fits your needs. All plans include a 14-day free trial.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <UpgradePlanContent currentPlan={plan.name} />
+                          </DialogContent>
+                        </Dialog>
                       </div>
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                         <div className="border rounded-md p-3">
