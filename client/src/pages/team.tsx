@@ -255,6 +255,22 @@ const TeamSettingsContent = () => {
   );
 };
 
+// Define a RolePermission type for better type-safety
+type RolePermission = {
+  id: string;
+  name: string;
+  granted: boolean;
+};
+
+// Define a Role type
+type Role = {
+  id: string;
+  name: string;
+  description: string;
+  iconColor: string;
+  permissions: RolePermission[];
+};
+
 const Team = () => {
   const { toast } = useToast();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
@@ -266,7 +282,54 @@ const Team = () => {
     email: "",
     role: "moderator",
   });
-  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [editableRoles, setEditableRoles] = useState<Role[]>([]);
+  
+  // Fetch roles for the customization dialog
+  const { data: roles, refetch: refetchRoles } = useQuery({
+    queryKey: ['/api/team/roles'],
+    queryFn: async () => {
+      const response = await fetch('/api/team/roles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch roles and permissions');
+      }
+      return await response.json() as Role[];
+    },
+  });
+  
+  // Update roles mutation
+  const updateRolesMutation = useMutation({
+    mutationFn: async (updatedRoles: Role[]) => {
+      const response = await fetch('/api/team/roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ updatedRoles }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update roles');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Roles updated",
+        description: "Role permissions have been updated successfully",
+      });
+      setIsRoleCustomizeDialogOpen(false);
+      refetchRoles(); // Refresh the roles data
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update roles",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch team members from the API
   const { data: teamMembers, isLoading: isLoadingMembers, refetch: refetchMembers } = useQuery({
@@ -828,6 +891,83 @@ const Team = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Role Customization Dialog */}
+      <Dialog open={isRoleCustomizeDialogOpen} onOpenChange={(open) => {
+        setIsRoleCustomizeDialogOpen(open);
+        // Reset editable roles when dialog is closed
+        if (!open) {
+          setEditableRoles([]);
+        } else if (roles) {
+          // Deep copy the roles to avoid modifying the original data
+          setEditableRoles(JSON.parse(JSON.stringify(roles)));
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Customize Roles & Permissions</DialogTitle>
+            <DialogDescription>
+              Modify what each role can access and change in the system.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 max-h-[60vh] overflow-y-auto pr-2">
+            {editableRoles.map((role, roleIndex) => (
+              <div key={role.id} className="mb-6 border rounded-lg p-4">
+                <div className="flex items-center mb-4">
+                  <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
+                    <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium">{role.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {role.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {role.permissions.map((permission, permIndex) => (
+                    <div key={permission.id} className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                      <span>{permission.name}</span>
+                      <Switch 
+                        checked={permission.granted} 
+                        onCheckedChange={(checked) => {
+                          const updatedRoles = [...editableRoles];
+                          updatedRoles[roleIndex].permissions[permIndex].granted = checked;
+                          setEditableRoles(updatedRoles);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsRoleCustomizeDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => updateRolesMutation.mutate(editableRoles)}
+              disabled={updateRolesMutation.isPending}
+            >
+              {updateRolesMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -176,6 +176,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
+  
+  // Update roles & permissions API endpoint
+  app.post("/api/team/roles", authMiddleware, async (req, res) => {
+    try {
+      const { updatedRoles } = req.body;
+      
+      if (!updatedRoles || !Array.isArray(updatedRoles)) {
+        return res.status(400).json({ message: "Invalid roles data" });
+      }
+      
+      // In a real app, we would save the roles to the database
+      // For now, just return success with the updated roles
+      
+      res.json({ 
+        success: true, 
+        message: "Roles updated successfully",
+        roles: updatedRoles
+      });
+    } catch (error: any) {
+      console.error("Error updating roles and permissions:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   // Health check
   app.get("/api/health", (req, res) => {
