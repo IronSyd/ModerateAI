@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 import {
   Card,
@@ -64,6 +65,18 @@ const Settings = () => {
   const { toast } = useToast();
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [location] = useLocation();
+  const [activeTab, setActiveTab] = useState("account");
+
+  // Parse URL params to get the tab
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam && ['account', 'notifications', 'api', 'billing'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   // General settings state
   const [generalSettings, setGeneralSettings] = useState({
@@ -233,7 +246,7 @@ const Settings = () => {
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
       </div>
 
-      <Tabs defaultValue="account" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="account">
             <User className="h-4 w-4 mr-2" />

@@ -61,15 +61,15 @@ const UserProfile = () => {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigateTo("/profile")}>
+          <DropdownMenuItem onClick={() => navigateTo("/settings?tab=account")}>
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigateTo("/preferences")}>
+          <DropdownMenuItem onClick={() => navigateTo("/settings?tab=notifications")}>
             <Settings className="mr-2 h-4 w-4" />
             Preferences
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigateTo("/billing")}>
+          <DropdownMenuItem onClick={() => navigateTo("/settings?tab=billing")}>
             <CreditCard className="mr-2 h-4 w-4" />
             Billing
           </DropdownMenuItem>
