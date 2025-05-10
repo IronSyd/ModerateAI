@@ -350,7 +350,7 @@ const Settings = () => {
           title: "Logged out",
           description: "You have been successfully logged out.",
         });
-        setLocation("/");
+        setLocation("/login");
       }
     });
   };
