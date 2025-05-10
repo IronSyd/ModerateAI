@@ -543,7 +543,7 @@ const Settings = () => {
             </CardContent>
             <CardFooter className="flex justify-between items-center border-t px-6 py-4">
               <div className="text-sm text-muted-foreground">
-                <CheckCircle2 className="inline-block mr-1 h-4 w-4 text-green-500" />
+                <CheckCircle className="inline-block mr-1 h-4 w-4 text-green-500" />
                 Language and timezone changes are saved automatically
               </div>
               <Button onClick={handleSaveProfile} disabled={saveProfileMutation.isPending}>
