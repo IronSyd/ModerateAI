@@ -520,10 +520,6 @@ const Team = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div></div> {/* Empty div to maintain the flex layout */}
-        <Button onClick={() => setIsInviteDialogOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite Team Member
-        </Button>
       </div>
 
       <Tabs defaultValue="members" className="space-y-6">
@@ -676,7 +672,7 @@ const Team = () => {
                   onClick={() => setIsInviteDialogOpen(true)}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Invite Member
+                  Invite Team Member
                 </Button>
               )}
             </CardFooter>
