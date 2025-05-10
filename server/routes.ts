@@ -210,6 +210,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching billing information" });
     }
   });
+  
+  // Download single invoice by ID
+  app.get("/api/billing/invoices/:id", async (req, res) => {
+    try {
+      const invoiceId = req.params.id;
+      
+      // In a real application, we would fetch the invoice from a database or Stripe
+      // For now, we'll create a simple CSV string
+      const invoiceData = `Invoice ID,${invoiceId}
+Date,2023-06-12
+Description,ModerateAI Pro Plan - Monthly
+Amount,$79.00
+Status,Paid`;
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoiceId}.csv`);
+      
+      // Send the CSV data
+      res.status(200).send(invoiceData);
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      res.status(500).json({ message: "Error downloading invoice" });
+    }
+  });
+  
+  // Download all invoices
+  app.get("/api/billing/invoices", async (req, res) => {
+    try {
+      // In a real application, we would fetch all invoices from a database or Stripe
+      // For now, we'll create a simple CSV with all invoice data
+      const allInvoicesData = `Invoice ID,Date,Description,Amount,Status
+INV-001,2023-06-12,ModerateAI Pro Plan - Monthly,$79.00,Paid
+INV-002,2023-05-12,ModerateAI Pro Plan - Monthly,$79.00,Paid
+INV-003,2023-04-12,ModerateAI Pro Plan - Monthly,$79.00,Paid`;
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=all-invoices.csv');
+      
+      // Send the CSV data
+      res.status(200).send(allInvoicesData);
+    } catch (error) {
+      console.error("Error downloading all invoices:", error);
+      res.status(500).json({ message: "Error downloading all invoices" });
+    }
+  });
+  
+  // Cancel subscription
+  app.post("/api/billing/cancel-subscription", async (req, res) => {
+    try {
+      // In a real application, this would connect to Stripe or another payment processor
+      // to cancel the subscription
+      
+      // Simulate a successful cancellation
+      setTimeout(() => {
+        res.status(200).json({ 
+          success: true,
+          message: "Subscription successfully cancelled. Service will remain active until the end of the billing period."
+        });
+      }, 500); // Small delay to simulate processing
+      
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      res.status(500).json({ message: "Error cancelling subscription" });
+    }
+  });
 
   // Recent activity
   app.get("/api/dashboard/recent-activity", authMiddleware, async (req, res) => {
