@@ -278,6 +278,72 @@ const Settings = () => {
     },
   });
 
+  // Language names mapping
+  const languageNames: Record<string, string> = {
+    en: "English",
+    es: "Spanish (Español)",
+    fr: "French (Français)",
+    de: "German (Deutsch)",
+    it: "Italian (Italiano)",
+    pt: "Portuguese (Português)",
+    ru: "Russian (Русский)",
+    zh: "Chinese (中文)",
+    ja: "Japanese (日本語)",
+    ko: "Korean (한국어)",
+    ar: "Arabic (العربية)",
+    hi: "Hindi (हिन्दी)"
+  };
+  
+  // Timezone names mapping
+  const timezoneNames: Record<string, string> = {
+    "UTC": "UTC (Coordinated Universal Time)",
+    "America/New_York": "Eastern Time (ET)",
+    "America/Chicago": "Central Time (CT)",
+    "America/Denver": "Mountain Time (MT)",
+    "America/Los_Angeles": "Pacific Time (PT)",
+    "Europe/London": "London (GMT/BST)",
+    "Europe/Paris": "Central European Time (CET)",
+    "Europe/Moscow": "Moscow Time (MSK)",
+    "Asia/Dubai": "Gulf Standard Time (GST)",
+    "Asia/Kolkata": "India Standard Time (IST)",
+    "Asia/Shanghai": "China Standard Time (CST)",
+    "Asia/Tokyo": "Japan Standard Time (JST)",
+    "Australia/Sydney": "Australian Eastern Time (AET)",
+    "Pacific/Auckland": "New Zealand Standard Time (NZST)"
+  };
+
+  // Handle language change
+  const handleLanguageChange = (language: string) => {
+    setGeneralSettings(prev => ({ ...prev, language }));
+    
+    toast({
+      title: "Language Updated",
+      description: `Language set to ${languageNames[language] || language}`,
+    });
+    
+    // Save the settings
+    saveProfileMutation.mutate({
+      ...generalSettings,
+      language
+    });
+  };
+  
+  // Handle timezone change
+  const handleTimezoneChange = (timezone: string) => {
+    setGeneralSettings(prev => ({ ...prev, timezone }));
+    
+    toast({
+      title: "Timezone Updated",
+      description: `Timezone set to ${timezoneNames[timezone] || timezone}`,
+    });
+    
+    // Save the settings
+    saveProfileMutation.mutate({
+      ...generalSettings,
+      timezone
+    });
+  };
+
   // Handle form submissions
   const handleSaveProfile = () => {
     saveProfileMutation.mutate(generalSettings);
@@ -424,7 +490,7 @@ const Settings = () => {
                     <Label htmlFor="language">Language</Label>
                     <Select 
                       value={generalSettings.language}
-                      onValueChange={(value) => setGeneralSettings(prev => ({ ...prev, language: value }))}
+                      onValueChange={handleLanguageChange}
                     >
                       <SelectTrigger id="language">
                         <SelectValue placeholder="Select language" />
@@ -449,7 +515,7 @@ const Settings = () => {
                     <Label htmlFor="timezone">Timezone</Label>
                     <Select 
                       value={generalSettings.timezone}
-                      onValueChange={(value) => setGeneralSettings(prev => ({ ...prev, timezone: value }))}
+                      onValueChange={handleTimezoneChange}
                     >
                       <SelectTrigger id="timezone">
                         <SelectValue placeholder="Select timezone" />
@@ -460,6 +526,15 @@ const Settings = () => {
                         <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
                         <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
                         <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                        <SelectItem value="Europe/London">London (GMT/BST)</SelectItem>
+                        <SelectItem value="Europe/Paris">Central European Time (CET)</SelectItem>
+                        <SelectItem value="Europe/Moscow">Moscow Time (MSK)</SelectItem>
+                        <SelectItem value="Asia/Dubai">Gulf Standard Time (GST)</SelectItem>
+                        <SelectItem value="Asia/Kolkata">India Standard Time (IST)</SelectItem>
+                        <SelectItem value="Asia/Shanghai">China Standard Time (CST)</SelectItem>
+                        <SelectItem value="Asia/Tokyo">Japan Standard Time (JST)</SelectItem>
+                        <SelectItem value="Australia/Sydney">Australian Eastern Time (AET)</SelectItem>
+                        <SelectItem value="Pacific/Auckland">New Zealand Standard Time (NZST)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -467,14 +542,17 @@ const Settings = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center border-t px-6 py-4">
-              <Button variant="outline">Cancel</Button>
+              <div className="text-sm text-muted-foreground">
+                <CheckCircle2 className="inline-block mr-1 h-4 w-4 text-green-500" />
+                Language and timezone changes are saved automatically
+              </div>
               <Button onClick={handleSaveProfile} disabled={saveProfileMutation.isPending}>
                 {saveProfileMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save Changes
+                Save Other Changes
               </Button>
             </CardFooter>
           </Card>
