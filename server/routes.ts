@@ -162,6 +162,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching dashboard stats" });
     }
   });
+  
+  // Billing information
+  app.get("/api/billing", authMiddleware, async (req, res) => {
+    try {
+      const planDetails = {
+        name: "Pro",
+        status: "active",
+        price: 79,
+        renewalDate: "2023-07-12",
+        nextPaymentDate: "2023-07-12",
+        aiResponsesLimit: 100000,
+        aiResponsesUsed: 45230,
+        activeIntegrations: 2
+      };
+      
+      const invoices = [
+        {
+          id: "INV-001",
+          date: "2023-06-12",
+          description: "ModerateAI Pro Plan - Monthly",
+          amount: "$79.00",
+          status: "Paid"
+        },
+        {
+          id: "INV-002",
+          date: "2023-05-12",
+          description: "ModerateAI Pro Plan - Monthly",
+          amount: "$79.00",
+          status: "Paid"
+        },
+        {
+          id: "INV-003",
+          date: "2023-04-12",
+          description: "ModerateAI Pro Plan - Monthly",
+          amount: "$79.00",
+          status: "Paid"
+        }
+      ];
+      
+      res.status(200).json({
+        plan: planDetails,
+        invoices: invoices
+      });
+    } catch (error) {
+      console.error("Error fetching billing info:", error);
+      res.status(500).json({ message: "Error fetching billing information" });
+    }
+  });
 
   // Recent activity
   app.get("/api/dashboard/recent-activity", authMiddleware, async (req, res) => {
