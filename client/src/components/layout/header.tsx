@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Bell, HelpCircle, LogOut } from "lucide-react";
+import { Menu, Bell, HelpCircle } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
@@ -8,22 +8,18 @@ import { HelpMenu } from "../help/help-menu-new";
 import { Logo } from "@/components/logo";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { useNotifications } from "@/hooks/use-notifications";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const Header = () => {
   const isMobile = useMobile();
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const [, setIsSidebarOpen] = useState(!isMobile);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const { isAdminUser, adminUser } = useAdminUser();
   const { unreadCount, hasNewNotifications } = useNotifications();
-  const { logoutMutation } = useAuth();
-  const { toast } = useToast();
   
   // Get page title based on current route
   const getPageTitle = () => {
@@ -62,19 +58,6 @@ const Header = () => {
   const handleOpenHelp = () => {
     setNotificationOpen(false);
     setHelpOpen(!helpOpen);
-  };
-  
-  // Handle logout
-  const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast({
-          title: "Logged out",
-          description: "You have been successfully logged out.",
-        });
-        setLocation("/auth");
-      }
-    });
   };
   
   return (
@@ -155,24 +138,6 @@ const Header = () => {
               <HelpMenu onClose={() => setHelpOpen(false)} />
             )}
           </div>
-          
-          {/* Logout Button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button 
-                  className="text-muted-foreground hover:text-foreground" 
-                  aria-label="Logout"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-6 w-6" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Logout</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
       </div>
     </div>
