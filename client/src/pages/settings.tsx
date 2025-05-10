@@ -58,6 +58,8 @@ import {
   FileJson,
   Plus,
   LogOut,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 const Settings = () => {
@@ -67,6 +69,8 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("account");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Parse URL params to get the tab
   useEffect(() => {
@@ -318,7 +322,27 @@ const Settings = () => {
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <div className="flex space-x-2">
-                      <Input id="password" type="password" value="••••••••" disabled />
+                      <div className="relative flex-1">
+                        <Input 
+                          id="password" 
+                          type={showPassword ? "text" : "password"} 
+                          value="DemoPassword123" 
+                          className="pr-10"
+                          disabled 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                       <Button variant="outline">Change</Button>
                     </div>
                   </div>
