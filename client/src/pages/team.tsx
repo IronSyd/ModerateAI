@@ -259,12 +259,14 @@ const Team = () => {
   const { toast } = useToast();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRoleCustomizeDialogOpen, setIsRoleCustomizeDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [inviteData, setInviteData] = useState({
     email: "",
     role: "moderator",
   });
+  const [selectedRole, setSelectedRole] = useState<any>(null);
 
   // Fetch team members from the API
   const { data: teamMembers, isLoading: isLoadingMembers, refetch: refetchMembers } = useQuery({
@@ -668,7 +670,15 @@ const Team = () => {
               <RolesAndPermissionsContent />
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="ml-auto">
+              <Button 
+                variant="outline" 
+                className="ml-auto"
+                onClick={() => {
+                  // Fetch roles data if needed and then open dialog
+                  setIsRoleCustomizeDialogOpen(true);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" />
                 Customize Roles
               </Button>
             </CardFooter>
