@@ -171,12 +171,6 @@ const Settings = () => {
       // Simulate API call
       return new Promise<void>((resolve) => setTimeout(resolve, 1000));
     },
-    onSuccess: () => {
-      toast({
-        title: "Profile updated",
-        description: "Your profile settings have been saved",
-      });
-    },
     onError: () => {
       toast({
         title: "Error",
@@ -312,20 +306,28 @@ const Settings = () => {
     "Pacific/Auckland": "New Zealand Standard Time (NZST)"
   };
 
+  // Track if settings have been modified since last save
+  const [isModified, setIsModified] = useState(false);
+  
   // Handle language change
   const handleLanguageChange = (language: string) => {
     setGeneralSettings(prev => ({ ...prev, language }));
+    setIsModified(true);
   };
   
   // Handle timezone change
   const handleTimezoneChange = (timezone: string) => {
     setGeneralSettings(prev => ({ ...prev, timezone }));
+    setIsModified(true);
   };
 
   // Handle form submissions
   const handleSaveProfile = () => {
     saveProfileMutation.mutate(generalSettings, {
       onSuccess: () => {
+        // Reset the modified flag
+        setIsModified(false);
+        
         // Display language and timezone info in success toast if they've been changed
         const defaultLanguage = "en";
         const defaultTimezone = "UTC";
@@ -349,6 +351,10 @@ const Settings = () => {
           title: "Profile updated",
           description: changeMessage,
         });
+        
+        // Apply the language and timezone changes (in a real app, this would update the app language)
+        console.log(`Language set to: ${generalSettings.language}`);
+        console.log(`Timezone set to: ${generalSettings.timezone}`);
       }
     });
   };
@@ -546,14 +552,37 @@ const Settings = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center border-t px-6 py-4">
-              <Button variant="outline">Cancel</Button>
-              <Button onClick={handleSaveProfile} disabled={saveProfileMutation.isPending}>
+              <div>
+                {isModified && (
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 mr-2">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Unsaved changes
+                  </Badge>
+                )}
+                <Button variant="outline" onClick={() => {
+                  setGeneralSettings({
+                    firstName: "Demo",
+                    lastName: "User",
+                    email: "demo@example.com",
+                    language: "en",
+                    timezone: "UTC",
+                  });
+                  setIsModified(false);
+                }} disabled={!isModified || saveProfileMutation.isPending}>
+                  Cancel
+                </Button>
+              </div>
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={saveProfileMutation.isPending || !isModified}
+                variant={isModified ? "default" : "outline"}
+              >
                 {saveProfileMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save Changes
+                {isModified ? "Save Changes" : "No Changes"}
               </Button>
             </CardFooter>
           </Card>
