@@ -3,6 +3,18 @@ import { sendEmail, sendInvitationEmail } from './emailService';
 
 const router = express.Router();
 
+// Endpoint to check if SendGrid is properly configured
+router.get('/check-sendgrid-config', (req, res) => {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const senderEmail = process.env.SENDGRID_SENDER_EMAIL;
+  
+  res.json({
+    apiKeyConfigured: !!apiKey,
+    senderEmailConfigured: !!senderEmail,
+    senderEmail: senderEmail || 'Not configured'
+  });
+});
+
 // Test route to send a simple email
 router.get('/test-simple-email', async (req, res) => {
   try {
@@ -15,7 +27,8 @@ router.get('/test-simple-email', async (req, res) => {
       });
     }
     
-    const senderEmail = process.env.SENDGRID_SENDER_EMAIL || 'noreply@moderateai.app';
+    // Important: This must be an email that has been verified in SendGrid
+    const senderEmail = process.env.SENDGRID_SENDER_EMAIL;
     
     const result = await sendEmail({
       to,

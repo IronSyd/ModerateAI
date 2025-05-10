@@ -26,8 +26,15 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       return false;
     }
     
-    // Make sure we always have a value for "from" field (required by SendGrid)
-    const senderEmail = params.from || process.env.SENDGRID_SENDER_EMAIL || 'noreply@moderateai.app';
+    // Always use the verified sender email from environment variables
+    // We ignore the params.from value to prevent "sender identity" errors
+    const senderEmail = process.env.SENDGRID_SENDER_EMAIL;
+    
+    // Check if sender email is available
+    if (!senderEmail) {
+      console.error('SENDGRID_SENDER_EMAIL environment variable not set. Cannot send email.');
+      return false;
+    }
 
     await mailService.send({
       to: params.to,
@@ -61,7 +68,8 @@ export async function sendInvitationEmail(
   role: string,
   inviteLink: string
 ): Promise<boolean> {
-  const senderEmail = process.env.SENDGRID_SENDER_EMAIL || 'noreply@moderateai.app';
+  // Important: Must be an email verified in SendGrid
+  const senderEmail = process.env.SENDGRID_SENDER_EMAIL;
   
   const subject = `${inviterName} invited you to join ${teamName}`;
   
