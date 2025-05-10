@@ -698,7 +698,7 @@ const Settings = () => {
                   </div>
                   <div className="border rounded-md p-3">
                     <p className="text-sm text-muted-foreground">Active Integrations</p>
-                    <p className="text-xl font-bold">2 / ∞</p>
+                    <p className="text-xl font-bold">2</p>
                   </div>
                 </div>
               </div>
