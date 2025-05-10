@@ -59,32 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ status: "ok" });
   });
   
-  // Billing plans endpoint
-  app.get("/api/billing/plans", (req, res) => {
-    res.json({ plans: billingPlans });
-  });
-  
-  // API endpoint to handle plan upgrades
-  app.post("/api/billing/upgrade", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ success: false, message: "Not authenticated" });
-    }
-    
-    const { planId } = req.body;
-    
-    if (!planId || !billingPlans.some(plan => plan.id === planId)) {
-      return res.status(400).json({ success: false, message: "Invalid plan selected" });
-    }
-    
-    // Simulate plan upgrade (in a real app, this would connect to Stripe or another payment provider)
-    // Here we'd update the user's subscription in the database
-    
-    return res.json({ 
-      success: true, 
-      message: "Plan upgraded successfully! Your subscription has been updated.",
-      plan: billingPlans.find(plan => plan.id === planId)
-    });
-  });
+
   
   // Direct OpenAI chat completion for the website demo interface
   app.post("/api/openai-demo", async (req, res) => {
