@@ -120,12 +120,28 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
+    console.log("Login attempt for:", req.body.username);
+    
     passport.authenticate("local", (err: Error, user: UserType, info: { message: string }) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info?.message || "Authentication failed" });
+      if (err) {
+        console.error("Login error:", err);
+        return next(err);
+      }
+      
+      if (!user) {
+        console.log("Login failed - Invalid credentials");
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
       
       req.login(user, (loginErr) => {
-        if (loginErr) return next(loginErr);
+        if (loginErr) {
+          console.error("Login session error:", loginErr);
+          return next(loginErr);
+        }
+        
+        console.log(`Login successful for user ${user.id}, session ID: ${req.sessionID}`);
+        console.log(`Session cookie set: ${JSON.stringify(req.session)}`);
+        
         return res.status(200).json(user);
       });
     })(req, res, next);
@@ -139,9 +155,13 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req: Request, res: Response) => {
+    console.log(`GET /api/user - isAuthenticated: ${req.isAuthenticated()}, sessionID: ${req.sessionID}, session:`, req.session);
+    
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
+    
+    console.log(`User found in session: ${JSON.stringify(req.user)}`);
     res.status(200).json(req.user);
   });
 }
