@@ -146,14 +146,17 @@ const Settings = () => {
     timezone: "UTC",
   });
 
-  // Notification settings state
-  const [notificationSettings, setNotificationSettings] = useState({
+  // Default notification settings
+  const defaultNotificationSettings = {
     emailNotifications: true,
     inAppNotifications: true,
     marketingEmails: false,
     weeklyDigest: true,
     alertNotifications: true,
-  });
+  };
+  
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({...defaultNotificationSettings});
 
   // API settings state
   const [apiSettings, setApiSettings] = useState({
@@ -323,6 +326,14 @@ const Settings = () => {
         // Apply the timezone change (in a real app, this would update the app timezone)
         console.log(`Timezone set to: ${generalSettings.timezone}`);
       }
+    });
+  };
+
+  const handleResetNotifications = () => {
+    setNotificationSettings({...defaultNotificationSettings});
+    toast({
+      title: "Defaults restored",
+      description: "Notification settings have been reset to defaults",
     });
   };
 
@@ -674,7 +685,7 @@ const Settings = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center border-t px-6 py-4">
-              <Button variant="outline">Reset Defaults</Button>
+              <Button variant="outline" onClick={handleResetNotifications}>Reset Defaults</Button>
               <Button 
                 onClick={handleSaveNotifications} 
                 disabled={saveNotificationsMutation.isPending}
