@@ -133,7 +133,7 @@ const Settings = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     
-    if (tabParam && ['account', 'notifications', 'api', 'billing'].includes(tabParam)) {
+    if (tabParam && ['account', 'notifications', 'billing'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [location]);
@@ -170,14 +170,7 @@ const Settings = () => {
     return savedSettings ? JSON.parse(savedSettings) : {...defaultNotificationSettings};
   });
 
-  // API settings state
-  const [apiSettings, setApiSettings] = useState({
-    apiKey: "sk_demo_••••••••••••••••••••••",
-    webhookUrl: "",
-    enableWebhooks: false,
-    enableLogging: true,
-    rateLimit: "100",
-  });
+  // Remove API settings state
 
   // Save profile settings
   const saveProfileMutation = useMutation({
@@ -218,53 +211,7 @@ const Settings = () => {
     },
   });
 
-  // Save API settings
-  const saveApiSettingsMutation = useMutation({
-    mutationFn: async (data: typeof apiSettings) => {
-      // Simulate API call
-      return new Promise<void>((resolve) => setTimeout(resolve, 1000));
-    },
-    onSuccess: () => {
-      toast({
-        title: "API settings updated",
-        description: "Your API settings have been saved",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update API settings",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Generate new API key
-  const generateApiKeyMutation = useMutation({
-    mutationFn: async () => {
-      // Simulate API call
-      return new Promise<{ apiKey: string }>((resolve) => 
-        setTimeout(() => resolve({ apiKey: "sk_demo_" + Math.random().toString(36).substring(2, 15) }), 1000)
-      );
-    },
-    onSuccess: (data) => {
-      setApiSettings(prev => ({
-        ...prev,
-        apiKey: data.apiKey
-      }));
-      toast({
-        title: "New API key generated",
-        description: "Make sure to copy your new API key",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to generate new API key",
-        variant: "destructive",
-      });
-    },
-  });
+  // Removed API settings mutations
 
   // Delete account
   const deleteAccountMutation = useMutation({
@@ -402,10 +349,6 @@ const Settings = () => {
           <TabsTrigger value="notifications">
             <Bell className="h-4 w-4 mr-2" />
             Notifications
-          </TabsTrigger>
-          <TabsTrigger value="api">
-            <FileJson className="h-4 w-4 mr-2" />
-            API
           </TabsTrigger>
           <TabsTrigger value="billing">
             <CreditCard className="h-4 w-4 mr-2" />
