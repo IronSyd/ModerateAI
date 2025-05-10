@@ -133,13 +133,10 @@ const RolesAndPermissionsContent = () => {
         <div key={role.id} className="border rounded-lg p-4">
           <div className="mb-4">
             <div className="flex items-center mb-2">
-              <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
-                <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
-              </div>
               <h3 className="text-lg font-medium">{role.name}</h3>
             </div>
-            <div className="ml-11 -mt-1">
-              <p className={`text-sm text-white font-medium px-2 py-1 rounded inline-block bg-${role.iconColor}-600`}>
+            <div>
+              <p className={`text-sm text-${role.iconColor}-800 font-medium`}>
                 {role.description}
               </p>
             </div>
@@ -148,12 +145,9 @@ const RolesAndPermissionsContent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
             {role.permissions.map((permission) => (
               <div key={permission.id} className="flex items-center p-2 rounded-md bg-gray-50">
-                {permission.granted ? (
-                  <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-500 mr-2" />
-                )}
-                {permission.name}
+                <span className={`font-medium ${permission.granted ? 'text-green-600' : 'text-gray-400'}`}>
+                  {permission.name}
+                </span>
               </div>
             ))}
           </div>
@@ -489,29 +483,25 @@ const Team = () => {
     switch (status) {
       case "active":
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+          <div className="text-green-600 font-medium">
             Active
           </div>
         );
       case "invited":
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>
+          <div className="text-yellow-600 font-medium">
             Invited
           </div>
         );
       case "disabled":
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+          <div className="text-gray-500 font-medium">
             Disabled
           </div>
         );
       default:
         return (
-          <div className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+          <div className="text-gray-500 font-medium">
             {status}
           </div>
         );
