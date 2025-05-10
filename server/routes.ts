@@ -138,33 +138,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const baseUrl = process.env.BASE_URL || `http://localhost:5000`;
       const inviteLink = `${baseUrl}/accept-invitation?token=${invitation.token}`;
       
-      // Send invitation email
-      const { sendInvitationEmail } = await import("./emailService");
-      const emailSent = await sendInvitationEmail(
-        email,
-        "ModerateAI Team", // Team name
-        inviter?.fullName || "The team at ModerateAI", // Inviter name
-        role,
-        inviteLink
-      );
+      // Instead of sending an email, we'll just return the invitation with the link
+      // This new approach focuses on directly sharing the referral link
+      console.log(`Created invitation link for ${email}: ${inviteLink}`);
       
-      if (!emailSent) {
-        // Email sending failed, but invitation was created
-        console.error(`Failed to send invitation email to ${email}`);
-        
-        // Return a partial success status code (207) instead of an error (500)
-        // This indicates that the invitation was saved but email delivery failed
-        return res.status(207).json({ 
-          message: "Invitation created but email delivery failed. You may need to share the invitation link manually.",
-          invitation,
-          emailDelivered: false,
-          status: "partial_success"
-        });
-      }
-      
-      res.status(201).json({
-        message: "Invitation sent successfully",
-        invitation
+      // Return success with the invitation link for manual sharing
+      return res.status(201).json({ 
+        message: "Invitation created successfully. Share the referral link with the team member.",
+        invitation,
+        inviteLink,
+        status: "success"
       });
     } catch (error: any) {
       console.error("Error sending team invitation:", error);

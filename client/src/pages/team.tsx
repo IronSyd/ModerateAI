@@ -349,37 +349,27 @@ const Team = () => {
         }
       });
       
-      // Handle special status code for partial success (invitation created but email failed)
-      if (response.status === 207) {
-        const responseData = await response.json();
-        return { ...responseData, partialSuccess: true };
-      }
-      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send invitation');
+        throw new Error(errorData.message || 'Failed to create invitation');
       }
       
-      // Regular success case
       const responseData = await response.json();
-      return { ...responseData, partialSuccess: false };
+      return responseData;
     },
     onSuccess: (data) => {
-      if (data.partialSuccess) {
-        // Invitation created but email failed to send
-        toast({
-          title: "Invitation created",
-          description: "The invitation was created but the email couldn't be sent. Click 'View Invitation' on the team member to share the link manually.",
-          variant: "default",
-          duration: 6000,
-        });
-      } else {
-        // Normal success case
-        toast({
-          title: "Invitation sent",
-          description: `Invitation email sent to ${inviteData.email}`,
-        });
-      }
+      // Set the invitation link immediately so we can show it to the user
+      setInviteLink(data.inviteLink);
+      
+      toast({
+        title: "Invitation created",
+        description: "Invitation link has been generated. Share it with your team member to join.",
+        variant: "default",
+        duration: 3000,
+      });
+      
+      // Show the invitation link dialog immediately
+      setIsInviteLinkDialogOpen(true);
       
       setIsInviteDialogOpen(false);
       setInviteData({ email: "", role: "moderator" });
@@ -888,9 +878,9 @@ const Team = () => {
               {inviteMemberMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Mail className="mr-2 h-4 w-4" />
+                <Link className="mr-2 h-4 w-4" />
               )}
-              Send Invitation
+              Create Invitation Link
             </Button>
           </DialogFooter>
         </DialogContent>
