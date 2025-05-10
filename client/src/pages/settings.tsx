@@ -55,9 +55,6 @@ import {
   CheckCircle,
   Trash2,
   FileJson,
-  Languages,
-  MoonStar,
-  Sun,
   Plus,
 } from "lucide-react";
 
@@ -85,7 +82,6 @@ const Settings = () => {
     email: "demo@example.com",
     language: "en",
     timezone: "UTC",
-    theme: "light",
   });
 
   // Notification settings state
@@ -353,39 +349,6 @@ const Settings = () => {
                         <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Theme</Label>
-                  <div className="flex space-x-4">
-                    <div 
-                      className={`border rounded-md p-3 flex flex-col items-center cursor-pointer ${
-                        generalSettings.theme === 'light' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => setGeneralSettings(prev => ({ ...prev, theme: 'light' }))}
-                    >
-                      <Sun className="h-6 w-6 mb-2 text-primary-500" />
-                      <span className="text-sm font-medium">Light</span>
-                    </div>
-                    <div 
-                      className={`border rounded-md p-3 flex flex-col items-center cursor-pointer ${
-                        generalSettings.theme === 'dark' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => setGeneralSettings(prev => ({ ...prev, theme: 'dark' }))}
-                    >
-                      <MoonStar className="h-6 w-6 mb-2 text-primary-500" />
-                      <span className="text-sm font-medium">Dark</span>
-                    </div>
-                    <div 
-                      className={`border rounded-md p-3 flex flex-col items-center cursor-pointer ${
-                        generalSettings.theme === 'system' ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => setGeneralSettings(prev => ({ ...prev, theme: 'system' }))}
-                    >
-                      <Languages className="h-6 w-6 mb-2 text-primary-500" />
-                      <span className="text-sm font-medium">System</span>
-                    </div>
                   </div>
                 </div>
               </div>
