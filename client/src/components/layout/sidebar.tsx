@@ -116,9 +116,11 @@ const Sidebar = () => {
   const SidebarSection = ({ title, items }: { title: string; items: SidebarItem[] }) => {
     return (
       <>
-        <div className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {title}
-        </div>
+        {title && (
+          <div className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {title}
+          </div>
+        )}
         {items.map((item) => (
           <NavItem key={item.path} item={item} />
         ))}
@@ -149,9 +151,9 @@ const Sidebar = () => {
         
         {/* Navigation Links */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          <SidebarSection title="Main" items={mainItems} />
-          <SidebarSection title="Integrations" items={integrationItems} />
-          <SidebarSection title="Settings" items={settingsItems} />
+          <SidebarSection title="" items={mainItems} />
+          <SidebarSection title="" items={integrationItems} />
+          <SidebarSection title="" items={settingsItems} />
         </nav>
       </div>
       
