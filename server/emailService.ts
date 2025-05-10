@@ -1,11 +1,12 @@
 import { MailService } from '@sendgrid/mail';
 
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error("SENDGRID_API_KEY environment variable must be set");
-}
-
+// Initialize SendGrid mail service
 const mailService = new MailService();
-mailService.setApiKey(process.env.SENDGRID_API_KEY);
+if (process.env.SENDGRID_API_KEY) {
+  mailService.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+  console.warn("SENDGRID_API_KEY environment variable not set. Email functionality will be disabled.");
+}
 
 interface EmailParams {
   to: string;
@@ -15,15 +16,24 @@ interface EmailParams {
   html?: string;
 }
 
+/**
+ * Generic function to send emails
+ */
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
+    if (!process.env.SENDGRID_API_KEY) {
+      console.error('SendGrid API key not set. Cannot send email.');
+      return false;
+    }
+
     await mailService.send({
       to: params.to,
-      from: params.from,
+      from: params.from, 
       subject: params.subject,
-      text: params.text || '',
-      html: params.html || '',
+      text: params.text,
+      html: params.html,
     });
+
     console.log(`Email sent successfully to ${params.to}`);
     return true;
   } catch (error) {
@@ -32,44 +42,83 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   }
 }
 
+/**
+ * Send team invitation email
+ */
 export async function sendInvitationEmail(
-  to: string, 
-  teamName: string, 
-  inviterName: string, 
+  email: string,
+  teamName: string,
+  inviterName: string,
   role: string,
   inviteLink: string
 ): Promise<boolean> {
-  const from = 'no-reply@moderateai.app'; // Replace with your verified sender
-  const subject = `Invitation to join ${teamName} on ModerateAI`;
+  const senderEmail = process.env.SENDGRID_SENDER_EMAIL || 'noreply@moderateai.app';
+  
+  const subject = `${inviterName} invited you to join ${teamName}`;
   
   const html = `
-  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-    <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-      <h1 style="color: #4f46e5;">ModerateAI</h1>
-    </div>
-    <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 5px; margin-top: 20px;">
-      <h2>You've been invited to join ${teamName}</h2>
-      <p>${inviterName} has invited you to join their team on ModerateAI as a ${role}.</p>
-      <p>ModerateAI is an AI-powered customer support and community moderation platform that helps teams manage communications across multiple channels.</p>
-      <div style="margin: 30px 0; text-align: center;">
-        <a href="${inviteLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Accept Invitation</a>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 2px solid #5a67d8;">
+        <h1 style="color: #4c51bf; margin: 0;">ModerateAI</h1>
       </div>
-      <p>This invitation link will expire in 7 days.</p>
-      <p>If you have any questions, please contact ${inviterName} directly.</p>
+      
+      <div style="padding: 20px;">
+        <h2>You've been invited!</h2>
+        
+        <p>Hello,</p>
+        
+        <p>${inviterName} has invited you to join <strong>${teamName}</strong> as a <strong>${role}</strong>.</p>
+        
+        <p>ModerateAI helps teams manage customer support and content moderation across multiple platforms with AI assistance.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${inviteLink}" style="background-color: #5a67d8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            Accept Invitation
+          </a>
+        </div>
+        
+        <p>Or copy and paste this URL into your browser:</p>
+        <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+          ${inviteLink}
+        </p>
+        
+        <p>This invitation will expire in 7 days.</p>
+        
+        <p>If you have any questions, please contact the person who invited you.</p>
+      </div>
+      
+      <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+        <p>© ${new Date().getFullYear()} ModerateAI. All rights reserved.</p>
+        <p>If you didn't request this invitation, you can ignore this email.</p>
+      </div>
     </div>
-    <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 0.8em;">
-      <p>© ${new Date().getFullYear()} ModerateAI. All rights reserved.</p>
-    </div>
-  </div>
   `;
   
-  const text = `You've been invited to join ${teamName} on ModerateAI by ${inviterName} as a ${role}. Please visit ${inviteLink} to accept the invitation. This link will expire in 7 days.`;
+  const text = `
+You've been invited!
+
+Hello,
+
+${inviterName} has invited you to join ${teamName} as a ${role}.
+
+ModerateAI helps teams manage customer support and content moderation across multiple platforms with AI assistance.
+
+Accept the invitation by visiting this link:
+${inviteLink}
+
+This invitation will expire in 7 days.
+
+If you have any questions, please contact the person who invited you.
+
+© ${new Date().getFullYear()} ModerateAI. All rights reserved.
+If you didn't request this invitation, you can ignore this email.
+  `;
   
   return sendEmail({
-    to,
-    from,
+    to: email,
+    from: senderEmail,
     subject,
-    html,
-    text
+    text,
+    html
   });
 }
