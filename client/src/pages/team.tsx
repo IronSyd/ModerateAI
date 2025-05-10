@@ -134,11 +134,6 @@ const RolesAndPermissionsContent = () => {
             <div className="flex items-center mb-2">
               <h3 className="text-lg font-medium">{role.name}</h3>
             </div>
-            <div>
-              <p className={`text-sm text-white font-medium px-2 py-1 rounded inline-block bg-${role.iconColor}-600`}>
-                {role.description}
-              </p>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
