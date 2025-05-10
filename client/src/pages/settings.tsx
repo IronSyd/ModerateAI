@@ -143,7 +143,6 @@ const Settings = () => {
     firstName: "Demo",
     lastName: "User",
     email: "demo@example.com",
-    language: "en",
     timezone: "UTC",
   });
 
@@ -272,22 +271,6 @@ const Settings = () => {
     },
   });
 
-  // Language names mapping
-  const languageNames: Record<string, string> = {
-    en: "English",
-    es: "Spanish (Español)",
-    fr: "French (Français)",
-    de: "German (Deutsch)",
-    it: "Italian (Italiano)",
-    pt: "Portuguese (Português)",
-    ru: "Russian (Русский)",
-    zh: "Chinese (中文)",
-    ja: "Japanese (日本語)",
-    ko: "Korean (한국어)",
-    ar: "Arabic (العربية)",
-    hi: "Hindi (हिन्दी)"
-  };
-  
   // Timezone names mapping
   const timezoneNames: Record<string, string> = {
     "UTC": "UTC (Coordinated Universal Time)",
@@ -309,12 +292,6 @@ const Settings = () => {
   // Track if settings have been modified since last save
   const [isModified, setIsModified] = useState(false);
   
-  // Handle language change
-  const handleLanguageChange = (language: string) => {
-    setGeneralSettings(prev => ({ ...prev, language }));
-    setIsModified(true);
-  };
-  
   // Handle timezone change
   const handleTimezoneChange = (timezone: string) => {
     setGeneralSettings(prev => ({ ...prev, timezone }));
@@ -328,23 +305,14 @@ const Settings = () => {
         // Reset the modified flag
         setIsModified(false);
         
-        // Display language and timezone info in success toast if they've been changed
-        const defaultLanguage = "en";
+        // Display timezone info in success toast if it's been changed
         const defaultTimezone = "UTC";
         
         let changeMessage = "Settings saved successfully";
         
-        // Only add language/timezone details if they're different from defaults
-        if (generalSettings.language !== defaultLanguage || generalSettings.timezone !== defaultTimezone) {
-          changeMessage += ":\n";
-          
-          if (generalSettings.language !== defaultLanguage) {
-            changeMessage += `• Language: ${languageNames[generalSettings.language] || generalSettings.language}\n`;
-          }
-          
-          if (generalSettings.timezone !== defaultTimezone) {
-            changeMessage += `• Timezone: ${timezoneNames[generalSettings.timezone] || generalSettings.timezone}`;
-          }
+        // Add timezone details if it's different from default
+        if (generalSettings.timezone !== defaultTimezone) {
+          changeMessage += `:\n• Timezone: ${timezoneNames[generalSettings.timezone] || generalSettings.timezone}`;
         }
         
         toast({
@@ -352,8 +320,7 @@ const Settings = () => {
           description: changeMessage,
         });
         
-        // Apply the language and timezone changes (in a real app, this would update the app language)
-        console.log(`Language set to: ${generalSettings.language}`);
+        // Apply the timezone change (in a real app, this would update the app timezone)
         console.log(`Timezone set to: ${generalSettings.timezone}`);
       }
     });
@@ -495,59 +462,32 @@ const Settings = () => {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Preferences</h3>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
-                    <Select 
-                      value={generalSettings.language}
-                      onValueChange={handleLanguageChange}
-                    >
-                      <SelectTrigger id="language">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish (Español)</SelectItem>
-                        <SelectItem value="fr">French (Français)</SelectItem>
-                        <SelectItem value="de">German (Deutsch)</SelectItem>
-                        <SelectItem value="it">Italian (Italiano)</SelectItem>
-                        <SelectItem value="pt">Portuguese (Português)</SelectItem>
-                        <SelectItem value="ru">Russian (Русский)</SelectItem>
-                        <SelectItem value="zh">Chinese (中文)</SelectItem>
-                        <SelectItem value="ja">Japanese (日本語)</SelectItem>
-                        <SelectItem value="ko">Korean (한국어)</SelectItem>
-                        <SelectItem value="ar">Arabic (العربية)</SelectItem>
-                        <SelectItem value="hi">Hindi (हिन्दी)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
-                    <Select 
-                      value={generalSettings.timezone}
-                      onValueChange={handleTimezoneChange}
-                    >
-                      <SelectTrigger id="timezone">
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="UTC">UTC (Coordinated Universal Time)</SelectItem>
-                        <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                        <SelectItem value="Europe/London">London (GMT/BST)</SelectItem>
-                        <SelectItem value="Europe/Paris">Central European Time (CET)</SelectItem>
-                        <SelectItem value="Europe/Moscow">Moscow Time (MSK)</SelectItem>
-                        <SelectItem value="Asia/Dubai">Gulf Standard Time (GST)</SelectItem>
-                        <SelectItem value="Asia/Kolkata">India Standard Time (IST)</SelectItem>
-                        <SelectItem value="Asia/Shanghai">China Standard Time (CST)</SelectItem>
-                        <SelectItem value="Asia/Tokyo">Japan Standard Time (JST)</SelectItem>
-                        <SelectItem value="Australia/Sydney">Australian Eastern Time (AET)</SelectItem>
-                        <SelectItem value="Pacific/Auckland">New Zealand Standard Time (NZST)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select 
+                    value={generalSettings.timezone}
+                    onValueChange={handleTimezoneChange}
+                  >
+                    <SelectTrigger id="timezone">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UTC">UTC (Coordinated Universal Time)</SelectItem>
+                      <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
+                      <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
+                      <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
+                      <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                      <SelectItem value="Europe/London">London (GMT/BST)</SelectItem>
+                      <SelectItem value="Europe/Paris">Central European Time (CET)</SelectItem>
+                      <SelectItem value="Europe/Moscow">Moscow Time (MSK)</SelectItem>
+                      <SelectItem value="Asia/Dubai">Gulf Standard Time (GST)</SelectItem>
+                      <SelectItem value="Asia/Kolkata">India Standard Time (IST)</SelectItem>
+                      <SelectItem value="Asia/Shanghai">China Standard Time (CST)</SelectItem>
+                      <SelectItem value="Asia/Tokyo">Japan Standard Time (JST)</SelectItem>
+                      <SelectItem value="Australia/Sydney">Australian Eastern Time (AET)</SelectItem>
+                      <SelectItem value="Pacific/Auckland">New Zealand Standard Time (NZST)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
@@ -564,7 +504,6 @@ const Settings = () => {
                     firstName: "Demo",
                     lastName: "User",
                     email: "demo@example.com",
-                    language: "en",
                     timezone: "UTC",
                   });
                   setIsModified(false);
