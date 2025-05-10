@@ -134,7 +134,7 @@ const RolesAndPermissionsContent = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
-                <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
+                {/* Shield icon removed as requested */}
               </div>
               <h3 className="text-lg font-medium">{role.name}</h3>
             </div>
