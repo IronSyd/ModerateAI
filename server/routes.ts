@@ -10,6 +10,7 @@ import {
 } from "./lib/openai";
 import { initializeBot, disconnectBot, initializeAllBots } from "./lib/telegram";
 import { setupAuth } from "./auth";
+import testEmailRoutes from "./test-email";
 import { 
   insertPlatformSchema, 
   insertConversationSchema, 
@@ -33,6 +34,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     next();
   };
+  
+  // Register test email routes
+  app.use("/api/email", testEmailRoutes);
   
   // TEMPORARY: Fix demo user password for testing
   app.get("/api/fix-demo-password", async (req, res) => {

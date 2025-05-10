@@ -25,10 +25,13 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       console.error('SendGrid API key not set. Cannot send email.');
       return false;
     }
+    
+    // Make sure we always have a value for "from" field (required by SendGrid)
+    const senderEmail = params.from || process.env.SENDGRID_SENDER_EMAIL || 'noreply@moderateai.app';
 
     await mailService.send({
       to: params.to,
-      from: params.from, 
+      from: senderEmail,
       subject: params.subject,
       text: params.text,
       html: params.html,
@@ -36,8 +39,14 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
 
     console.log(`Email sent successfully to ${params.to}`);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('SendGrid email error:', error);
+    
+    // Log more detailed error information if available
+    if (error.response && error.response.body && error.response.body.errors) {
+      console.error('SendGrid detailed error:', JSON.stringify(error.response.body.errors));
+    }
+    
     return false;
   }
 }
