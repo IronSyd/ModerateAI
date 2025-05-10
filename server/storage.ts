@@ -8,7 +8,8 @@ import {
   KnowledgeDocument, InsertKnowledgeDocument,
   ModerationAction, InsertModerationAction,
   ConversationTraining, InsertConversationTraining,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions, conversationTrainings
+  TeamInvitation, InsertTeamInvitation,
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions, conversationTrainings, teamInvitations
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
@@ -76,6 +77,16 @@ export interface IStorage {
   getLatestConversationTraining(userId: number, platformId: number): Promise<ConversationTraining | undefined>;
   createConversationTraining(training: InsertConversationTraining): Promise<ConversationTraining>;
   updateConversationTraining(id: number, training: Partial<ConversationTraining>): Promise<ConversationTraining | undefined>;
+  
+  // Team Invitation operations
+  getTeamInvitation(id: number): Promise<TeamInvitation | undefined>;
+  getTeamInvitationByToken(token: string): Promise<TeamInvitation | undefined>;
+  getTeamInvitationsByEmail(email: string): Promise<TeamInvitation[]>;
+  getTeamInvitationsByInviter(inviterId: number): Promise<TeamInvitation[]>;
+  getPendingTeamInvitations(): Promise<TeamInvitation[]>;
+  createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation>;
+  updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined>;
+  deleteTeamInvitation(id: number): Promise<boolean>;
   
   // Analytics operations
   getConversationCount(): Promise<number>;

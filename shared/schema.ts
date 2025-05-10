@@ -194,12 +194,33 @@ export const insertConversationTrainingSchema = createInsertSchema(conversationT
   startedAt: true,
 });
 
+// Team Invitations table
+export const teamInvitations = pgTable("team_invitations", {
+  id: serial("id").primaryKey(),
+  token: uuid("token").notNull().defaultRandom(),
+  email: text("email").notNull(),
+  role: text("role").notNull(),
+  invitedBy: integer("invited_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("pending"), // pending, accepted, expired, canceled
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+});
+
+export const insertTeamInvitationSchema = createInsertSchema(teamInvitations).pick({
+  email: true,
+  role: true,
+  invitedBy: true,
+  expiresAt: true,
+});
+
 // Define relations
 export const usersRelations = relations(users, ({ many }) => ({
   platforms: many(platforms),
   aiConfigurations: many(aiConfigurations),
   knowledgeBases: many(knowledgeBases),
-  conversationTrainings: many(conversationTrainings)
+  conversationTrainings: many(conversationTrainings),
+  sentInvitations: many(teamInvitations, { relationName: "sent_invitations" })
 }));
 
 export const platformsRelations = relations(platforms, ({ one, many }) => ({
@@ -278,6 +299,14 @@ export const conversationTrainingsRelations = relations(conversationTrainings, (
   })
 }));
 
+export const teamInvitationsRelations = relations(teamInvitations, ({ one }) => ({
+  inviter: one(users, {
+    fields: [teamInvitations.invitedBy],
+    references: [users.id],
+    relationName: "sent_invitations"
+  })
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -305,3 +334,6 @@ export type InsertKnowledgeDocument = z.infer<typeof insertKnowledgeDocumentSche
 
 export type ConversationTraining = typeof conversationTrainings.$inferSelect;
 export type InsertConversationTraining = z.infer<typeof insertConversationTrainingSchema>;
+
+export type TeamInvitation = typeof teamInvitations.$inferSelect;
+export type InsertTeamInvitation = z.infer<typeof insertTeamInvitationSchema>;
