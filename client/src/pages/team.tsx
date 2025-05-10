@@ -963,16 +963,16 @@ const Team = () => {
 
       {/* Role Customization Dialog */}
       <Dialog open={isRoleCustomizeDialogOpen} onOpenChange={(open) => {
+        console.log('Dialog open state changed:', open);
         setIsRoleCustomizeDialogOpen(open);
+        
         // Reset editable roles when dialog is closed
         if (!open) {
           setEditableRoles([]);
         } else {
-          // Deep copy the roles to avoid modifying the original data
-          // Use default roles if API data is not available
-          const rolesData = roles || defaultRolesData;
-          setEditableRoles(JSON.parse(JSON.stringify(rolesData)));
-          console.log('Setting editable roles:', rolesData);
+          // Always use the default roles for this demo to ensure we have data
+          console.log('Setting up editable roles using default data');
+          setEditableRoles(JSON.parse(JSON.stringify(defaultRolesData)));
         }
       }}>
         <DialogContent className="sm:max-w-[600px]">
@@ -984,37 +984,47 @@ const Team = () => {
           </DialogHeader>
           
           <div className="py-4 max-h-[60vh] overflow-y-auto pr-2">
-            {editableRoles.map((role, roleIndex) => (
-              <div key={role.id} className="mb-6 border rounded-lg p-4">
-                <div className="flex items-center mb-4">
-                  <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
-                    <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium">{role.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {role.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {role.permissions.map((permission, permIndex) => (
-                    <div key={permission.id} className="flex items-center justify-between p-2 rounded-md bg-gray-50">
-                      <span>{permission.name}</span>
-                      <Switch 
-                        checked={permission.granted} 
-                        onCheckedChange={(checked) => {
-                          const updatedRoles = [...editableRoles];
-                          updatedRoles[roleIndex].permissions[permIndex].granted = checked;
-                          setEditableRoles(updatedRoles);
-                        }}
-                      />
+            {editableRoles && editableRoles.length > 0 ? (
+              editableRoles.map((role, roleIndex) => (
+                <div key={role.id} className="mb-6 border rounded-lg p-4">
+                  <div className="flex items-center mb-4">
+                    <div className={`h-8 w-8 rounded-full bg-${role.iconColor || 'gray'}-100 mr-3 flex items-center justify-center`}>
+                      <Shield className={`h-4 w-4 text-${role.iconColor || 'gray'}-800`} />
                     </div>
-                  ))}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-medium">{role.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        {role.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {role.permissions && role.permissions.map((permission, permIndex) => (
+                      <div key={permission.id} className="flex items-center justify-between p-2 rounded-md bg-gray-50">
+                        <span>{permission.name}</span>
+                        <Switch 
+                          checked={permission.granted} 
+                          onCheckedChange={(checked) => {
+                            const updatedRoles = [...editableRoles];
+                            updatedRoles[roleIndex].permissions[permIndex].granted = checked;
+                            setEditableRoles(updatedRoles);
+                            console.log('Updated role permissions:', updatedRoles[roleIndex]);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading roles data...</p>
+                <pre className="text-left mt-4 text-xs bg-gray-100 p-2 rounded">
+                  {JSON.stringify(defaultRolesData, null, 2)}
+                </pre>
               </div>
-            ))}
+            )}
           </div>
           
           <DialogFooter>
