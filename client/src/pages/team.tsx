@@ -132,10 +132,10 @@ const RolesAndPermissionsContent = () => {
       {roles.map((role) => (
         <div key={role.id} className="border rounded-lg p-4">
           <div className="mb-4">
-            <div className="flex items-center mb-2">
+            <div className="mb-2">
               <h3 className="text-lg font-medium">{role.name}</h3>
             </div>
-            <div className="-mt-1">
+            <div>
               <p className={`text-sm text-white font-medium px-2 py-1 rounded inline-block bg-${role.iconColor}-600`}>
                 {role.description}
               </p>
