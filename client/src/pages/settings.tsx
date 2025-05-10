@@ -841,7 +841,11 @@ const Settings = () => {
                                     </span>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <Button variant="ghost" size="sm">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => window.open(`/api/billing/invoices/${invoice.id}`, '_blank')}
+                                    >
                                       Download
                                     </Button>
                                   </td>
@@ -857,13 +861,64 @@ const Settings = () => {
               })()}
             </CardContent>
             <CardFooter className="justify-between items-center border-t px-6 py-4">
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                onClick={() => window.open('/api/billing/invoices', '_blank')}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download All Invoices
               </Button>
-              <Button variant="outline" className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 border-red-200 dark:border-red-800">
-                Cancel Subscription
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 border-red-200 dark:border-red-800">
+                    Cancel Subscription
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to cancel your subscription? Your service will remain active until the end of the current billing period.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => {
+                        // Call the cancel subscription API
+                        apiRequest("POST", "/api/billing/cancel-subscription")
+                          .then((res) => res.json())
+                          .then((data) => {
+                            if (data.success) {
+                              toast({
+                                title: "Subscription Cancelled",
+                                description: data.message,
+                              });
+                              // Invalidate the billing data cache to refresh the UI
+                              queryClient.invalidateQueries({ queryKey: ['/api/billing'] });
+                            } else {
+                              toast({
+                                title: "Error",
+                                description: data.message || "Failed to cancel subscription",
+                                variant: "destructive",
+                              });
+                            }
+                          })
+                          .catch((error) => {
+                            toast({
+                              title: "Error",
+                              description: "Failed to cancel subscription. Please try again.",
+                              variant: "destructive",
+                            });
+                            console.error("Subscription cancellation error:", error);
+                          });
+                      }}
+                    >
+                      Yes, Cancel
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardFooter>
           </Card>
         </TabsContent>
