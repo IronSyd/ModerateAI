@@ -315,38 +315,42 @@ const Settings = () => {
   // Handle language change
   const handleLanguageChange = (language: string) => {
     setGeneralSettings(prev => ({ ...prev, language }));
-    
-    toast({
-      title: "Language Updated",
-      description: `Language set to ${languageNames[language] || language}`,
-    });
-    
-    // Save the settings
-    saveProfileMutation.mutate({
-      ...generalSettings,
-      language
-    });
   };
   
   // Handle timezone change
   const handleTimezoneChange = (timezone: string) => {
     setGeneralSettings(prev => ({ ...prev, timezone }));
-    
-    toast({
-      title: "Timezone Updated",
-      description: `Timezone set to ${timezoneNames[timezone] || timezone}`,
-    });
-    
-    // Save the settings
-    saveProfileMutation.mutate({
-      ...generalSettings,
-      timezone
-    });
   };
 
   // Handle form submissions
   const handleSaveProfile = () => {
-    saveProfileMutation.mutate(generalSettings);
+    saveProfileMutation.mutate(generalSettings, {
+      onSuccess: () => {
+        // Display language and timezone info in success toast if they've been changed
+        const defaultLanguage = "en";
+        const defaultTimezone = "UTC";
+        
+        let changeMessage = "Settings saved successfully";
+        
+        // Only add language/timezone details if they're different from defaults
+        if (generalSettings.language !== defaultLanguage || generalSettings.timezone !== defaultTimezone) {
+          changeMessage += ":\n";
+          
+          if (generalSettings.language !== defaultLanguage) {
+            changeMessage += `• Language: ${languageNames[generalSettings.language] || generalSettings.language}\n`;
+          }
+          
+          if (generalSettings.timezone !== defaultTimezone) {
+            changeMessage += `• Timezone: ${timezoneNames[generalSettings.timezone] || generalSettings.timezone}`;
+          }
+        }
+        
+        toast({
+          title: "Profile updated",
+          description: changeMessage,
+        });
+      }
+    });
   };
 
   const handleSaveNotifications = () => {
@@ -542,17 +546,14 @@ const Settings = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center border-t px-6 py-4">
-              <div className="text-sm text-muted-foreground">
-                <CheckCircle className="inline-block mr-1 h-4 w-4 text-green-500" />
-                Language and timezone changes are saved automatically
-              </div>
+              <Button variant="outline">Cancel</Button>
               <Button onClick={handleSaveProfile} disabled={saveProfileMutation.isPending}>
                 {saveProfileMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save Other Changes
+                Save Changes
               </Button>
             </CardFooter>
           </Card>
