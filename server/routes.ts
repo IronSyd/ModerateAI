@@ -26,6 +26,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication with Passport.js
   setupAuth(app);
   
+  // Auth middleware to check if the user is authenticated
+  const authMiddleware = (req: Request, res: Response, next: Function) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    next();
+  };
+  
   // TEMPORARY: Fix demo user password for testing
   app.get("/api/fix-demo-password", async (req, res) => {
     try {
@@ -46,13 +54,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Auth middleware to check if the user is authenticated
-  const authMiddleware = (req: Request, res: Response, next: Function) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+  // Team members API endpoint
+  app.get("/api/team/members", authMiddleware, async (req, res) => {
+    try {
+      const teamMembers = await storage.getAllUsers();
+      
+      // Map users to team members format
+      const formattedMembers = teamMembers.map(user => ({
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        role: user.role,
+        status: "active", // All users are active by default
+        lastActive: user.id === req.user?.id ? "Just now" : "Recently"
+      }));
+      
+      res.json(formattedMembers);
+    } catch (error: any) {
+      console.error("Error fetching team members:", error);
+      res.status(500).json({ message: error.message });
     }
-    next();
-  };
+  });
 
   // Health check
   app.get("/api/health", (req, res) => {

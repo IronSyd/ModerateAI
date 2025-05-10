@@ -90,45 +90,15 @@ const Team = () => {
     role: "moderator",
   });
 
-  // Fetch team members - would use real API in production
+  // Fetch team members from the API
   const { data: teamMembers, isLoading: isLoadingMembers } = useQuery({
     queryKey: ['/api/team/members'],
     queryFn: async () => {
-      // This is demo data since our backend doesn't have team members API yet
-      return [
-        {
-          id: 1,
-          name: "Demo User",
-          email: "demo@example.com",
-          role: "admin",
-          status: "active",
-          lastActive: "Just now",
-        },
-        {
-          id: 2,
-          name: "Alex Johnson",
-          email: "alex@example.com",
-          role: "moderator",
-          status: "active",
-          lastActive: "2 hours ago",
-        },
-        {
-          id: 3,
-          name: "Sarah Williams",
-          email: "sarah@example.com",
-          role: "viewer",
-          status: "active",
-          lastActive: "1 day ago",
-        },
-        {
-          id: 4,
-          name: "Miguel Lopez",
-          email: "miguel@example.com",
-          role: "moderator",
-          status: "invited",
-          lastActive: "N/A",
-        },
-      ] as TeamMember[];
+      const response = await fetch('/api/team/members');
+      if (!response.ok) {
+        throw new Error('Failed to fetch team members');
+      }
+      return await response.json() as TeamMember[];
     },
   });
 
