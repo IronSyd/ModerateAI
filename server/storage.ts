@@ -111,6 +111,7 @@ export class MemStorage implements IStorage {
   private knowledgeDocuments: Map<number, KnowledgeDocument>;
   private moderationActions: Map<number, ModerationAction>;
   private conversationTrainings: Map<number, ConversationTraining>;
+  private teamInvitations: Map<number, TeamInvitation>;
 
   private userIdCounter: number;
   private platformIdCounter: number;
@@ -121,6 +122,7 @@ export class MemStorage implements IStorage {
   private knowledgeDocumentIdCounter: number;
   private moderationActionIdCounter: number;
   private conversationTrainingIdCounter: number;
+  private teamInvitationIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -132,6 +134,7 @@ export class MemStorage implements IStorage {
     this.knowledgeDocuments = new Map();
     this.moderationActions = new Map();
     this.conversationTrainings = new Map();
+    this.teamInvitations = new Map();
 
     this.userIdCounter = 1;
     this.platformIdCounter = 1;
@@ -142,6 +145,7 @@ export class MemStorage implements IStorage {
     this.knowledgeDocumentIdCounter = 1;
     this.moderationActionIdCounter = 1;
     this.conversationTrainingIdCounter = 1;
+    this.teamInvitationIdCounter = 1;
 
     // Initialize with demo data
     this.initializeDemoData();
@@ -671,10 +675,108 @@ export class MemStorage implements IStorage {
     // Filter out null activities and limit to requested size
     return activities.filter(Boolean).slice(0, limit);
   }
+
+  // Team Invitation operations
+  async getTeamInvitation(id: number): Promise<TeamInvitation | undefined> {
+    return this.teamInvitations.get(id);
+  }
+
+  async getTeamInvitationByToken(token: string): Promise<TeamInvitation | undefined> {
+    return Array.from(this.teamInvitations.values()).find(invitation => invitation.token === token);
+  }
+
+  async getTeamInvitationsByEmail(email: string): Promise<TeamInvitation[]> {
+    return Array.from(this.teamInvitations.values()).filter(invitation => invitation.email === email);
+  }
+
+  async getTeamInvitationsByInviter(inviterId: number): Promise<TeamInvitation[]> {
+    return Array.from(this.teamInvitations.values()).filter(invitation => invitation.invitedBy === inviterId);
+  }
+
+  async getPendingTeamInvitations(): Promise<TeamInvitation[]> {
+    const now = new Date();
+    return Array.from(this.teamInvitations.values())
+      .filter(invitation => invitation.status === "pending" && invitation.expiresAt > now);
+  }
+
+  async createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation> {
+    const id = this.teamInvitationIdCounter++;
+    const now = new Date();
+    // Generate a random UUID-like token
+    const token = `${Math.random().toString(36).substring(2)}${Math.random().toString(36).substring(2)}`;
+    
+    const newInvitation: TeamInvitation = {
+      ...invitation,
+      id,
+      token,
+      status: "pending",
+      createdAt: now,
+      acceptedAt: null
+    };
+    
+    this.teamInvitations.set(id, newInvitation);
+    return newInvitation;
+  }
+
+  async updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined> {
+    const existingInvitation = this.teamInvitations.get(id);
+    if (!existingInvitation) return undefined;
+    
+    const updatedInvitation = { ...existingInvitation, ...invitation };
+    this.teamInvitations.set(id, updatedInvitation);
+    return updatedInvitation;
+  }
+
+  async deleteTeamInvitation(id: number): Promise<boolean> {
+    return this.teamInvitations.delete(id);
+  }
 }
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
+  // Team Invitation operations
+  async getTeamInvitation(id: number): Promise<TeamInvitation | undefined> {
+    const result = await db.select().from(teamInvitations).where(eq(teamInvitations.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getTeamInvitationByToken(token: string): Promise<TeamInvitation | undefined> {
+    const result = await db.select().from(teamInvitations).where(eq(teamInvitations.token, token)).limit(1);
+    return result[0];
+  }
+
+  async getTeamInvitationsByEmail(email: string): Promise<TeamInvitation[]> {
+    return db.select().from(teamInvitations).where(eq(teamInvitations.email, email));
+  }
+
+  async getTeamInvitationsByInviter(inviterId: number): Promise<TeamInvitation[]> {
+    return db.select().from(teamInvitations).where(eq(teamInvitations.invitedBy, inviterId));
+  }
+
+  async getPendingTeamInvitations(): Promise<TeamInvitation[]> {
+    return db.select()
+      .from(teamInvitations)
+      .where(eq(teamInvitations.status, "pending"))
+      .where(sql`${teamInvitations.expiresAt} > NOW()`);
+  }
+
+  async createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation> {
+    const result = await db.insert(teamInvitations).values(invitation).returning();
+    return result[0];
+  }
+
+  async updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined> {
+    const result = await db.update(teamInvitations)
+      .set(invitation)
+      .where(eq(teamInvitations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTeamInvitation(id: number): Promise<boolean> {
+    const result = await db.delete(teamInvitations).where(eq(teamInvitations.id, id)).returning();
+    return result.length > 0;
+  }
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
