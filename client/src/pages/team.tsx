@@ -79,6 +79,70 @@ type TeamMember = {
   lastActive?: string;
 };
 
+// RolesAndPermissionsContent component
+const RolesAndPermissionsContent = () => {
+  // Fetch roles from API
+  const { data: roles, isLoading: isLoadingRoles } = useQuery({
+    queryKey: ['/api/team/roles'],
+    queryFn: async () => {
+      const response = await fetch('/api/team/roles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch roles and permissions');
+      }
+      return await response.json();
+    },
+  });
+
+  if (isLoadingRoles) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!roles || roles.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No roles configuration found
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {roles.map((role) => (
+        <div key={role.id} className="border rounded-lg p-4">
+          <div className="flex items-center mb-4">
+            <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
+              <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium">{role.name}</h3>
+              <p className="text-sm text-gray-500">
+                {role.description}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            {role.permissions.map((permission) => (
+              <div key={permission.id} className="flex items-center p-2 rounded-md bg-gray-50">
+                {permission.granted ? (
+                  <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-500 mr-2" />
+                )}
+                {permission.name}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+};
+
 const TeamSettingsContent = () => {
   // Fetch team settings from API
   const { data: teamSettings, isLoading: isLoadingSettings, refetch: refetchSettings } = useQuery({

@@ -126,6 +126,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
+  
+  // Roles & permissions API endpoint
+  app.get("/api/team/roles", authMiddleware, async (req, res) => {
+    try {
+      // Real permissions data
+      const roles = [
+        {
+          id: "admin",
+          name: "Admin",
+          description: "Full access to all features and settings",
+          iconColor: "red",
+          permissions: [
+            { id: "manage_team", name: "Manage team members", granted: true },
+            { id: "configure_ai", name: "Configure AI settings", granted: true },
+            { id: "manage_integrations", name: "Manage integrations", granted: true },
+            { id: "access_billing", name: "Access billing & subscription", granted: true }
+          ]
+        },
+        {
+          id: "moderator",
+          name: "Moderator",
+          description: "Access to manage conversations and moderate content",
+          iconColor: "blue",
+          permissions: [
+            { id: "access_conversations", name: "Access conversations", granted: true },
+            { id: "perform_moderation", name: "Perform moderation actions", granted: true },
+            { id: "edit_templates", name: "Edit response templates", granted: true },
+            { id: "manage_team", name: "Manage team members", granted: false }
+          ]
+        },
+        {
+          id: "viewer",
+          name: "Viewer",
+          description: "Read-only access to view data and analytics",
+          iconColor: "gray",
+          permissions: [
+            { id: "view_conversations", name: "View conversations", granted: true },
+            { id: "view_analytics", name: "View analytics", granted: true },
+            { id: "perform_actions", name: "Perform actions", granted: false },
+            { id: "edit_settings", name: "Edit settings", granted: false }
+          ]
+        }
+      ];
+      
+      res.json(roles);
+    } catch (error: any) {
+      console.error("Error fetching roles and permissions:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   // Health check
   app.get("/api/health", (req, res) => {
