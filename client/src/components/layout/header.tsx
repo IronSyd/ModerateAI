@@ -26,7 +26,7 @@ const Header = () => {
     if (location === "/dashboard") return "Dashboard";
     if (location === "/conversations") return "Conversations";
     if (location === "/ai-configuration") return "AI Configuration";
-    if (location === "/templates") return ""; // Don't show "Templates" in the header
+    if (location === "/templates") return "Response Templates"; // Show "Response Templates" instead of "Templates"
     if (location === "/integrations/website") return "Website Chat Widget";
     if (location === "/integrations/telegram") return "Telegram Integration";
     if (location === "/integrations/discord") return "Discord Integration";
