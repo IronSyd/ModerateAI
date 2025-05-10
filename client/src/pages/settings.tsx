@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 import {
   Card,
@@ -56,13 +57,15 @@ import {
   Trash2,
   FileJson,
   Plus,
+  LogOut,
 } from "lucide-react";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { logoutMutation } = useAuth();
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("account");
 
   // Parse URL params to get the tab
@@ -236,6 +239,19 @@ const Settings = () => {
     deleteAccountMutation.mutate();
   };
 
+  // Handle logout
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast({
+          title: "Logged out",
+          description: "You have been successfully logged out.",
+        });
+        setLocation("/");
+      }
+    });
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -366,14 +382,39 @@ const Settings = () => {
             </CardFooter>
           </Card>
 
-          <Card className="border-red-900/20">
+          <Card className="space-y-6">
             <CardHeader>
-              <CardTitle className="text-red-500">Danger Zone</CardTitle>
+              <CardTitle>Account Actions</CardTitle>
               <CardDescription>
-                Irreversible actions that affect your account
+                Security-related actions for your account
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              {/* Logout Option */}
+              <div className="rounded-md border border-border p-4">
+                <div className="flex">
+                  <LogOut className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-sm font-medium">Logout</h3>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>
+                        Sign out of your account on this device.
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Delete Account Option */}
               <div className="rounded-md border border-red-900/30 bg-red-900/10 p-4">
                 <div className="flex">
                   <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" />
