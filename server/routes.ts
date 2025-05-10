@@ -237,35 +237,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Billing information - available without authentication for demo purposes
   app.get("/api/billing", async (req, res) => {
     try {
+      // Calculate dates relative to current date
+      const today = new Date();
+      
+      // Next renewal date (10th of next month)
+      const nextMonth = new Date(today);
+      nextMonth.setMonth(today.getMonth() + 1);
+      nextMonth.setDate(10);
+      
+      // Function to get previous months' dates on the 10th
+      const getPreviousMonthDate = (monthsAgo: number) => {
+        const date = new Date(today);
+        date.setMonth(today.getMonth() - monthsAgo);
+        date.setDate(10);
+        return date.toISOString().split('T')[0];
+      };
+      
+      // Current subscription info
       const planDetails = {
         name: "Pro",
         status: "active",
         price: 79,
-        renewalDate: "2023-07-12",
-        nextPaymentDate: "2023-07-12",
+        renewalDate: nextMonth.toISOString().split('T')[0],
+        nextPaymentDate: nextMonth.toISOString().split('T')[0],
         aiResponsesLimit: 100000,
-        aiResponsesUsed: 45230,
-        activeIntegrations: 2
+        aiResponsesUsed: 62845,
+        activeIntegrations: 3
       };
       
+      // Generate invoices for the past 3 months
       const invoices = [
         {
-          id: "INV-001",
-          date: "2023-06-12",
+          id: "INV-2025-003",
+          date: getPreviousMonthDate(0),
           description: "ModerateAI Pro Plan - Monthly",
           amount: "$79.00",
           status: "Paid"
         },
         {
-          id: "INV-002",
-          date: "2023-05-12",
+          id: "INV-2025-002",
+          date: getPreviousMonthDate(1),
           description: "ModerateAI Pro Plan - Monthly",
           amount: "$79.00",
           status: "Paid"
         },
         {
-          id: "INV-003",
-          date: "2023-04-12",
+          id: "INV-2025-001",
+          date: getPreviousMonthDate(2),
           description: "ModerateAI Pro Plan - Monthly",
           amount: "$79.00",
           status: "Paid"
@@ -287,10 +305,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const invoiceId = req.params.id;
       
+      // Helper function to get invoice month and date
+      const getInvoiceDate = (invoiceId: string) => {
+        // For the demo, we'll use the current date and compute relative dates
+        const today = new Date();
+        
+        // Extract the invoice number from the ID format INV-2025-00X
+        const invoiceNum = invoiceId.split("-")[2];
+        let monthsAgo = 0;
+        
+        if (invoiceNum === "001") monthsAgo = 2;
+        else if (invoiceNum === "002") monthsAgo = 1;
+        else if (invoiceNum === "003") monthsAgo = 0;
+        
+        const date = new Date(today);
+        date.setMonth(today.getMonth() - monthsAgo);
+        date.setDate(10);
+        return date.toISOString().split('T')[0];
+      };
+      
       // In a real application, we would fetch the invoice from a database or Stripe
-      // For now, we'll create a simple CSV string
+      // For now, we'll create a simple CSV string with updated date
       const invoiceData = `Invoice ID,${invoiceId}
-Date,2023-06-12
+Date,${getInvoiceDate(invoiceId)}
 Description,ModerateAI Pro Plan - Monthly
 Amount,$79.00
 Status,Paid`;
@@ -310,12 +347,20 @@ Status,Paid`;
   // Download all invoices
   app.get("/api/billing/invoices", async (req, res) => {
     try {
+      // Helper function to get previous months' dates on the 10th
+      const getPreviousMonthDate = (monthsAgo: number) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - monthsAgo);
+        date.setDate(10);
+        return date.toISOString().split('T')[0];
+      };
+      
       // In a real application, we would fetch all invoices from a database or Stripe
-      // For now, we'll create a simple CSV with all invoice data
+      // For now, we'll create a simple CSV with all invoice data using updated IDs and dates
       const allInvoicesData = `Invoice ID,Date,Description,Amount,Status
-INV-001,2023-06-12,ModerateAI Pro Plan - Monthly,$79.00,Paid
-INV-002,2023-05-12,ModerateAI Pro Plan - Monthly,$79.00,Paid
-INV-003,2023-04-12,ModerateAI Pro Plan - Monthly,$79.00,Paid`;
+INV-2025-003,${getPreviousMonthDate(0)},ModerateAI Pro Plan - Monthly,$79.00,Paid
+INV-2025-002,${getPreviousMonthDate(1)},ModerateAI Pro Plan - Monthly,$79.00,Paid
+INV-2025-001,${getPreviousMonthDate(2)},ModerateAI Pro Plan - Monthly,$79.00,Paid`;
       
       // Set headers for file download
       res.setHeader('Content-Type', 'text/csv');
