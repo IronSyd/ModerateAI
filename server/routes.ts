@@ -22,50 +22,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Demo billing plans - simulating API data for pricing plans
-  const billingPlans = [
-    {
-      id: "basic",
-      name: "Basic",
-      price: 49,
-      features: [
-        "1,000 AI responses per month",
-        "1 active integration",
-        "Custom knowledge base",
-        "Basic analytics",
-        "Email support"
-      ]
-    },
-    {
-      id: "pro",
-      name: "Professional",
-      price: 99,
-      features: [
-        "5,000 AI responses per month",
-        "3 active integrations",
-        "Advanced knowledge base",
-        "Detailed analytics",
-        "Priority email support",
-        "API access",
-        "Webhooks"
-      ]
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      price: 249,
-      features: [
-        "Unlimited AI responses",
-        "Unlimited integrations",
-        "Enterprise knowledge base",
-        "Advanced analytics & reporting",
-        "24/7 phone support",
-        "Dedicated account manager",
-        "Custom AI model fine-tuning",
-        "SLA guarantees"
-      ]
-    }
-  ];
+
   // Set up authentication with Passport.js
   setupAuth(app);
   

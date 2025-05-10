@@ -72,6 +72,8 @@ import {
   Lock,
   Trash2,
   LogOut,
+  Loader2,
+  AlertTriangle,
   Eye,
   EyeOff,
 } from "lucide-react";
