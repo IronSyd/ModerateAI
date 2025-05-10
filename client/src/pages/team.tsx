@@ -133,14 +133,14 @@ const RolesAndPermissionsContent = () => {
         <div key={role.id} className="border rounded-lg p-4">
           <div className="mb-4">
             <h3 className="text-lg font-medium mb-2">{role.name}</h3>
-            <p className={`text-sm text-white font-medium px-2 py-1 rounded inline-block bg-${role.iconColor}-600`}>
+            <p className={`text-sm text-${role.iconColor}-800 font-medium px-2 py-1 rounded inline-block bg-${role.iconColor}-100 border border-${role.iconColor}-200`}>
               {role.description}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
             {role.permissions.map((permission) => (
-              <div key={permission.id} className="flex items-center p-2 rounded-md bg-gray-50">
+              <div key={permission.id} className="flex items-center p-2 rounded-md bg-gray-100">
                 {permission.granted ? (
                   <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                 ) : (
