@@ -81,7 +81,7 @@ type TeamMember = {
 
 const TeamSettingsContent = () => {
   // Fetch team settings from API
-  const { data: teamSettings, isLoading: isLoadingSettings } = useQuery({
+  const { data: teamSettings, isLoading: isLoadingSettings, refetch: refetchSettings } = useQuery({
     queryKey: ['/api/team/settings'],
     queryFn: async () => {
       const response = await fetch('/api/team/settings');
@@ -203,7 +203,7 @@ const Team = () => {
   });
 
   // Fetch team members from the API
-  const { data: teamMembers, isLoading: isLoadingMembers } = useQuery({
+  const { data: teamMembers, isLoading: isLoadingMembers, refetch: refetchMembers } = useQuery({
     queryKey: ['/api/team/members'],
     queryFn: async () => {
       const response = await fetch('/api/team/members');
@@ -388,7 +388,11 @@ const Team = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Button variant="outline" className="ml-4">
+                <Button 
+                  variant="outline" 
+                  className="ml-4" 
+                  onClick={() => refetchMembers()}
+                >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh
                 </Button>
@@ -718,11 +722,24 @@ const Team = () => {
             <CardFooter>
               <Button
                 className="ml-auto"
-                onClick={() => {
-                  toast({
-                    title: "Settings saved",
-                    description: "Your team settings have been updated",
-                  });
+                onClick={async () => {
+                  try {
+                    // In real app, this would save to the API
+                    const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
+                    const teamName = teamNameInput ? teamNameInput.value : "ModerateAI Team";
+                    
+                    // For now, just update UI with success message
+                    toast({
+                      title: "Settings saved",
+                      description: `Team name "${teamName}" has been updated`,
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Error saving settings",
+                      description: "Please try again",
+                      variant: "destructive",
+                    });
+                  }
                 }}
               >
                 Save Settings

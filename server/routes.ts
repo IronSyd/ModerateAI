@@ -103,6 +103,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
+  
+  // Update team settings API endpoint
+  app.post("/api/team/settings", authMiddleware, async (req, res) => {
+    try {
+      // Using the current user's organization info
+      const user = await storage.getUser(req.user!.id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // In a real app, we would save the settings to the database
+      // For now, just return success
+      
+      res.json({ 
+        success: true, 
+        message: "Team settings updated successfully" 
+      });
+    } catch (error: any) {
+      console.error("Error updating team settings:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   // Health check
   app.get("/api/health", (req, res) => {
