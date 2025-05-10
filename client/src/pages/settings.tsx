@@ -693,7 +693,7 @@ const Settings = () => {
                     <p className="text-xl font-bold">Jul 12, 2023</p>
                   </div>
                   <div className="border rounded-md p-3">
-                    <p className="text-sm text-muted-foreground">AI Requests</p>
+                    <p className="text-sm text-muted-foreground">AI Responses</p>
                     <p className="text-xl font-bold">45,230 / 100,000</p>
                   </div>
                   <div className="border rounded-md p-3">
