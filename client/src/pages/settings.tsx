@@ -4,7 +4,19 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Card,
   CardContent,
@@ -62,15 +74,59 @@ import {
   EyeOff,
 } from "lucide-react";
 
+// Password change form schema
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, { message: "Current password is required." }),
+  newPassword: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  confirmPassword: z.string().min(8, { message: "Confirm password is required." }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
 const Settings = () => {
   const { toast } = useToast();
   const { logoutMutation } = useAuth();
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("account");
   const [showPassword, setShowPassword] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  
+  // Password change form
+  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+  
+  // Password change mutation
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof passwordSchema>) => {
+      // In a real app, this would update the user's password through an API call
+      return new Promise<void>((resolve) => setTimeout(resolve, 1000));
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password updated",
+        description: "Your password has been updated successfully.",
+      });
+      passwordForm.reset();
+      setIsChangePasswordDialogOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "There was an error updating your password.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Parse URL params to get the tab
   useEffect(() => {
@@ -255,6 +311,11 @@ const Settings = () => {
       }
     });
   };
+  
+  // Handle password change
+  const handleChangePassword = (data: z.infer<typeof passwordSchema>) => {
+    changePasswordMutation.mutate(data);
+  };
 
   return (
     <div>
@@ -343,7 +404,12 @@ const Settings = () => {
                           )}
                         </button>
                       </div>
-                      <Button variant="outline">Change</Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setIsChangePasswordDialogOpen(true)}
+                      >
+                        Change
+                      </Button>
                     </div>
                   </div>
                 </div>
