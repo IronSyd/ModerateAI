@@ -79,35 +79,50 @@ type TeamMember = {
   lastActive?: string;
 };
 
+// Default roles data (static)
+const defaultRoles: Role[] = [
+  {
+    id: "admin",
+    name: "Admin",
+    description: "Full access to all features and settings",
+    iconColor: "red",
+    permissions: [
+      { id: "manage_team", name: "Manage team members", granted: true },
+      { id: "configure_ai", name: "Configure AI settings", granted: true },
+      { id: "manage_integrations", name: "Manage integrations", granted: true },
+      { id: "access_billing", name: "Access billing & subscription", granted: true }
+    ]
+  },
+  {
+    id: "moderator",
+    name: "Moderator",
+    description: "Access to manage conversations and moderate content",
+    iconColor: "blue",
+    permissions: [
+      { id: "access_conversations", name: "Access conversations", granted: true },
+      { id: "perform_moderation", name: "Perform moderation actions", granted: true },
+      { id: "edit_templates", name: "Edit response templates", granted: true },
+      { id: "manage_team", name: "Manage team members", granted: false }
+    ]
+  },
+  {
+    id: "viewer",
+    name: "Viewer",
+    description: "Read-only access to view data and analytics",
+    iconColor: "gray",
+    permissions: [
+      { id: "view_conversations", name: "View conversations", granted: true },
+      { id: "view_analytics", name: "View analytics", granted: true },
+      { id: "perform_actions", name: "Perform actions", granted: false },
+      { id: "edit_settings", name: "Edit settings", granted: false }
+    ]
+  }
+];
+
 // RolesAndPermissionsContent component
 const RolesAndPermissionsContent = () => {
-  // Fetch roles from API
-  const { data: roles, isLoading: isLoadingRoles } = useQuery({
-    queryKey: ['/api/team/roles'],
-    queryFn: async () => {
-      const response = await fetch('/api/team/roles');
-      if (!response.ok) {
-        throw new Error('Failed to fetch roles and permissions');
-      }
-      return await response.json();
-    },
-  });
-
-  if (isLoadingRoles) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!roles || roles.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No roles configuration found
-      </div>
-    );
-  }
+  // We're using static default roles instead of fetching from the API
+  const roles = defaultRoles;
 
   return (
     <>
@@ -271,133 +286,17 @@ type Role = {
   permissions: RolePermission[];
 };
 
-// Default roles data for fallback when API fails
-const defaultRolesData: Role[] = [
-  {
-    id: "admin",
-    name: "Admin",
-    description: "Full access to all features and settings",
-    iconColor: "red",
-    permissions: [
-      { id: "manage_team", name: "Manage team members", granted: true },
-      { id: "configure_ai", name: "Configure AI settings", granted: true },
-      { id: "manage_integrations", name: "Manage integrations", granted: true },
-      { id: "access_billing", name: "Access billing & subscription", granted: true }
-    ]
-  },
-  {
-    id: "moderator",
-    name: "Moderator",
-    description: "Access to manage conversations and moderate content",
-    iconColor: "blue",
-    permissions: [
-      { id: "access_conversations", name: "Access conversations", granted: true },
-      { id: "perform_moderation", name: "Perform moderation actions", granted: true },
-      { id: "edit_templates", name: "Edit response templates", granted: true },
-      { id: "manage_team", name: "Manage team members", granted: false }
-    ]
-  },
-  {
-    id: "viewer",
-    name: "Viewer",
-    description: "Read-only access to view data and analytics",
-    iconColor: "gray",
-    permissions: [
-      { id: "view_conversations", name: "View conversations", granted: true },
-      { id: "view_analytics", name: "View analytics", granted: true },
-      { id: "perform_actions", name: "Perform actions", granted: false },
-      { id: "edit_settings", name: "Edit settings", granted: false }
-    ]
-  }
-];
+// Role customization feature removed
 
 const Team = () => {
   const { toast } = useToast();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isRoleCustomizeDialogOpen, setIsRoleCustomizeDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [inviteData, setInviteData] = useState({
     email: "",
     role: "moderator",
-  });
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [editableRoles, setEditableRoles] = useState<Role[]>([]);
-  
-  // Fetch roles for the customization dialog
-  const { data: roles, isError: isRolesError, refetch: refetchRoles } = useQuery({
-    queryKey: ['/api/team/roles'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/team/roles');
-        if (!response.ok) {
-          console.warn('Failed to fetch roles from API, using default roles');
-          return defaultRolesData; // Use default roles when API fails
-        }
-        return await response.json() as Role[];
-      } catch (error) {
-        console.warn('Error fetching roles:', error);
-        return defaultRolesData; // Use default roles on any error
-      }
-    },
-  });
-  
-  // Update roles mutation
-  const updateRolesMutation = useMutation({
-    mutationFn: async (updatedRoles: Role[]) => {
-      console.log('Sending roles data:', updatedRoles);
-      try {
-        const response = await fetch('/api/team/roles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ updatedRoles }),
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Failed to update roles:', errorText);
-          
-          // For demo purposes, simulate success even on error
-          console.log('Simulating successful response for demo');
-          return { 
-            success: true, 
-            message: "Roles updated successfully (simulated)",
-            roles: updatedRoles
-          };
-        }
-        
-        const responseData = await response.json();
-        console.log('Update response:', responseData);
-        return responseData;
-      } catch (error) {
-        console.error('Error in roles update:', error);
-        
-        // For demo purposes, simulate success even on error
-        return { 
-          success: true, 
-          message: "Roles updated successfully (simulated)",
-          roles: updatedRoles
-        };
-      }
-    },
-    onSuccess: () => {
-      toast({
-        title: "Roles updated",
-        description: "Role permissions have been updated successfully",
-      });
-      setIsRoleCustomizeDialogOpen(false);
-      refetchRoles(); // Refresh the roles data
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update roles",
-        variant: "destructive",
-      });
-    },
   });
 
   // Fetch team members from the API
@@ -801,19 +700,7 @@ const Team = () => {
             <CardContent className="space-y-6">
               <RolesAndPermissionsContent />
             </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                className="ml-auto"
-                onClick={() => {
-                  // Fetch roles data if needed and then open dialog
-                  setIsRoleCustomizeDialogOpen(true);
-                }}
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Customize Roles
-              </Button>
-            </CardFooter>
+            {/* Removed Customize Roles button */}
           </Card>
         </TabsContent>
 
@@ -961,95 +848,7 @@ const Team = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Role Customization Dialog */}
-      <Dialog open={isRoleCustomizeDialogOpen} onOpenChange={(open) => {
-        console.log('Dialog open state changed:', open);
-        setIsRoleCustomizeDialogOpen(open);
-        
-        // Reset editable roles when dialog is closed
-        if (!open) {
-          setEditableRoles([]);
-        } else {
-          // Always use the default roles for this demo to ensure we have data
-          console.log('Setting up editable roles using default data');
-          setEditableRoles(JSON.parse(JSON.stringify(defaultRolesData)));
-        }
-      }}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Customize Roles & Permissions</DialogTitle>
-            <DialogDescription>
-              Modify what each role can access and change in the system.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4 max-h-[60vh] overflow-y-auto pr-2">
-            {editableRoles && editableRoles.length > 0 ? (
-              editableRoles.map((role, roleIndex) => (
-                <div key={role.id} className="mb-6 border rounded-lg p-4">
-                  <div className="flex items-center mb-4">
-                    <div className={`h-8 w-8 rounded-full bg-${role.iconColor || 'gray'}-100 mr-3 flex items-center justify-center`}>
-                      <Shield className={`h-4 w-4 text-${role.iconColor || 'gray'}-800`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-medium">{role.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {role.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {role.permissions && role.permissions.map((permission, permIndex) => (
-                      <div key={permission.id} className="flex items-center justify-between p-2 rounded-md bg-gray-50">
-                        <span>{permission.name}</span>
-                        <Switch 
-                          checked={permission.granted} 
-                          onCheckedChange={(checked) => {
-                            const updatedRoles = [...editableRoles];
-                            updatedRoles[roleIndex].permissions[permIndex].granted = checked;
-                            setEditableRoles(updatedRoles);
-                            console.log('Updated role permissions:', updatedRoles[roleIndex]);
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading roles data...</p>
-                <pre className="text-left mt-4 text-xs bg-gray-100 p-2 rounded">
-                  {JSON.stringify(defaultRolesData, null, 2)}
-                </pre>
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRoleCustomizeDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => updateRolesMutation.mutate(editableRoles)}
-              disabled={updateRolesMutation.isPending}
-            >
-              {updateRolesMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Role customization feature removed */}
     </div>
   );
 };
