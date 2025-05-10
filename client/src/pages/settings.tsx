@@ -431,10 +431,17 @@ const Settings = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                        <SelectItem value="ja">Japanese</SelectItem>
+                        <SelectItem value="es">Spanish (Español)</SelectItem>
+                        <SelectItem value="fr">French (Français)</SelectItem>
+                        <SelectItem value="de">German (Deutsch)</SelectItem>
+                        <SelectItem value="it">Italian (Italiano)</SelectItem>
+                        <SelectItem value="pt">Portuguese (Português)</SelectItem>
+                        <SelectItem value="ru">Russian (Русский)</SelectItem>
+                        <SelectItem value="zh">Chinese (中文)</SelectItem>
+                        <SelectItem value="ja">Japanese (日本語)</SelectItem>
+                        <SelectItem value="ko">Korean (한국어)</SelectItem>
+                        <SelectItem value="ar">Arabic (العربية)</SelectItem>
+                        <SelectItem value="hi">Hindi (हिन्दी)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
