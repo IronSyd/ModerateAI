@@ -75,6 +75,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
+  
+  // Team settings API endpoint
+  app.get("/api/team/settings", authMiddleware, async (req, res) => {
+    try {
+      // Using the current user's organization info
+      const user = await storage.getUser(req.user!.id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Construct organization settings from user data
+      const teamSettings = {
+        name: "ModerateAI Team", // Default organization name
+        securitySettings: {
+          twoFactorRequired: false,
+          passwordRotationDays: 90,
+          sessionTimeoutMinutes: 60,
+          ipRestrictions: false
+        }
+      };
+      
+      res.json(teamSettings);
+    } catch (error: any) {
+      console.error("Error fetching team settings:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   // Health check
   app.get("/api/health", (req, res) => {

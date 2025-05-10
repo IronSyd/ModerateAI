@@ -79,6 +79,118 @@ type TeamMember = {
   lastActive?: string;
 };
 
+const TeamSettingsContent = () => {
+  // Fetch team settings from API
+  const { data: teamSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['/api/team/settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/team/settings');
+      if (!response.ok) {
+        throw new Error('Failed to fetch team settings');
+      }
+      return await response.json();
+    },
+  });
+
+  if (isLoadingSettings) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <h3 className="text-lg font-medium">Team Information</h3>
+        <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="teamName">Team Name</Label>
+            <Input
+              id="teamName"
+              placeholder="Your Team Name"
+              defaultValue={teamSettings?.name || "ModerateAI Team"}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-lg font-medium">Security Settings</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex items-center justify-between p-4 border rounded-md">
+            <div>
+              <h4 className="font-medium">Two-Factor Authentication</h4>
+              <p className="text-sm text-gray-500">
+                Require 2FA for all team members
+              </p>
+            </div>
+            <Switch defaultChecked={teamSettings?.securitySettings?.twoFactorRequired} />
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-md">
+            <div>
+              <h4 className="font-medium">Session Timeout</h4>
+              <p className="text-sm text-gray-500">
+                Automatically log out after inactivity
+              </p>
+            </div>
+            <Select defaultValue={String(teamSettings?.securitySettings?.sessionTimeoutMinutes || "60")}>
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">30 min</SelectItem>
+                <SelectItem value="60">1 hour</SelectItem>
+                <SelectItem value="120">2 hours</SelectItem>
+                <SelectItem value="240">4 hours</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-lg font-medium">Notification Preferences</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">
+                New Team Member Notifications
+              </h4>
+              <p className="text-sm text-gray-500">
+                Notify when someone joins your team
+              </p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Critical Alert Notifications</h4>
+              <p className="text-sm text-gray-500">
+                Notify on critical moderation events
+              </p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Weekly Activity Summary</h4>
+              <p className="text-sm text-gray-500">
+                Receive weekly email summaries
+              </p>
+            </div>
+            <Switch defaultChecked />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Team = () => {
   const { toast } = useToast();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
@@ -600,92 +712,8 @@ const Team = () => {
                 Configure team-wide settings and preferences
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium">Team Information</h3>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="teamName">Team Name</Label>
-                    <Input
-                      id="teamName"
-                      placeholder="Your Team Name"
-                      defaultValue="Demo Team"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium">Security Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-center justify-between p-4 border rounded-md">
-                    <div>
-                      <h4 className="font-medium">Two-Factor Authentication</h4>
-                      <p className="text-sm text-gray-500">
-                        Require 2FA for all team members
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-md">
-                    <div>
-                      <h4 className="font-medium">Session Timeout</h4>
-                      <p className="text-sm text-gray-500">
-                        Automatically log out after inactivity
-                      </p>
-                    </div>
-                    <Select defaultValue="60">
-                      <SelectTrigger className="w-24">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">30 min</SelectItem>
-                        <SelectItem value="60">1 hour</SelectItem>
-                        <SelectItem value="120">2 hours</SelectItem>
-                        <SelectItem value="240">4 hours</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium">Notification Preferences</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">
-                        New Team Member Notifications
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        Notify when someone joins your team
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Critical Alert Notifications</h4>
-                      <p className="text-sm text-gray-500">
-                        Notify on critical moderation events
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Weekly Activity Summary</h4>
-                      <p className="text-sm text-gray-500">
-                        Receive weekly email summaries
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-              </div>
+            <CardContent>
+              <TeamSettingsContent />
             </CardContent>
             <CardFooter>
               <Button
