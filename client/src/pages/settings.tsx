@@ -588,12 +588,27 @@ const Settings = () => {
                 <div className="space-y-2">
                   <Label htmlFor="apiKey">API Key</Label>
                   <div className="flex space-x-2">
-                    <Input 
-                      id="apiKey" 
-                      value={apiSettings.apiKey} 
-                      readOnly 
-                      className="font-mono text-sm"
-                    />
+                    <div className="relative flex-1">
+                      <Input 
+                        id="apiKey" 
+                        value={apiSettings.apiKey} 
+                        type={showApiKey ? "text" : "password"}
+                        readOnly 
+                        className="font-mono text-sm pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                        aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                      >
+                        {showApiKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                     <Button 
                       variant="outline"
                       onClick={handleGenerateApiKey}
