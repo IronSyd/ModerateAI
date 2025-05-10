@@ -667,167 +667,169 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-md border p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-base font-medium">Current Plan</h3>
-                    <div className="mt-1 flex items-center">
-                      <span className="text-2xl font-bold">Pro</span>
-                      <Badge className="ml-2 bg-green-100 text-green-800">Active</Badge>
+              {/* Fetch billing data using React Query */}
+              {(() => {
+                const { data: billingData, isLoading, isError } = useQuery({
+                  queryKey: ['/api/billing'],
+                  retry: false,
+                });
+                
+                if (isLoading) {
+                  return (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Billed monthly • Renews on July 12, 2023
-                    </p>
-                  </div>
-                  <Button>
-                    Upgrade Plan
-                  </Button>
-                </div>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                  <div className="border rounded-md p-3">
-                    <p className="text-sm text-muted-foreground">Monthly Price</p>
-                    <p className="text-xl font-bold">$79</p>
-                  </div>
-                  <div className="border rounded-md p-3">
-                    <p className="text-sm text-muted-foreground">Next Payment</p>
-                    <p className="text-xl font-bold">Jul 12, 2023</p>
-                  </div>
-                  <div className="border rounded-md p-3">
-                    <p className="text-sm text-muted-foreground">AI Responses</p>
-                    <p className="text-xl font-bold">45,230 / 100,000</p>
-                  </div>
-                  <div className="border rounded-md p-3">
-                    <p className="text-sm text-muted-foreground">Active Integrations</p>
-                    <p className="text-xl font-bold">2</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Payment Methods</h3>
-                <div className="border rounded-md divide-y">
-                  <div className="p-4 flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="h-10 w-16 bg-gray-200 rounded flex items-center justify-center mr-3">
-                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
-                          <path d="M2 10H22" stroke="currentColor" strokeWidth="2" />
-                        </svg>
+                  );
+                }
+                
+                if (isError) {
+                  return (
+                    <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 text-red-700 dark:text-red-400">
+                      <AlertTriangle className="h-5 w-5 inline-block mr-2" />
+                      Failed to load billing data. Please try again.
+                    </div>
+                  );
+                }
+                
+                const { plan, invoices } = billingData;
+                
+                const formatDate = (dateString) => {
+                  const date = new Date(dateString);
+                  return date.toLocaleDateString('en-US', { 
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+                };
+                
+                return (
+                  <>
+                    <div className="rounded-md border p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-base font-medium">Current Plan</h3>
+                          <div className="mt-1 flex items-center">
+                            <span className="text-2xl font-bold">{plan.name}</span>
+                            <Badge className="ml-2 bg-green-100 text-green-800">
+                              {plan.status === 'active' ? 'Active' : plan.status}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Billed monthly • Renews on {formatDate(plan.renewalDate)}
+                          </p>
+                        </div>
+                        <Button>
+                          Upgrade Plan
+                        </Button>
                       </div>
-                      <div>
-                        <p className="font-medium">•••• •••• •••• 4242</p>
-                        <p className="text-sm text-muted-foreground">Expires 12/24</p>
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div className="border rounded-md p-3">
+                          <p className="text-sm text-muted-foreground">Monthly Price</p>
+                          <p className="text-xl font-bold">${plan.price}</p>
+                        </div>
+                        <div className="border rounded-md p-3">
+                          <p className="text-sm text-muted-foreground">Next Payment</p>
+                          <p className="text-xl font-bold">{formatDate(plan.nextPaymentDate)}</p>
+                        </div>
+                        <div className="border rounded-md p-3">
+                          <p className="text-sm text-muted-foreground">AI Responses</p>
+                          <p className="text-xl font-bold">{plan.aiResponsesUsed.toLocaleString()} / {plan.aiResponsesLimit.toLocaleString()}</p>
+                        </div>
+                        <div className="border rounded-md p-3">
+                          <p className="text-sm text-muted-foreground">Active Integrations</p>
+                          <p className="text-xl font-bold">{plan.activeIntegrations}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <Badge className="mr-2">Default</Badge>
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
+                  
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Payment Methods</h3>
+                      <div className="border rounded-md divide-y">
+                        <div className="p-4 flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="h-10 w-16 bg-gray-200 rounded flex items-center justify-center mr-3">
+                              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
+                                <path d="M2 10H22" stroke="currentColor" strokeWidth="2" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium">•••• •••• •••• 4242</p>
+                              <p className="text-sm text-muted-foreground">Expires 12/24</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <Badge className="mr-2">Default</Badge>
+                            <Button variant="ghost" size="sm">
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="p-4 flex items-center">
+                          <Button variant="outline">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Payment Method
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-4 flex items-center">
-                    <Button variant="outline">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Payment Method
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Billing History</h3>
-                <div className="border rounded-md">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border">
-                      <thead className="bg-accent">
-                        <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Description
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Invoice
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            Jun 12, 2023
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            ModerateAI Pro Plan
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            $79.00
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
-                              Paid
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm">
-                              Download
-                            </Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            May 12, 2023
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            ModerateAI Pro Plan
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            $79.00
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
-                              Paid
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm">
-                              Download
-                            </Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            Apr 12, 2023
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            ModerateAI Pro Plan
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            $79.00
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
-                              Paid
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm">
-                              Download
-                            </Button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
+                  
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Billing History</h3>
+                      <div className="border rounded-md">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-accent">
+                              <tr>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                  Date
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                  Description
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                  Amount
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                  Status
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                  Invoice
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {invoices.map((invoice) => (
+                                <tr key={invoice.id}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                    {formatDate(invoice.date)}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    {invoice.description}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                    {invoice.amount}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100/20 text-green-700 dark:text-green-400">
+                                      {invoice.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <Button variant="ghost" size="sm">
+                                      Download
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </CardContent>
             <CardFooter className="justify-between items-center border-t px-6 py-4">
               <Button variant="outline">
