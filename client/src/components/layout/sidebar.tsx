@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import UserProfile from "./user-profile";
 import { 
   LayoutDashboard, 
   MessagesSquare, 
@@ -154,9 +153,6 @@ const Sidebar = () => {
           <SidebarSection title="Integrations" items={integrationItems} />
           <SidebarSection title="Settings" items={settingsItems} />
         </nav>
-        
-        {/* User Profile */}
-        <UserProfile />
       </div>
       
       {/* Mobile toggle button - in the Header component */}
