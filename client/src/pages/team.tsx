@@ -131,13 +131,15 @@ const RolesAndPermissionsContent = () => {
     <>
       {roles.map((role) => (
         <div key={role.id} className="border rounded-lg p-4">
-          <div className="flex items-center mb-4">
-            <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
-              <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
-            </div>
-            <div>
+          <div className="mb-4">
+            <div className="flex items-center mb-2">
+              <div className={`h-8 w-8 rounded-full bg-${role.iconColor}-100 mr-3 flex items-center justify-center`}>
+                <Shield className={`h-4 w-4 text-${role.iconColor}-800`} />
+              </div>
               <h3 className="text-lg font-medium">{role.name}</h3>
-              <p className={`text-sm text-white font-medium px-2 py-1 rounded bg-${role.iconColor}-600`}>
+            </div>
+            <div className="ml-11 -mt-1">
+              <p className={`text-sm text-white font-medium px-2 py-1 rounded inline-block bg-${role.iconColor}-600`}>
                 {role.description}
               </p>
             </div>
