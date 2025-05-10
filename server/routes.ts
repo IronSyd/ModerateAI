@@ -22,6 +22,50 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Demo billing plans - simulating API data for pricing plans
+  const billingPlans = [
+    {
+      id: "basic",
+      name: "Basic",
+      price: 49,
+      features: [
+        "1,000 AI responses per month",
+        "1 active integration",
+        "Custom knowledge base",
+        "Basic analytics",
+        "Email support"
+      ]
+    },
+    {
+      id: "pro",
+      name: "Professional",
+      price: 99,
+      features: [
+        "5,000 AI responses per month",
+        "3 active integrations",
+        "Advanced knowledge base",
+        "Detailed analytics",
+        "Priority email support",
+        "API access",
+        "Webhooks"
+      ]
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      price: 249,
+      features: [
+        "Unlimited AI responses",
+        "Unlimited integrations",
+        "Enterprise knowledge base",
+        "Advanced analytics & reporting",
+        "24/7 phone support",
+        "Dedicated account manager",
+        "Custom AI model fine-tuning",
+        "SLA guarantees"
+      ]
+    }
+  ];
   // Set up authentication with Passport.js
   setupAuth(app);
   
@@ -56,6 +100,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check
   app.get("/api/health", (req, res) => {
     res.status(200).json({ status: "ok" });
+  });
+  
+  // Billing plans endpoint
+  app.get("/api/billing/plans", (req, res) => {
+    res.json({ plans: billingPlans });
+  });
+  
+  // API endpoint to handle plan upgrades
+  app.post("/api/billing/upgrade", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+    
+    const { planId } = req.body;
+    
+    if (!planId || !billingPlans.some(plan => plan.id === planId)) {
+      return res.status(400).json({ success: false, message: "Invalid plan selected" });
+    }
+    
+    // Simulate plan upgrade (in a real app, this would connect to Stripe or another payment provider)
+    // Here we'd update the user's subscription in the database
+    
+    return res.json({ 
+      success: true, 
+      message: "Plan upgraded successfully! Your subscription has been updated.",
+      plan: billingPlans.find(plan => plan.id === planId)
+    });
   });
   
   // Direct OpenAI chat completion for the website demo interface

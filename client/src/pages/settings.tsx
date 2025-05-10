@@ -357,19 +357,26 @@ const Settings = () => {
     
     // Fetch available plans
     useEffect(() => {
-      fetch('/api/billing/plans')
-        .then(response => response.json())
-        .then(data => {
-          setPlans(data.plans);
-        })
-        .catch(error => {
+      const fetchPlans = async () => {
+        try {
+          const response = await apiRequest("GET", "/api/billing/plans");
+          const data = await response.json();
+          if (data.plans) {
+            setPlans(data.plans);
+          } else {
+            throw new Error("Invalid response format");
+          }
+        } catch (error) {
           console.error('Error fetching plans:', error);
           toast({
             title: "Error",
             description: "Failed to load available plans",
             variant: "destructive",
           });
-        });
+        }
+      };
+      
+      fetchPlans();
     }, [toast]);
     
     // Handle plan selection
