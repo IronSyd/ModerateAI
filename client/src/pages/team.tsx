@@ -292,8 +292,10 @@ const Team = () => {
   const { toast } = useToast();
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
   const [inviteData, setInviteData] = useState({
     email: "",
     role: "moderator",
@@ -308,6 +310,31 @@ const Team = () => {
         throw new Error('Failed to fetch team members');
       }
       return await response.json() as TeamMember[];
+    },
+  });
+
+  // Get invitation link mutation
+  const getInvitationLinkMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/team/invite/${id}/link`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to get invitation link');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setInviteLink(data.inviteLink);
+      setIsInviteLinkDialogOpen(true);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get invitation link",
+        variant: "destructive",
+      });
     },
   });
 
@@ -698,6 +725,15 @@ const Team = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  title="View invitation link"
+                                  onClick={() => getInvitationLinkMutation.mutate(member.id)}
+                                >
+                                  <Mail className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Resend invitation email"
                                   onClick={() => {
                                     toast({
                                       title: "Invitation resent",
@@ -711,6 +747,7 @@ const Team = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="text-red-500"
+                                  title="Cancel invitation"
                                   onClick={() => {
                                     setSelectedMember(member);
                                     setIsDeleteDialogOpen(true);
@@ -856,6 +893,57 @@ const Team = () => {
               Send Invitation
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invitation Link Dialog */}
+      <Dialog open={isInviteLinkDialogOpen} onOpenChange={setIsInviteLinkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invitation Link</DialogTitle>
+            <DialogDescription>
+              Share this link with the team member to accept the invitation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 my-4">
+            <div className="bg-gray-50 p-3 rounded-md border overflow-x-auto">
+              <code className="text-sm break-all">{inviteLink}</code>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteLink);
+                  toast({
+                    title: "Copied to clipboard",
+                    description: "The invitation link has been copied to your clipboard",
+                  });
+                }}
+                className="w-full"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-4 w-4 mr-2" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" 
+                  />
+                </svg>
+                Copy to Clipboard
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsInviteLinkDialogOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
