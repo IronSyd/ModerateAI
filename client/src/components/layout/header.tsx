@@ -30,7 +30,7 @@ const Header = () => {
     if (location === "/integrations/website") return "Website Chat Widget";
     if (location === "/integrations/telegram") return "Telegram Integration";
     if (location === "/integrations/discord") return "Discord Integration";
-    if (location === "/team") return "Team";
+    if (location === "/team") return "Team Management"; // Show "Team Management" instead of "Team"
     if (location === "/settings") return "Settings";
     if (location === "/activity") return "Activity Log";
     // Don't show title for help center pages
