@@ -419,6 +419,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // 2FA API Endpoints
+  
+  // Generate a new 2FA secret
+  app.post("/api/user/2fa/setup", authMiddleware, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const { generateSecret, generateQRCode, generateBackupCodes } = await import("./lib/twoFactorAuth");
+      
+      const userId = req.user!.id;
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Generate a new secret
+      const secret = generateSecret(user.username);
+      
+      // Generate a QR code
+      const qrCode = await generateQRCode(secret.otpAuthUrl);
+      
+      // Generate backup codes
+      const backupCodes = generateBackupCodes();
+      
+      // Store the secret and backup codes temporarily (not enabled yet)
+      await db.update(users)
+        .set({
+          twoFactorSecret: secret.base32,
+          twoFactorBackupCodes: backupCodes,
+          twoFactorEnabled: false
+        })
+        .where(eq(users.id, userId));
+      
+      res.json({
+        secret: secret.base32,
+        qrCode,
+        backupCodes
+      });
+    } catch (error) {
+      console.error("Error setting up 2FA:", error);
+      res.status(500).json({ message: "Failed to set up 2FA" });
+    }
+  });
+  
+  // Verify and enable 2FA
+  app.post("/api/user/2fa/verify", authMiddleware, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const { verifyToken, generateRecoveryToken } = await import("./lib/twoFactorAuth");
+      
+      const userId = req.user!.id;
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token is required" });
+      }
+      
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (!user || !user.twoFactorSecret) {
+        return res.status(404).json({ message: "User not found or 2FA not set up" });
+      }
+      
+      // Verify the token
+      const isValid = verifyToken(token, user.twoFactorSecret);
+      
+      if (!isValid) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+      
+      // Generate a recovery token
+      const recoveryToken = generateRecoveryToken();
+      
+      // Enable 2FA
+      await db.update(users)
+        .set({
+          twoFactorEnabled: true,
+          twoFactorRecoveryToken: recoveryToken
+        })
+        .where(eq(users.id, userId));
+      
+      res.json({
+        enabled: true,
+        recoveryToken
+      });
+    } catch (error) {
+      console.error("Error verifying 2FA:", error);
+      res.status(500).json({ message: "Failed to verify 2FA" });
+    }
+  });
+  
+  // Disable 2FA
+  app.post("/api/user/2fa/disable", authMiddleware, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { users, teamSettings } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const { verifyToken } = await import("./lib/twoFactorAuth");
+      
+      const userId = req.user!.id;
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+      
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+        return res.status(404).json({ message: "User not found or 2FA not enabled" });
+      }
+      
+      // Verify the token
+      const isValid = verifyToken(token, user.twoFactorSecret);
+      
+      if (!isValid) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+      
+      // Verify if 2FA is required by team settings
+      const teamConfig = await db.query.teamSettings.findFirst({
+        where: eq(teamSettings.userId, userId)
+      });
+      
+      if (teamConfig?.securitySettings?.twoFactorRequired && user.role !== 'admin') {
+        return res.status(403).json({ message: "Cannot disable 2FA as it is required by your team settings" });
+      }
+      
+      // Disable 2FA
+      await db.update(users)
+        .set({
+          twoFactorEnabled: false,
+          twoFactorSecret: null,
+          twoFactorBackupCodes: null,
+          twoFactorRecoveryToken: null
+        })
+        .where(eq(users.id, userId));
+      
+      res.json({
+        enabled: false
+      });
+    } catch (error) {
+      console.error("Error disabling 2FA:", error);
+      res.status(500).json({ message: "Failed to disable 2FA" });
+    }
+  });
+  
+  // Verify 2FA during login
+  app.post("/api/verify-2fa", async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const { verifyToken } = await import("./lib/twoFactorAuth");
+      
+      const { userId, token, useBackupCode } = req.body;
+      
+      if (!userId || (!token && !useBackupCode)) {
+        return res.status(400).json({ message: "User ID and token/backup code are required" });
+      }
+      
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (!user || !user.twoFactorEnabled) {
+        return res.status(404).json({ message: "User not found or 2FA not enabled" });
+      }
+      
+      let isValid = false;
+      
+      if (useBackupCode && user.twoFactorBackupCodes) {
+        // Check if the token is in the backup codes
+        const backupCodes = user.twoFactorBackupCodes as string[];
+        isValid = backupCodes.includes(token);
+        
+        // Remove the used backup code
+        if (isValid) {
+          const updatedBackupCodes = backupCodes.filter(code => code !== token);
+          await db.update(users)
+            .set({ twoFactorBackupCodes: updatedBackupCodes })
+            .where(eq(users.id, userId));
+        }
+      } else if (user.twoFactorSecret) {
+        // Verify the token against the secret
+        isValid = verifyToken(token, user.twoFactorSecret);
+      }
+      
+      if (!isValid) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+      
+      // Authentication successful, set up the session
+      if (req.session.passport) {
+        req.session.passport.user = userId;
+      } else {
+        req.session.passport = { user: userId };
+      }
+      
+      res.json({
+        success: true,
+        message: "2FA verification successful",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      console.error("Error verifying 2FA:", error);
+      res.status(500).json({ message: "Failed to verify 2FA" });
+    }
+  });
+
   // Roles & permissions API endpoint
   app.get("/api/team/roles", async (req, res) => {
     try {

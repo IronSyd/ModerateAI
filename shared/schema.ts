@@ -12,6 +12,10 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   role: text("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  twoFactorSecret: text("two_factor_secret"),
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+  twoFactorBackupCodes: jsonb("two_factor_backup_codes"),
+  twoFactorRecoveryToken: text("two_factor_recovery_token"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
