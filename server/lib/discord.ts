@@ -22,8 +22,9 @@ const isDemoToken = (token: string) => {
   return token === 'discord-token-partial' || token.startsWith('demo-');
 };
 
-// For environment token, always treat as real token
+// Check if token is from environment variables (real token)
 const isEnvironmentToken = (token: string) => {
+  // Get environment token to compare
   const envToken = process.env.DISCORD_BOT_TOKEN;
   return envToken && token === envToken;
 };
