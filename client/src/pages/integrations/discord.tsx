@@ -448,7 +448,7 @@ const DiscordIntegration = () => {
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
-                            <ShieldAlert className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <Shield className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Moderation Actions</span>
                           </div>
                           <span className="text-sm font-medium">12</span>
