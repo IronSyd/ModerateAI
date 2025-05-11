@@ -12,6 +12,7 @@ import WebsiteIntegration from "@/pages/integrations/website";
 import WebsiteDemoPage from "@/pages/integrations/website-demo";
 import TelegramIntegration from "@/pages/integrations/telegram";
 import DiscordIntegration from "@/pages/integrations/discord";
+import DiscordFix from "@/pages/discord-fix";
 import Team from "@/pages/team";
 import Settings from "@/pages/settings";
 import ActivityPage from "@/pages/activity";

@@ -18,7 +18,8 @@ const discordClients = new Map<number, Client>();
 
 // Is this a demo token?
 const isDemoToken = (token: string) => {
-  return token === 'discord-token-partial' || token.startsWith('demo-') || token.length < 30;
+  // Skip the length check, as real tokens can be any length
+  return token === 'discord-token-partial' || token.startsWith('demo-');
 };
 
 // For environment token, always treat as real token
