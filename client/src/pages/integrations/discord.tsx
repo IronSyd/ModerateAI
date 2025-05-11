@@ -25,6 +25,17 @@ interface DiscordConfig {
   welcomeMessage?: string;
   permissions?: string;
   setupCompleted?: boolean;
+  
+  // Response settings
+  respondToCommands?: boolean;
+  respondToMentions?: boolean;
+  privateResponses?: boolean;
+  
+  // Moderation settings
+  contentFiltering?: boolean;
+  automaticWarnings?: boolean;
+  logModerationActions?: boolean;
+  moderationLogChannel?: string;
 }
 
 interface DiscordPlatform {
@@ -121,6 +132,14 @@ const DiscordIntegration = () => {
   const [authCode, setAuthCode] = useState("");
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [updatedChannels, setUpdatedChannels] = useState<DiscordChannel[]>([]);
+  // Add state for settings
+  const [respondToCommands, setRespondToCommands] = useState(true);
+  const [respondToMentions, setRespondToMentions] = useState(true);
+  const [privateResponses, setPrivateResponses] = useState(true);
+  const [contentFiltering, setContentFiltering] = useState(true);
+  const [automaticWarnings, setAutomaticWarnings] = useState(true);
+  const [logModerationActions, setLogModerationActions] = useState(true);
+  const [moderationLogChannel, setModerationLogChannel] = useState("mod-logs");
   
   // Check if user is authenticated
   useEffect(() => {
@@ -381,6 +400,20 @@ const DiscordIntegration = () => {
   useEffect(() => {
     if (platform?.config?.channels) {
       setUpdatedChannels([...platform.config.channels]);
+    }
+    
+    // Initialize settings from platform config when it loads
+    if (platform?.config) {
+      // Response settings
+      setRespondToCommands(platform.config.respondToCommands ?? true);
+      setRespondToMentions(platform.config.respondToMentions ?? true);
+      setPrivateResponses(platform.config.privateResponses ?? true);
+      
+      // Moderation settings
+      setContentFiltering(platform.config.contentFiltering ?? true);
+      setAutomaticWarnings(platform.config.automaticWarnings ?? true);
+      setLogModerationActions(platform.config.logModerationActions ?? true);
+      setModerationLogChannel(platform.config.moderationLogChannel ?? "mod-logs");
     }
   }, [platform]);
 
@@ -825,7 +858,10 @@ const DiscordIntegration = () => {
                       Bot responds to slash commands
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={respondToCommands} 
+                    onCheckedChange={setRespondToCommands}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -835,7 +871,10 @@ const DiscordIntegration = () => {
                       Bot responds when mentioned
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={respondToMentions} 
+                    onCheckedChange={setRespondToMentions}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -845,7 +884,10 @@ const DiscordIntegration = () => {
                       Send sensitive responses as DMs
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={privateResponses} 
+                    onCheckedChange={setPrivateResponses}
+                  />
                 </div>
               </div>
 
@@ -861,7 +903,10 @@ const DiscordIntegration = () => {
                       Filter inappropriate content
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={contentFiltering} 
+                    onCheckedChange={setContentFiltering}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -871,7 +916,10 @@ const DiscordIntegration = () => {
                       Warn users who violate rules
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={automaticWarnings} 
+                    onCheckedChange={setAutomaticWarnings}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -881,12 +929,18 @@ const DiscordIntegration = () => {
                       Keep a record of all moderation
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={logModerationActions} 
+                    onCheckedChange={setLogModerationActions}
+                  />
                 </div>
                 
                 <div className="mt-4">
                   <Label htmlFor="logChannel">Moderation Log Channel</Label>
-                  <Select defaultValue="mod-logs">
+                  <Select 
+                    value={moderationLogChannel}
+                    onValueChange={setModerationLogChannel}
+                  >
                     <SelectTrigger className="w-full mt-1">
                       <SelectValue placeholder="Select channel" />
                     </SelectTrigger>
@@ -903,12 +957,24 @@ const DiscordIntegration = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="ml-auto" onClick={() => {
-                toast({
-                  title: "Settings saved",
-                  description: "Your Discord bot settings have been updated"
-                });
-              }}>
+              <Button 
+                className="ml-auto" 
+                onClick={() => {
+                  // Save all settings to the database
+                  updateBotConfigMutation.mutate({
+                    // Response settings
+                    respondToCommands,
+                    respondToMentions,
+                    privateResponses,
+                    
+                    // Moderation settings
+                    contentFiltering,
+                    automaticWarnings,
+                    logModerationActions,
+                    moderationLogChannel
+                  });
+                }}
+              >
                 <Save className="mr-2 h-4 w-4" />
                 Save Changes
               </Button>
