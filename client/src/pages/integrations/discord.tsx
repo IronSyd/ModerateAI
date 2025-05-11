@@ -338,8 +338,8 @@ const DiscordIntegration = () => {
                 <div className="space-y-6">
                   <div className="p-4">
                     <div className="flex">
-                      <div className="rounded-full bg-emerald-600 p-1 mr-3 flex-shrink-0">
-                        <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="mr-3 flex-shrink-0">
+                        <svg className="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
