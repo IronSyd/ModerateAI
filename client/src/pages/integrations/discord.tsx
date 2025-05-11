@@ -368,7 +368,7 @@ const DiscordIntegration = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Bot Name:</span>
-                          <span className="text-sm font-medium">ModerateAI</span>
+                          <span className="text-sm font-medium">{platform?.config?.botName || "ModerateAI"}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Server:</span>
