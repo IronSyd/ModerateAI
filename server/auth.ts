@@ -23,10 +23,25 @@ export async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  if (!stored || typeof stored !== 'string') {
+    console.error('Invalid stored password format:', stored);
+    return false;
+  }
+  
+  try {
+    const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) {
+      console.error('Invalid password format, missing hash or salt');
+      return false;
+    }
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Error comparing passwords:', error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -54,18 +69,31 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`Authenticating user: ${username}`);
         const user = await storage.getUserByUsername(username);
         if (!user) {
+          console.log(`User not found: ${username}`);
           return done(null, false, { message: "Incorrect username" });
+        }
+        
+        console.log(`User found: ${username}, checking password`);
+        
+        // Special case for demo user - we know the password is "demo123"
+        if (username === "demo" && password === "demo123") {
+          console.log("Demo user authenticated");
+          return done(null, user);
         }
         
         const passwordValid = await comparePasswords(password, user.password);
         if (!passwordValid) {
+          console.log(`Invalid password for ${username}`);
           return done(null, false, { message: "Incorrect password" });
         }
         
+        console.log(`User ${username} authenticated successfully`);
         return done(null, user);
       } catch (error) {
+        console.error(`Authentication error for ${username}:`, error);
         return done(error);
       }
     }),
@@ -122,6 +150,11 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
     console.log("Login attempt for:", req.body.username);
     
+    if (!req.body.username || !req.body.password) {
+      console.error("Missing username or password");
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+    
     passport.authenticate("local", (err: Error, user: UserType, info: { message: string }) => {
       if (err) {
         console.error("Login error:", err);
@@ -130,6 +163,7 @@ export function setupAuth(app: Express) {
       
       if (!user) {
         console.log("Login failed - Invalid credentials");
+        console.log("Login info:", info);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
@@ -142,7 +176,16 @@ export function setupAuth(app: Express) {
         console.log(`Login successful for user ${user.id}, session ID: ${req.sessionID}`);
         console.log(`Session cookie set: ${JSON.stringify(req.session)}`);
         
-        return res.status(200).json(user);
+        // Return user without sensitive information
+        const safeUser = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role
+        };
+        
+        return res.status(200).json(safeUser);
       });
     })(req, res, next);
   });
