@@ -162,12 +162,15 @@ export async function initializeBot(platformId: number, token: string): Promise<
             const aiConfig = await storage.getActiveAiConfiguration(userId);
             
             // Create or get conversation
+            // Get channel name for logging
+            // Look for existing conversation or create a new one
             let conversation = await storage.getConversationByExternalId(message.channel.id);
             if (!conversation) {
               conversation = await storage.createConversation({
                 platformId,
                 externalId: message.channel.id,
-                title: isDM ? `DM with ${message.author.username}` : `Channel: ${channelName}`,
+                externalUserId: message.author.id,
+                externalUsername: message.author.username,
                 status: 'active'
               });
             }
@@ -220,8 +223,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
               await message.reply(aiResponse);
             }
             
-            const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
-            console.log(`Sent AI response for Discord message in ${isDM ? 'DM' : 'channel ' + channelName}`);
+            const responseChannelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
+            console.log(`Sent AI response for Discord message in ${isDM ? 'DM' : 'channel ' + responseChannelName}`);
           } catch (error) {
             console.error('Error generating AI response for Discord:', error);
             await message.reply("I'm sorry, I encountered an error while processing your request.");
@@ -230,8 +233,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
         
         // Check if we should moderate this channel
         if (channelConfig && channelConfig.moderationEnabled) {
-          const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
-          console.log(`Moderating message in channel ${channelName}`);
+          const moderationChannel = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
+          console.log(`Moderating message in channel ${moderationChannel}`);
           
           // Moderate the content
           const moderationResult = await moderateContent(message.content);
@@ -250,7 +253,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
             // Optionally, respond to the message
             await message.reply("This message has been flagged by our moderation system.");
             
-            console.log(`Flagged message in channel ${channelName}`);
+            console.log(`Flagged message in channel ${moderationChannel}`);
           }
         }
       } catch (error) {

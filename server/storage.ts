@@ -339,6 +339,10 @@ export class MemStorage implements IStorage {
     return this.conversations.get(id);
   }
 
+  async getConversationByExternalId(externalId: string): Promise<Conversation | undefined> {
+    return Array.from(this.conversations.values()).find(conv => (conv as any).externalId === externalId);
+  }
+
   async getConversationsByPlatformId(platformId: number): Promise<Conversation[]> {
     return Array.from(this.conversations.values()).filter(conv => conv.platformId === platformId);
   }

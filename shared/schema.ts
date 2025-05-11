@@ -59,6 +59,7 @@ export const insertConversationSchema = createInsertSchema(conversations).pick({
   platformId: true,
   externalUserId: true,
   externalUsername: true,
+  externalId: true,
   status: true,
 });
 
