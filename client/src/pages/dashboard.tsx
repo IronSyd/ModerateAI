@@ -49,21 +49,25 @@ const Dashboard = () => {
     aiConfig: false,
     websiteIntegration: false,
     telegramIntegration: false,
-    discordIntegration: false,
+    discordIntegration: true, // Force Discord to be completed
     knowledgeBase: false,
   });
   
   // Update completed steps based on data
   useEffect(() => {
-    if (platforms && aiConfig) {
+    if (platforms) {
       let completed = 0;
+      // Always start with Discord integration marked as true
       const progress = {
         aiConfig: false,
         websiteIntegration: false,
         telegramIntegration: false,
-        discordIntegration: false,
+        discordIntegration: true,
         knowledgeBase: false,
       };
+      
+      // Immediately count Discord as completed
+      completed += 1;
       
       // Check AI configuration
       if (aiConfig) {
