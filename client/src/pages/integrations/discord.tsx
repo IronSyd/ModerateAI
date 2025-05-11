@@ -4,7 +4,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, Link } from "wouter";
-import { DiscordAnalytics } from "@/components/analytics/discord-analytics";
 
 // Type definitions for Discord platform
 interface DiscordChannel {
@@ -992,7 +991,16 @@ const DiscordIntegration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DiscordAnalytics platformId={platform?.id} />
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground opacity-40" />
+                  <h3 className="mt-4 text-lg font-medium">Analytics Coming Soon</h3>
+                  <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+                    We're building detailed analytics for your Discord bot.
+                    Check back soon to see message volume, moderation actions, and user engagement metrics.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
