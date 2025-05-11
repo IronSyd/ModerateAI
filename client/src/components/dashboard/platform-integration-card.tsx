@@ -59,16 +59,10 @@ const PlatformIntegrationCard = ({
     switch (status) {
       case "active":
         return (
-          <div className="mt-4 flex items-center">
+          <div className="mt-4">
             <Link href={`/integrations/${type}`}>
               <Button variant="link" className="text-sm font-medium p-0">
                 Configure
-              </Button>
-            </Link>
-            <span className="mx-2 text-muted-foreground/40">|</span>
-            <Link href={`/integrations/${type}/analytics`}>
-              <Button variant="link" className="text-sm text-muted-foreground font-medium p-0">
-                View Analytics
               </Button>
             </Link>
           </div>
