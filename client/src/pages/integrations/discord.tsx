@@ -372,11 +372,11 @@ const DiscordIntegration = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Server:</span>
-                          <span className="text-sm font-medium">Your Community Server</span>
+                          <span className="text-sm font-medium">{platform?.name || "Discord Server"}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Server ID:</span>
-                          <span className="text-sm font-mono text-muted-foreground">{platform?.config?.serverId || "123456789"}</span>
+                          <span className="text-sm font-mono text-muted-foreground">{platform?.config?.serverId}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Status:</span>
@@ -397,28 +397,28 @@ const DiscordIntegration = () => {
                             <Users className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Members</span>
                           </div>
-                          <span className="text-sm font-medium">127</span>
+                          <span className="text-sm font-medium">{platform?.config?.memberCount || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
                             <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Text Channels</span>
                           </div>
-                          <span className="text-sm font-medium">6</span>
+                          <span className="text-sm font-medium">{(platform?.config?.channels?.length || 0)}</span>
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
                             <MessagesSquare className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Today's Messages</span>
                           </div>
-                          <span className="text-sm font-medium">134</span>
+                          <span className="text-sm font-medium">{platform?.config?.dailyMessages || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
                             <Shield className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Moderation Actions</span>
                           </div>
-                          <span className="text-sm font-medium">12</span>
+                          <span className="text-sm font-medium">{platform?.config?.moderationCount || 0}</span>
                         </div>
                       </div>
                     </div>
