@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, uuid, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -215,12 +215,13 @@ export const insertTeamInvitationSchema = createInsertSchema(teamInvitations).pi
 });
 
 // Define relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   platforms: many(platforms),
   aiConfigurations: many(aiConfigurations),
   knowledgeBases: many(knowledgeBases),
   conversationTrainings: many(conversationTrainings),
-  sentInvitations: many(teamInvitations, { relationName: "sent_invitations" })
+  sentInvitations: many(teamInvitations, { relationName: "sent_invitations" }),
+  teamSettings: many(teamSettings)
 }));
 
 export const platformsRelations = relations(platforms, ({ one, many }) => ({
@@ -307,6 +308,38 @@ export const teamInvitationsRelations = relations(teamInvitations, ({ one }) => 
   })
 }));
 
+// Team Settings table
+export const teamSettings = pgTable("team_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull().default("ModerateAI Team"),
+  securitySettings: jsonb("security_settings").notNull().default({
+    twoFactorRequired: false,
+    sessionTimeoutMinutes: 60
+  }),
+  notificationSettings: jsonb("notification_settings").notNull().default({
+    newMemberNotifications: true,
+    criticalAlertNotifications: true,
+    weeklyActivitySummary: true
+  }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertTeamSettingsSchema = createInsertSchema(teamSettings).pick({
+  userId: true,
+  name: true,
+  securitySettings: true,
+  notificationSettings: true,
+});
+
+export const teamSettingsRelations = relations(teamSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [teamSettings.userId],
+    references: [users.id],
+  })
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -337,3 +370,6 @@ export type InsertConversationTraining = z.infer<typeof insertConversationTraini
 
 export type TeamInvitation = typeof teamInvitations.$inferSelect;
 export type InsertTeamInvitation = z.infer<typeof insertTeamInvitationSchema>;
+
+export type TeamSettings = typeof teamSettings.$inferSelect;
+export type InsertTeamSettings = z.infer<typeof insertTeamSettingsSchema>;
