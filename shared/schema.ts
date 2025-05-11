@@ -330,12 +330,29 @@ export const teamSettings = pgTable("team_settings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertTeamSettingsSchema = createInsertSchema(teamSettings).pick({
-  userId: true,
-  name: true,
-  securitySettings: true,
-  notificationSettings: true,
+// Zod schemas for team settings validation
+export const securitySettingsSchema = z.object({
+  twoFactorRequired: z.boolean().default(false),
+  sessionTimeoutMinutes: z.number().int().min(5).max(1440).default(60)
 });
+
+export const notificationSettingsSchema = z.object({
+  newMemberNotifications: z.boolean().default(true),
+  criticalAlertNotifications: z.boolean().default(true),
+  weeklyActivitySummary: z.boolean().default(true)
+});
+
+export const insertTeamSettingsSchema = createInsertSchema(teamSettings)
+  .pick({
+    userId: true,
+    name: true,
+    securitySettings: true,
+    notificationSettings: true,
+  })
+  .extend({
+    securitySettings: securitySettingsSchema,
+    notificationSettings: notificationSettingsSchema
+  });
 
 export const teamSettingsRelations = relations(teamSettings, ({ one }) => ({
   user: one(users, {

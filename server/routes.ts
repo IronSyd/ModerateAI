@@ -392,12 +392,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/team/settings", authMiddleware, async (req, res) => {
     try {
       const { db } = await import("./db");
-      const { teamSettings } = await import("@shared/schema");
+      const { teamSettings, securitySettingsSchema, notificationSettingsSchema, insertTeamSettingsSchema } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
       
       const userId = req.user!.id;
       const { teamName, twoFactorRequired, sessionTimeoutMinutes, newMemberNotifications, 
               criticalAlertNotifications, weeklyActivitySummary } = req.body;
+      
+      // Create security settings object with validation
+      const securitySettings = securitySettingsSchema.parse({
+        twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : false,
+        sessionTimeoutMinutes: sessionTimeoutMinutes || 60
+      });
+      
+      // Create notification settings object with validation
+      const notificationSettings = notificationSettingsSchema.parse({
+        newMemberNotifications: newMemberNotifications !== undefined ? newMemberNotifications : true,
+        criticalAlertNotifications: criticalAlertNotifications !== undefined ? criticalAlertNotifications : true,
+        weeklyActivitySummary: weeklyActivitySummary !== undefined ? weeklyActivitySummary : true
+      });
       
       // Check if settings exist
       const existingSettings = await db.query.teamSettings.findFirst({
@@ -405,21 +418,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!existingSettings) {
-        // Create new settings
+        // Create new settings with validated data
+        const newSettingsData = {
+          userId,
+          name: teamName || "ModerateAI Team",
+          securitySettings,
+          notificationSettings
+        };
+        
+        // Validate the full object
+        insertTeamSettingsSchema.parse(newSettingsData);
+        
+        // Insert into database
         const [newSettings] = await db.insert(teamSettings)
-          .values({
-            userId,
-            name: teamName || "ModerateAI Team",
-            securitySettings: {
-              twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : false,
-              sessionTimeoutMinutes: sessionTimeoutMinutes || 60
-            },
-            notificationSettings: {
-              newMemberNotifications: newMemberNotifications !== undefined ? newMemberNotifications : true,
-              criticalAlertNotifications: criticalAlertNotifications !== undefined ? criticalAlertNotifications : true,
-              weeklyActivitySummary: weeklyActivitySummary !== undefined ? weeklyActivitySummary : true
-            }
-          })
+          .values(newSettingsData)
           .returning();
           
         return res.json({ 
@@ -428,24 +440,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           settings: newSettings
         });
       } else {
-        // Update existing settings
+        // Update existing settings with validated data
+        const currentSecuritySettings = existingSettings.securitySettings || {};
+        const currentNotificationSettings = existingSettings.notificationSettings || {};
+        
+        // Merge current settings with new settings
+        const mergedSecuritySettings = securitySettingsSchema.parse({
+          twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : 
+                           currentSecuritySettings.twoFactorRequired || false,
+          sessionTimeoutMinutes: sessionTimeoutMinutes !== undefined ? sessionTimeoutMinutes : 
+                               currentSecuritySettings.sessionTimeoutMinutes || 60
+        });
+        
         const [updatedSettings] = await db.update(teamSettings)
           .set({
             name: teamName !== undefined ? teamName : existingSettings.name,
-            securitySettings: {
-              twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : 
-                                existingSettings.securitySettings?.twoFactorRequired || false,
-              sessionTimeoutMinutes: sessionTimeoutMinutes !== undefined ? sessionTimeoutMinutes : 
-                                    existingSettings.securitySettings?.sessionTimeoutMinutes || 60
-            },
-            notificationSettings: {
+            securitySettings: mergedSecuritySettings,
+            notificationSettings: notificationSettingsSchema.parse({
               newMemberNotifications: newMemberNotifications !== undefined ? newMemberNotifications : 
-                                      existingSettings.notificationSettings?.newMemberNotifications || true,
+                                      currentNotificationSettings.newMemberNotifications || true,
               criticalAlertNotifications: criticalAlertNotifications !== undefined ? criticalAlertNotifications : 
-                                         existingSettings.notificationSettings?.criticalAlertNotifications || true,
+                                         currentNotificationSettings.criticalAlertNotifications || true,
               weeklyActivitySummary: weeklyActivitySummary !== undefined ? weeklyActivitySummary : 
-                                     existingSettings.notificationSettings?.weeklyActivitySummary || true
-            },
+                                     currentNotificationSettings.weeklyActivitySummary || true
+            }),
             updatedAt: new Date()
           })
           .where(eq(teamSettings.userId, userId))
