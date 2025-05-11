@@ -41,8 +41,12 @@ async function fixDiscordIntegration() {
       SET auth_token = $1,
           status = 'active',
           config = jsonb_set(
-            COALESCE(config, '{}'::jsonb),
-            '{setupCompleted}',
+            jsonb_set(
+              COALESCE(config, '{}'::jsonb),
+              '{setupCompleted}',
+              'true'
+            ),
+            '{useRealToken}',
             'true'
           )
       WHERE id = 3

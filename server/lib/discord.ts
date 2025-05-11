@@ -26,6 +26,13 @@ const isDemoToken = (token: string) => {
 const isEnvironmentToken = (token: string) => {
   // Get environment token to compare
   const envToken = process.env.DISCORD_BOT_TOKEN;
+  // Add debug logging
+  console.log('isEnvironmentToken check:');
+  console.log('- Environment token exists:', !!envToken);
+  console.log('- Token starts with:', token.substring(0, 5) + '...');
+  console.log('- Env token starts with:', envToken?.substring(0, 5) + '...');
+  console.log('- Tokens match:', envToken === token);
+  
   return envToken && token === envToken;
 };
 
@@ -40,6 +47,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
     }
 
     console.log(`Initializing Discord bot for platform ${platformId}...`);
+    console.log(`Token starts with: ${token.substring(0, 5)}...`);
+    console.log(`Using environment token? ${isEnvironmentToken(token)}`);
     
     // Get the platform
     const platform = await storage.getPlatform(platformId);
@@ -50,8 +59,13 @@ export async function initializeBot(platformId: number, token: string): Promise<
       };
     }
     
-    // Check if this is a demo token
-    if (isDemoToken(token) && !isEnvironmentToken(token)) {
+    // Always use real Discord connection when environment token is available
+    if (isEnvironmentToken(token)) {
+      console.log(`Using environment token for Discord platform ${platformId}`);
+      // Continue with real Discord connection
+    }
+    // Use demo mode only for demo tokens that aren't environment tokens
+    else if (isDemoToken(token)) {
       console.log(`Using demo mode for Discord platform ${platformId}`);
       
       // For demo mode, we'll create simulated channels and update the platform

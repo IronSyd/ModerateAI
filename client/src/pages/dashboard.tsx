@@ -87,8 +87,14 @@ const Dashboard = () => {
         
         const discordPlatform = platforms.find(p => p.type === "discord");
         if (discordPlatform && discordPlatform.status === "active") {
-          completed += 1;
-          progress.discordIntegration = true;
+          // Check if the Discord platform has setupCompleted flag or real server data
+          const hasRealData = discordPlatform.config?.setupCompleted === true || 
+                             (discordPlatform.config?.serverId && 
+                              discordPlatform.config?.serverId !== "123456789"); // Not demo ID
+          if (hasRealData) {
+            completed += 1;
+            progress.discordIntegration = true;
+          }
         }
       }
       
