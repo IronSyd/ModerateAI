@@ -7,10 +7,11 @@ import {
   GatewayIntentBits,
   ChannelType,
   Partials,
-  Collection
+  Collection,
+  DMChannel
 } from 'discord.js';
 import { storage } from '../storage';
-import { moderateContent } from './openai';
+import { moderateContent, generateAIResponse } from './openai';
 
 // Map of platform IDs to Discord clients
 const discordClients = new Map<number, Client>();
@@ -158,7 +159,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
         
         // Handle AI chat responses (for mentions, DMs, or commands)
         if ((respondToMentions && isBotMentioned) || isDM || (respondToCommands && isCommand)) {
-          console.log(`Bot interaction in ${isDM ? 'DM' : 'channel ' + message.channel.name}`);
+          const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
+          console.log(`Bot interaction in ${isDM ? 'DM' : 'channel ' + channelName}`);
           
           try {
             // Get active AI configuration for this platform's user
@@ -178,9 +180,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
             if (!conversation) {
               conversation = await storage.createConversation({
                 platformId,
-                platformType: 'discord',
                 externalId: message.channel.id,
-                title: isDM ? `DM with ${message.author.username}` : `Channel: ${message.channel.name}`,
+                title: isDM ? `DM with ${message.author.username}` : `Channel: ${channelName}`,
                 status: 'active'
               });
             }
@@ -233,7 +234,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
               await message.reply(aiResponse);
             }
             
-            console.log(`Sent AI response for Discord message in ${isDM ? 'DM' : 'channel ' + message.channel.name}`);
+            const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
+            console.log(`Sent AI response for Discord message in ${isDM ? 'DM' : 'channel ' + channelName}`);
           } catch (error) {
             console.error('Error generating AI response for Discord:', error);
             await message.reply("I'm sorry, I encountered an error while processing your request.");
@@ -242,7 +244,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
         
         // Check if we should moderate this channel
         if (channelConfig && channelConfig.moderationEnabled) {
-          console.log(`Moderating message in channel ${message.channel.name}`);
+          const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
+          console.log(`Moderating message in channel ${channelName}`);
           
           // Moderate the content
           const moderationResult = await moderateContent(message.content);
@@ -261,7 +264,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
             // Optionally, respond to the message
             await message.reply("This message has been flagged by our moderation system.");
             
-            console.log(`Flagged message in channel ${message.channel.name}`);
+            console.log(`Flagged message in channel ${channelName}`);
           }
         }
       } catch (error) {
