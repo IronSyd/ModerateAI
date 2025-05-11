@@ -108,6 +108,7 @@ function Router() {
         <ProtectedRoute path="/integrations/website-demo" component={WebsiteDemoPage} />
         <ProtectedRoute path="/integrations/telegram" component={TelegramIntegration} />
         <ProtectedRoute path="/integrations/discord" component={DiscordIntegration} />
+        <ProtectedRoute path="/integrations/discord-fix" component={DiscordFix} />
         <ProtectedRoute path="/team" component={Team} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/activity" component={ActivityPage} />
