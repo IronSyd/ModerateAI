@@ -510,13 +510,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const backupCodes = generateBackupCodes();
       
       // Store the secret and backup codes temporarily (not enabled yet)
-      await db.update(users)
-        .set({
-          twoFactorSecret: secret.base32,
-          twoFactorBackupCodes: backupCodes,
-          twoFactorEnabled: false
-        })
-        .where(eq(users.id, userId));
+      const { storage } = await import("./storage");
+      await storage.updateUser(userId, {
+        twoFactorSecret: secret.base32,
+        twoFactorBackupCodes: backupCodes,
+        twoFactorEnabled: false
+      });
       
       res.json({
         secret: secret.base32,
