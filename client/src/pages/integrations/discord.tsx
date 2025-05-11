@@ -157,11 +157,12 @@ const DiscordIntegration = () => {
 
   // Complete Discord bot setup
   const completeSetupMutation = useMutation({
-    mutationFn: async (data: { serverId: string, authCode: string }) => {
+    mutationFn: async (data: { serverId: string, authCode?: string }) => {
       return apiRequest("PATCH", `/api/platforms/3`, {
         name: "Discord Bot",
         status: "active",
-        authToken: data.authCode,
+        // Only include authToken if authCode is provided
+        ...(data.authCode ? { authToken: data.authCode } : {}),
         config: {
           setupCompleted: true,
           serverId: data.serverId,
@@ -258,18 +259,10 @@ const DiscordIntegration = () => {
   };
 
   const handleCompleteSetup = () => {
-    if (!authCode) {
-      toast({
-        title: "Error",
-        description: "Please enter the Discord authorization code.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // We no longer require the authCode, but we'll pass it if it's provided
     completeSetupMutation.mutate({
       serverId: platform?.config?.serverId || "123456789",
-      authCode
+      ...(authCode ? { authCode } : {})
     });
   };
 
@@ -488,7 +481,8 @@ const DiscordIntegration = () => {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Complete Bot Setup</h3>
                     <p className="text-sm text-muted-foreground">
-                      To finish setting up your Discord bot, we need the authorization code from Discord:
+                      Your Discord bot has been added to your server. Click the button below to complete the setup process.
+                      An authorization code is no longer required.
                     </p>
                     <Button onClick={() => setIsCompleteSetupDialogOpen(true)}>
                       Complete Setup
@@ -503,7 +497,8 @@ const DiscordIntegration = () => {
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-2">
                       <li>Make sure you have admin permissions on your Discord server</li>
                       <li>Check that you've authorized the bot with the correct permissions</li>
-                      <li>Try refreshing the authorization page and starting over</li>
+                      <li>You can complete the setup without an authorization code</li>
+                      <li>Try refreshing the authorization page and starting over if needed</li>
                     </ul>
                     <div className="mt-4">
                       <Link href="/help/article/discord-integration">
@@ -810,21 +805,21 @@ const DiscordIntegration = () => {
           <DialogHeader>
             <DialogTitle>Complete Discord Setup</DialogTitle>
             <DialogDescription>
-              Enter the authorization code from Discord to complete your bot setup.
+              You can now complete your Discord bot setup. Authorization code is optional.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="authCode">Discord Authorization Code</Label>
+              <Label htmlFor="authCode">Discord Authorization Code (Optional)</Label>
               <Input
                 id="authCode"
-                placeholder="Enter authorization code"
+                placeholder="Enter authorization code if you have one"
                 value={authCode}
                 onChange={(e) => setAuthCode(e.target.value)}
               />
               <p className="text-sm text-muted-foreground flex items-center">
                 <Lock className="h-3 w-3 mr-1" />
-                Your code is securely stored and encrypted
+                Your code is securely stored and encrypted if provided
               </p>
             </div>
           </div>
