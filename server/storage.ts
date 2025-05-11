@@ -926,6 +926,134 @@ export class DatabaseStorage implements IStorage {
   async deleteTeamInvitation(id: number): Promise<boolean> {
     return false;
   }
+
+  /**
+   * Get total conversation count from the database
+   */
+  async getConversationCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(conversations);
+    return result[0]?.count || 0;
+  }
+
+  /**
+   * Get total message count from the database
+   * This represents AI responses
+   */
+  async getMessageCount(): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(eq(messages.sender, 'ai'));
+    return result[0]?.count || 0;
+  }
+
+  /**
+   * Get total moderation action count from the database
+   */
+  async getModerationActionCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(moderationActions);
+    return result[0]?.count || 0;
+  }
+
+  /**
+   * Calculate response rate based on the number of AI responses vs total messages
+   */
+  async getResponseRate(): Promise<number> {
+    // Get total message count
+    const totalResult = await db.select({ count: count() }).from(messages);
+    const totalMessages = totalResult[0]?.count || 0;
+    
+    // Get AI message count
+    const aiResult = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(eq(messages.sender, 'ai'));
+    const aiMessages = aiResult[0]?.count || 0;
+    
+    // Calculate response rate
+    return totalMessages > 0 ? aiMessages / totalMessages : 0;
+  }
+
+  /**
+   * Get recent activity from messages and moderation actions
+   */
+  async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
+    // Get the most recent messages
+    const recentMessages = await db
+      .select({
+        id: messages.id,
+        content: messages.content,
+        sender: messages.sender,
+        conversationId: messages.conversationId,
+        createdAt: messages.createdAt,
+        metadata: messages.metadata
+      })
+      .from(messages)
+      .orderBy(desc(messages.createdAt))
+      .limit(Math.floor(limit / 2));
+      
+    // Get the conversation and platform information for each message
+    const messageActivities = await Promise.all(
+      recentMessages.map(async (message) => {
+        const [conversation] = message.conversationId ? await db
+          .select()
+          .from(conversations)
+          .where(eq(conversations.id, message.conversationId)) : [];
+        
+        const [platform] = conversation ? await db
+          .select({
+            type: platforms.type
+          })
+          .from(platforms)
+          .where(eq(platforms.id, conversation.platformId)) : [{ type: 'unknown' }];
+          
+        return {
+          user: typeof message.metadata === 'object' && message.metadata !== null && 'username' in message.metadata 
+            ? message.metadata.username as string 
+            : message.sender,
+          action: "message",
+          platform: platform.type,
+          time: message.createdAt
+        };
+      })
+    );
+    
+    // Get the most recent moderation actions
+    const recentActions = await db
+      .select({
+        id: moderationActions.id,
+        action: moderationActions.action,
+        platformId: moderationActions.platformId,
+        createdAt: moderationActions.createdAt
+      })
+      .from(moderationActions)
+      .orderBy(desc(moderationActions.createdAt))
+      .limit(Math.floor(limit / 2));
+      
+    // Get the platform information for each moderation action
+    const moderationActivities = await Promise.all(
+      recentActions.map(async (action) => {
+        const [platform] = await db
+          .select({
+            type: platforms.type
+          })
+          .from(platforms)
+          .where(eq(platforms.id, action.platformId));
+          
+        return {
+          user: "Moderator",
+          action: action.action,
+          platform: platform?.type || 'unknown',
+          time: action.createdAt
+        };
+      })
+    );
+    
+    // Combine message and moderation activities, sort by time, and limit to the requested number
+    return [...messageActivities, ...moderationActivities]
+      .sort((a, b) => b.time.getTime() - a.time.getTime())
+      .slice(0, limit);
+  }
 }
 
 // Choose the storage implementation based on environment
