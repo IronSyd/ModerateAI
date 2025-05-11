@@ -473,7 +473,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { db } = await import("./db");
       const { users } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
-      const { verifyToken, generateRecoveryToken } = await import("./lib/twoFactorAuth");
+      const { verifyTOTP, generateBackupCodes } = await import("./lib/twoFactorAuth");
+      
+      // Function to generate a recovery token
+      const generateRecoveryToken = () => {
+        return require('crypto').randomBytes(20).toString('hex');
+      };
       
       const userId = req.user!.id;
       const { token } = req.body;
@@ -491,7 +496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the token
-      const isValid = verifyToken(token, user.twoFactorSecret);
+      const isValid = verifyTOTP(user.twoFactorSecret, token);
       
       if (!isValid) {
         return res.status(400).json({ message: "Invalid verification code" });

@@ -1,70 +1,134 @@
-import * as speakeasy from 'speakeasy';
-import * as QRCode from 'qrcode';
-import * as crypto from 'crypto';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
+import { randomBytes } from 'crypto';
+import { User } from '@shared/schema';
+import { db } from '../db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
-// Generate a new secret key for 2FA
-export function generateSecret(label: string, issuer: string = 'ModerateAI') {
+/**
+ * Generate a new TOTP secret for a user
+ */
+export function generateSecret(username: string) {
   const secret = speakeasy.generateSecret({
-    name: `${issuer}:${label}`,
-    issuer
+    name: `ModerateAI:${username}`
   });
   
   return {
-    otpAuthUrl: secret.otpauth_url,
-    base32: secret.base32
+    secret: secret.base32,
+    otpauth_url: secret.otpauth_url
   };
 }
 
-// Generate QR code image data URL from OTP auth URL
-export async function generateQRCode(otpAuthUrl: string): Promise<string> {
+/**
+ * Generate a QR code for the TOTP secret
+ */
+export async function generateQRCode(otpauthUrl: string): Promise<string> {
   try {
-    return await QRCode.toDataURL(otpAuthUrl);
+    return await QRCode.toDataURL(otpauthUrl);
   } catch (error) {
     console.error('Error generating QR code:', error);
     throw new Error('Failed to generate QR code');
   }
 }
 
-// Verify a token against the secret
-export function verifyToken(token: string, secret: string): boolean {
+/**
+ * Verify a TOTP token
+ */
+export function verifyTOTP(secret: string, token: string): boolean {
   return speakeasy.totp.verify({
     secret,
     encoding: 'base32',
     token,
-    window: 1 // Allow 1 time step before/after for clock drift (30 seconds)
+    window: 1 // Allow a time skew of ±30 seconds
   });
 }
 
-// Generate backup codes
-export function generateBackupCodes(count: number = 10): string[] {
-  const codes = [];
+/**
+ * Generate backup codes for a user
+ */
+export function generateBackupCodes(count = 10): string[] {
+  const codes: string[] = [];
+  
   for (let i = 0; i < count; i++) {
-    const code = crypto.randomBytes(4).toString('hex').toUpperCase();
-    codes.push(`${code.substring(0, 4)}-${code.substring(4)}`);
+    // Generate a random 8-character code and format it as XXXX-XXXX
+    const code = randomBytes(4).toString('hex').toUpperCase();
+    codes.push(`${code.slice(0, 4)}-${code.slice(4, 8)}`);
   }
+  
   return codes;
 }
 
-// Generate a recovery token
-export function generateRecoveryToken(): string {
-  return crypto.randomBytes(20).toString('hex');
+/**
+ * Verify a backup code
+ */
+export async function verifyBackupCode(user: User, code: string): Promise<boolean> {
+  if (!user.twoFactorBackupCodes) {
+    return false;
+  }
+  
+  // Convert from JSON to array if needed
+  const backupCodes = Array.isArray(user.twoFactorBackupCodes) 
+    ? user.twoFactorBackupCodes 
+    : JSON.parse(String(user.twoFactorBackupCodes));
+  
+  // Check if the provided code exists in the backup codes
+  const codeIndex = backupCodes.indexOf(code);
+  if (codeIndex === -1) {
+    return false;
+  }
+  
+  // Remove the used backup code
+  backupCodes.splice(codeIndex, 1);
+  
+  // Update the user's backup codes
+  await db.update(users)
+    .set({ twoFactorBackupCodes: backupCodes })
+    .where(eq(users.id, user.id));
+  
+  return true;
 }
 
-// Verify if a team member should be required to use 2FA
-export function shouldRequire2FA(
-  user: { role: string, twoFactorEnabled: boolean }, 
-  teamSettings: { securitySettings: { twoFactorRequired: boolean } }
-): boolean {
-  // Admin users are exempt from 2FA requirement (they can always access)
-  if (user.role === 'admin') {
-    return false;
-  }
+/**
+ * Enable 2FA for a user
+ */
+export async function enable2FA(userId: number, secret: string): Promise<void> {
+  // Generate backup codes
+  const backupCodes = generateBackupCodes();
   
-  // Check if user already has 2FA enabled
-  if (user.twoFactorEnabled) {
-    return false;
-  }
+  // Update the user record
+  await db.update(users)
+    .set({
+      twoFactorSecret: secret,
+      twoFactorEnabled: true,
+      twoFactorBackupCodes: backupCodes
+    })
+    .where(eq(users.id, userId));
+}
+
+/**
+ * Disable 2FA for a user
+ */
+export async function disable2FA(userId: number): Promise<void> {
+  await db.update(users)
+    .set({
+      twoFactorSecret: null,
+      twoFactorEnabled: false,
+      twoFactorBackupCodes: null,
+      twoFactorRecoveryToken: null
+    })
+    .where(eq(users.id, userId));
+}
+
+/**
+ * Generate new backup codes for a user
+ */
+export async function regenerateBackupCodes(userId: number): Promise<string[]> {
+  const backupCodes = generateBackupCodes();
   
-  // Check if team settings require 2FA
-  return teamSettings?.securitySettings?.twoFactorRequired === true;
+  await db.update(users)
+    .set({ twoFactorBackupCodes: backupCodes })
+    .where(eq(users.id, userId));
+  
+  return backupCodes;
 }

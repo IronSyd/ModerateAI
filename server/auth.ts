@@ -122,7 +122,7 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
     console.log("Login attempt for:", req.body.username);
     
-    passport.authenticate("local", (err: Error, user: UserType, info: { message: string }) => {
+    passport.authenticate("local", async (err: Error, user: UserType, info: { message: string }) => {
       if (err) {
         console.error("Login error:", err);
         return next(err);
@@ -133,6 +133,17 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
+      // Check if 2FA is enabled for this user
+      if (user.twoFactorEnabled) {
+        console.log(`2FA required for user ${user.id}`);
+        // Don't log the user in yet - require 2FA verification first
+        return res.status(200).json({
+          requires2FA: true,
+          userId: user.id
+        });
+      }
+      
+      // If no 2FA required, proceed with login
       req.login(user, (loginErr) => {
         if (loginErr) {
           console.error("Login session error:", loginErr);
@@ -145,6 +156,58 @@ export function setupAuth(app: Express) {
         return res.status(200).json(user);
       });
     })(req, res, next);
+  });
+  
+  // 2FA verification endpoint
+  app.post("/api/verify-2fa", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId, token, useBackupCode } = req.body;
+      
+      if (!userId || !token) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Get the user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Ensure user has 2FA enabled
+      if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+        return res.status(400).json({ message: "Two-factor authentication is not enabled for this user" });
+      }
+      
+      // Import the 2FA utility functions
+      const { verifyTOTP, verifyBackupCode } = require('./lib/twoFactorAuth');
+      
+      let isValid = false;
+      
+      if (useBackupCode) {
+        // Verify backup code
+        isValid = await verifyBackupCode(user, token);
+      } else {
+        // Verify TOTP token
+        isValid = verifyTOTP(user.twoFactorSecret, token);
+      }
+      
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid verification code" });
+      }
+      
+      // If verification successful, log the user in
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          return next(loginErr);
+        }
+        
+        console.log(`2FA verification successful for user ${user.id}`);
+        return res.status(200).json(user);
+      });
+    } catch (error) {
+      console.error("2FA verification error:", error);
+      next(error);
+    }
   });
 
   app.post("/api/logout", (req: Request, res: Response) => {
