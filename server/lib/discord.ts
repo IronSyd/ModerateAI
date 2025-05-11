@@ -62,42 +62,20 @@ export async function initializeBot(platformId: number, token: string): Promise<
       };
     }
     
-    // FORCE DEMO MODE: Always use demo mode regardless of token
-    {
-      console.log(`Using demo mode for Discord platform ${platformId}`);
-      
-      // For demo mode, we'll create simulated channels and update the platform
-      // without actually connecting to Discord
-      const demoChannels = [
-        { id: "12345", name: "general", type: "text", moderationEnabled: true, active: true },
-        { id: "23456", name: "welcome", type: "text", moderationEnabled: true, active: true },
-        { id: "34567", name: "announcements", type: "text", moderationEnabled: true, active: true },
-        { id: "45678", name: "off-topic", type: "text", moderationEnabled: false, active: true },
-        { id: "56789", name: "voice-chat", type: "voice", moderationEnabled: false, active: true }
-      ];
-      
-      // Update platform with demo info
-      await storage.updatePlatform(platformId, {
-        status: "active",
-        config: {
-          ...(platform.config || {}),
-          serverId: "123456789",
-          serverName: "ModerateAI Demo Server",
-          memberCount: 127,
-          channels: demoChannels,
-          lastRefreshed: new Date().toISOString(),
-          dailyMessages: 134,
-          moderationCount: 12
-        }
-      });
-      
-      console.log(`Updated Discord platform ${platformId} with demo info`);
-      
-      return { 
-        success: true, 
-        message: "Discord bot connected successfully (demo mode)" 
-      };
-    }
+    // Initialize Discord client with real token
+    const client = new Client({ 
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+      ],
+      partials: [Partials.Channel, Partials.Message]
+    });
+
+    // Connect to Discord
+    await client.login(token);
+    discordClients.set(platformId, client);
     
     // If not a demo, proceed with real Discord connection
     // Create a new Discord client
