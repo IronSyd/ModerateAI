@@ -573,7 +573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { db } = await import("./db");
       const { users, teamSettings } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
-      const { verifyToken } = await import("./lib/twoFactorAuth");
+      const { verifyTOTP } = await import("./lib/twoFactorAuth");
       
       const userId = req.user!.id;
       const { token, password } = req.body;
@@ -591,7 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the token
-      const isValid = verifyToken(token, user.twoFactorSecret);
+      const isValid = verifyTOTP(user.twoFactorSecret, token);
       
       if (!isValid) {
         return res.status(400).json({ message: "Invalid verification code" });
@@ -631,7 +631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { db } = await import("./db");
       const { users } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
-      const { verifyToken } = await import("./lib/twoFactorAuth");
+      const { verifyTOTP } = await import("./lib/twoFactorAuth");
       
       const { userId, token, useBackupCode } = req.body;
       
@@ -663,7 +663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else if (user.twoFactorSecret) {
         // Verify the token against the secret
-        isValid = verifyToken(token, user.twoFactorSecret);
+        isValid = verifyTOTP(user.twoFactorSecret, token);
       }
       
       if (!isValid) {
