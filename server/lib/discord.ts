@@ -76,18 +76,6 @@ export async function initializeBot(platformId: number, token: string): Promise<
     // Connect to Discord
     await client.login(token);
     discordClients.set(platformId, client);
-    
-    // If not a demo, proceed with real Discord connection
-    // Create a new Discord client
-    const client = new Client({ 
-      intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers,
-      ],
-      partials: [Partials.Channel, Partials.Message]
-    });
 
     // Set up event listeners
     client.on(Events.ClientReady, async () => {
