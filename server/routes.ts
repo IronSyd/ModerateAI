@@ -344,6 +344,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Check if 2FA is required for the user based on team settings
+  app.get("/api/user/2fa/required", authMiddleware, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { teamSettings, users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      
+      const userId = req.user!.id;
+      
+      // Get the user to check if they already have 2FA enabled
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // If user already has 2FA enabled, they're compliant
+      if (user.twoFactorEnabled) {
+        return res.json({ required: false });
+      }
+      
+      // Check team settings to see if 2FA is required
+      const settings = await db.query.teamSettings.findFirst({
+        where: eq(teamSettings.userId, userId)
+      });
+      
+      // If no settings or 2FA not required by team, return false
+      if (!settings || !settings.securitySettings || !settings.securitySettings.twoFactorRequired) {
+        return res.json({ required: false });
+      }
+      
+      // 2FA is required by team settings and not set up by user
+      res.json({ 
+        required: true,
+        message: "Your team requires two-factor authentication. Please set it up in your security settings."
+      });
+    } catch (error: any) {
+      console.error("Error checking 2FA requirement:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
   // Update team settings API endpoint
   app.post("/api/team/settings", authMiddleware, async (req, res) => {
     try {
