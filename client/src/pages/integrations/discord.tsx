@@ -293,7 +293,7 @@ const DiscordIntegration = () => {
   const handleCompleteSetup = () => {
     // We no longer require the authCode, but we'll pass it if it's provided
     completeSetupMutation.mutate({
-      serverId: platform?.config?.serverId || "123456789",
+      serverId: platform?.config?.serverId || "",
       ...(authCode ? { authCode } : {})
     });
   };
@@ -302,8 +302,8 @@ const DiscordIntegration = () => {
     disconnectBotMutation.mutate();
   };
 
-  // Mock channels and roles for the demo
-  const discordChannels = [
+  // Use channels from the platform config or fallback to demo channels
+  const discordChannels = platform?.config?.channels || [
     { id: "1", name: "general", type: "text", moderationEnabled: true, active: true },
     { id: "2", name: "help", type: "text", moderationEnabled: true, active: true },
     { id: "3", name: "announcements", type: "text", moderationEnabled: false, active: false },
@@ -436,7 +436,7 @@ const DiscordIntegration = () => {
                             <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Text Channels</span>
                           </div>
-                          <span className="text-sm font-medium">{(platform?.config?.channels?.filter(c => c.type === "text")?.length || 6)}</span>
+                          <span className="text-sm font-medium">{(platform?.config?.channels?.filter((c: DiscordChannel) => c.type === "text")?.length || 6)}</span>
                         </div>
                         <div className="flex justify-between">
                           <div className="flex items-center">
