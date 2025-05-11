@@ -305,7 +305,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/team/settings", authMiddleware, async (req, res) => {
     try {
       const { db } = await import("./db");
-      const { teamSettings, eq } = await import("@shared/schema");
+      const { teamSettings } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
       
       // Using the current user's organization info
       const userId = req.user!.id;
@@ -347,7 +348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/team/settings", authMiddleware, async (req, res) => {
     try {
       const { db } = await import("./db");
-      const { teamSettings, eq } = await import("@shared/schema");
+      const { teamSettings } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
       
       const userId = req.user!.id;
       const { teamName, twoFactorRequired, sessionTimeoutMinutes, newMemberNotifications, 
