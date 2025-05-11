@@ -131,13 +131,13 @@ export async function initializeBot(platformId: number, token: string): Promise<
       }
     });
 
-    // Handle messages for moderation
+    // Handle messages for moderation and chat responses
     client.on(Events.MessageCreate, async (message: Message) => {
       try {
         // Ignore bot messages
         if (message.author.bot) return;
         
-        // Get updated platform info for moderation settings
+        // Get updated platform info for settings
         const updatedPlatform = await storage.getPlatform(platformId);
         if (!updatedPlatform || !updatedPlatform.config?.channels) return;
         
@@ -145,6 +145,100 @@ export async function initializeBot(platformId: number, token: string): Promise<
         const channelConfig = updatedPlatform.config.channels.find(
           (c: any) => c.id === message.channel.id
         );
+        
+        // Get platform settings
+        const respondToMentions = updatedPlatform.config?.respondToMentions !== false; // Default to true
+        const respondToCommands = updatedPlatform.config?.respondToCommands !== false; // Default to true
+        const privateResponses = updatedPlatform.config?.privateResponses === true; // Default to false
+        
+        // Check if the bot was mentioned or this is a direct message
+        const isBotMentioned = message.mentions.has(client.user?.id || '');
+        const isDM = message.channel.type === ChannelType.DM;
+        const isCommand = message.content.startsWith('!') || message.content.startsWith('/');
+        
+        // Handle AI chat responses (for mentions, DMs, or commands)
+        if ((respondToMentions && isBotMentioned) || isDM || (respondToCommands && isCommand)) {
+          console.log(`Bot interaction in ${isDM ? 'DM' : 'channel ' + message.channel.name}`);
+          
+          try {
+            // Get active AI configuration for this platform's user
+            const platform = await storage.getPlatform(platformId);
+            const userId = platform?.userId;
+            
+            if (!userId) {
+              console.error(`No user ID associated with platform ${platformId}`);
+              return;
+            }
+            
+            // Get the active AI configuration
+            const aiConfig = await storage.getActiveAiConfiguration(userId);
+            
+            // Create or get conversation
+            let conversation = await storage.getConversationByExternalId(message.channel.id);
+            if (!conversation) {
+              conversation = await storage.createConversation({
+                platformId,
+                platformType: 'discord',
+                externalId: message.channel.id,
+                title: isDM ? `DM with ${message.author.username}` : `Channel: ${message.channel.name}`,
+                status: 'active'
+              });
+            }
+            
+            // Save user message
+            await storage.createMessage({
+              conversationId: conversation.id,
+              content: message.content,
+              sender: 'user',
+              metadata: {
+                username: message.author.username,
+                userId: message.author.id
+              }
+            });
+            
+            // Get conversation history
+            const messages = await storage.getMessagesByConversationId(conversation.id);
+            
+            // Convert to AI format (take last 10 for context)
+            const conversationHistory = messages.slice(-10).map(msg => ({
+              role: msg.sender === "user" ? "user" : "assistant",
+              content: msg.content
+            }));
+            
+            // Default system prompt if none is configured
+            const systemPrompt = aiConfig?.systemPrompt || 'You are a helpful assistant for Discord. Provide concise and accurate responses.';
+            
+            // Generate AI response
+            const aiResponse = await generateAIResponse(
+              message.content,
+              conversationHistory,
+              systemPrompt,
+              aiConfig?.responseStyle || 50,
+              aiConfig?.responseLength || 50
+            );
+            
+            // Save AI response
+            await storage.createMessage({
+              conversationId: conversation.id,
+              content: aiResponse,
+              sender: 'ai',
+              metadata: null
+            });
+            
+            // Send the response (either as a reply or DM based on settings)
+            if (privateResponses && !isDM) {
+              await message.author.send(aiResponse);
+              await message.react('✅');
+            } else {
+              await message.reply(aiResponse);
+            }
+            
+            console.log(`Sent AI response for Discord message in ${isDM ? 'DM' : 'channel ' + message.channel.name}`);
+          } catch (error) {
+            console.error('Error generating AI response for Discord:', error);
+            await message.reply("I'm sorry, I encountered an error while processing your request.");
+          }
+        }
         
         // Check if we should moderate this channel
         if (channelConfig && channelConfig.moderationEnabled) {
