@@ -460,10 +460,6 @@ const DiscordIntegration = () => {
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </TabsTrigger>
-          <TabsTrigger value="analytics" disabled={platform?.status !== "active"}>
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="setup" className="m-0">
@@ -982,28 +978,7 @@ const DiscordIntegration = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="m-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics & Insights</CardTitle>
-              <CardDescription>
-                View performance metrics for your Discord bot
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground opacity-40" />
-                  <h3 className="mt-4 text-lg font-medium">Analytics Coming Soon</h3>
-                  <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                    We're building detailed analytics for your Discord bot.
-                    Check back soon to see message volume, moderation actions, and user engagement metrics.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
 
       {/* Complete Setup Dialog */}
