@@ -212,10 +212,23 @@ export class MemStorage implements IStorage {
 
     const discordPlatform: InsertPlatform = {
       type: "discord",
-      name: "Discord Bot",
-      status: "setup_required",
+      name: "Moderation AI Community",
+      status: "active",
       userId: user.id,
-      config: { serverId: "123456789", channelId: "987654321" },
+      config: { 
+        serverId: "123456789",
+        botName: "ModerateAI",
+        memberCount: 127,
+        channels: [
+          { id: "1", name: "general", type: "text", moderationEnabled: true, active: true },
+          { id: "2", name: "help", type: "text", moderationEnabled: true, active: true }
+        ],
+        dailyMessages: 134,
+        moderationCount: 12,
+        welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
+        permissions: "8",
+        setupCompleted: true,
+      },
       authToken: "discord-token-partial"
     };
     this.createPlatform(discordPlatform);
