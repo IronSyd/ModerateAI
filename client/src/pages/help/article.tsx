@@ -254,6 +254,43 @@ const articleContent: Record<string, {
           Integrate ModerateAI with your Discord server to provide AI-powered moderation, 
           support, and engagement for your community. This guide covers the complete setup process.
         </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 1: Connect Your Discord Server</h3>
+        <p>Navigate to the Integrations page and select Discord. Click the "Add to Discord" button to start the authorization process.</p>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 2: Authorize the Bot</h3>
+        <p>
+          You'll be redirected to Discord's authorization page. Select your server from the dropdown and confirm
+          the requested permissions. The bot requires admin permissions to properly moderate your server.
+        </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 3: Complete the Setup</h3>
+        <p>
+          After authorizing, you'll be redirected back to ModerateAI. Click "Complete Setup" and enter the 
+          authorization code provided by Discord. This will finalize the integration.
+        </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 4: Configure Channels</h3>
+        <p>
+          Once connected, go to the Channels tab to select which Discord channels should be monitored and moderated.
+          You can enable or disable moderation for each channel individually.
+        </p>
+        
+        <h3 className="text-xl font-semibold mt-6">Step 5: Customize Bot Settings</h3>
+        <p>
+          In the Settings tab, you can customize the welcome message, moderation strictness, and other
+          behaviors of your Discord bot. These settings can be adjusted at any time.
+        </p>
+        
+        <div className="bg-primary/10 p-4 rounded-lg mt-6">
+          <h4 className="font-semibold">Troubleshooting Tips:</h4>
+          <ul className="list-disc list-inside mt-2">
+            <li>Ensure you have administrator permissions on the Discord server</li>
+            <li>Check that the bot is online in your server's member list</li>
+            <li>Verify the bot has the necessary channel permissions</li>
+            <li>If the bot isn't responding, try disconnecting and reconnecting it</li>
+          </ul>
+        </div>
       </div>
     )
   }

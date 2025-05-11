@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 import {
   Card,
@@ -506,10 +506,12 @@ const DiscordIntegration = () => {
                       <li>Try refreshing the authorization page and starting over</li>
                     </ul>
                     <div className="mt-4">
-                      <Button variant="outline">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Setup Guide
-                      </Button>
+                      <Link href="/help/article/discord-integration">
+                        <Button variant="outline">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Setup Guide
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
