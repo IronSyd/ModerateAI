@@ -8,7 +8,8 @@ import {
   trainOnConversations,
   generateImprovedSystemPrompt
 } from "./lib/openai";
-import { initializeBot, disconnectBot, initializeAllBots } from "./lib/telegram";
+import { initializeBot as initializeTelegramBot, disconnectBot as disconnectTelegramBot, initializeAllBots as initializeAllTelegramBots } from "./lib/telegram";
+import { initializeBot as initializeDiscordBot, disconnectBot as disconnectDiscordBot, initializeAllBots as initializeAllDiscordBots, refreshChannels as refreshDiscordChannels } from "./lib/discord";
 import { setupAuth } from "./auth";
 import testEmailRoutes from "./test-email";
 import { 
@@ -707,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Attempting to connect Telegram bot for platform ${platformId}`);
           
           // Validate and initialize the bot
-          const result = await initializeBot(platformId, req.body.authToken);
+          const result = await initializeTelegramBot(platformId, req.body.authToken);
           
           // If failed, return error
           if (!result.success) {
@@ -721,7 +722,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if we're disconnecting
         else if (platform.status === "active" && req.body.status === "not_connected") {
           console.log(`Disconnecting Telegram bot for platform ${platformId}`);
-          disconnectBot(platformId);
+          disconnectTelegramBot(platformId);
+        }
+      }
+      
+      // Special handling for Discord platform
+      if (platform.type === "discord") {
+        // Check if we're activating with a token
+        if (req.body.status === "active" && req.body.authToken) {
+          console.log(`Attempting to connect Discord bot for platform ${platformId}`);
+          
+          // Validate and initialize the bot
+          const result = await initializeDiscordBot(platformId, req.body.authToken);
+          
+          // If failed, return error
+          if (!result.success) {
+            return res.status(400).json({ 
+              message: result.message || "Failed to connect Discord bot" 
+            });
+          }
+          
+          console.log(`Discord bot connected successfully for platform ${platformId}`);
+        } 
+        // Check if we're disconnecting
+        else if (platform.status === "active" && req.body.status === "not_connected") {
+          console.log(`Disconnecting Discord bot for platform ${platformId}`);
+          disconnectDiscordBot(platformId);
+        }
+        // Check if we're refreshing channels
+        else if (req.body.config?.lastRefreshed) {
+          console.log(`Refreshing Discord channels for platform ${platformId}`);
+          const success = await refreshDiscordChannels(platformId);
+          if (!success) {
+            return res.status(400).json({ 
+              message: "Failed to refresh Discord channels" 
+            });
+          }
         }
       }
 
