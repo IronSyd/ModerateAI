@@ -442,11 +442,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         {
           id: "viewer",
           name: "Viewer",
-          description: "Read-only access to view data and analytics",
+          description: "Read-only access to view data",
           iconColor: "gray",
           permissions: [
             { id: "view_conversations", name: "View conversations", granted: true },
-            { id: "view_analytics", name: "View analytics", granted: true },
             { id: "perform_actions", name: "Perform actions", granted: false },
             { id: "edit_settings", name: "Edit settings", granted: false }
           ]
@@ -536,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add product information for better responses
       systemPrompt += `\n\nHere is key information about ModerateAI:
-- Features: Multi-platform integration (Website, Telegram, Discord), AI-powered chat responses, content moderation, analytics dashboard, customizable AI configurations
+- Features: Multi-platform integration (Website, Telegram, Discord), AI-powered chat responses, content moderation, customizable AI configurations
 - Pricing: Basic plan ($29/month), Pro plan ($79/month), Enterprise (custom pricing)
 - Integration: Easy setup via web dashboard with platform-specific wizards
 - Moderation: Customizable strictness levels, policy-based filtering, manual review options
