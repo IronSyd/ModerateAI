@@ -567,12 +567,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recoveryToken = generateRecoveryToken();
       
       // Enable 2FA
-      await db.update(users)
-        .set({
-          twoFactorEnabled: true,
-          twoFactorRecoveryToken: recoveryToken
-        })
-        .where(eq(users.id, userId));
+      const { storage } = await import("./storage");
+      await storage.updateUser(userId, {
+        twoFactorEnabled: true,
+        twoFactorRecoveryToken: recoveryToken
+      });
       
       res.json({
         enabled: true,
@@ -624,14 +623,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Disable 2FA
-      await db.update(users)
-        .set({
-          twoFactorEnabled: false,
-          twoFactorSecret: null,
-          twoFactorBackupCodes: null,
-          twoFactorRecoveryToken: null
-        })
-        .where(eq(users.id, userId));
+      const { storage } = await import("./storage");
+      await storage.updateUser(userId, {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        twoFactorBackupCodes: null,
+        twoFactorRecoveryToken: null
+      });
       
       res.json({
         enabled: false

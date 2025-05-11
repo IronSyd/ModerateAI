@@ -82,9 +82,8 @@ export async function verifyBackupCode(user: User, code: string): Promise<boolea
   backupCodes.splice(codeIndex, 1);
   
   // Update the user's backup codes
-  await db.update(users)
-    .set({ twoFactorBackupCodes: backupCodes })
-    .where(eq(users.id, user.id));
+  const { storage } = await import('../storage');
+  await storage.updateUser(user.id, { twoFactorBackupCodes: backupCodes });
   
   return true;
 }
