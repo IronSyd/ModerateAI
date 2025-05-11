@@ -21,6 +21,12 @@ const isDemoToken = (token: string) => {
   return token === 'discord-token-partial' || token.startsWith('demo-') || token.length < 30;
 };
 
+// For environment token, always treat as real token
+const isEnvironmentToken = (token: string) => {
+  const envToken = process.env.DISCORD_BOT_TOKEN;
+  return envToken && token === envToken;
+};
+
 /**
  * Initialize Discord bot with token
  */
@@ -43,7 +49,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
     }
     
     // Check if this is a demo token
-    if (isDemoToken(token)) {
+    if (isDemoToken(token) && !isEnvironmentToken(token)) {
       console.log(`Using demo mode for Discord platform ${platformId}`);
       
       // For demo mode, we'll create simulated channels and update the platform
@@ -60,7 +66,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
       await storage.updatePlatform(platformId, {
         status: "active",
         config: {
-          ...platform.config,
+          ...(platform.config || {}),
           serverId: "123456789",
           serverName: "ModerateAI Demo Server",
           memberCount: 127,
@@ -107,7 +113,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
         await storage.updatePlatform(platformId, {
           status: "active",
           config: {
-            ...platform.config,
+            ...(platform.config || {}),
             serverId: firstGuild.id,
             serverName: firstGuild.name,
             memberCount: firstGuild.memberCount,
@@ -124,7 +130,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
         await storage.updatePlatform(platformId, {
           status: "active",
           config: {
-            ...platform.config,
+            ...(platform.config || {}),
             botName: client.user?.username || "ModerateAI Bot",
             lastRefreshed: new Date().toISOString()
           }
