@@ -49,6 +49,7 @@ export const conversations = pgTable("conversations", {
   platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
   externalUserId: text("external_user_id").notNull(), // User ID from the external platform
   externalUsername: text("external_username"), // Username from the external platform
+  externalId: text("external_id"), // External ID (like channel ID for Discord)
   status: text("status").notNull().default("active"), // "active", "closed", "archived"
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
