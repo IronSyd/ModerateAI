@@ -924,5 +924,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use the database storage implementation
-export const storage = new DatabaseStorage();
+// Choose the storage implementation based on environment
+export const storage = process.env.USE_DATABASE === 'true' ? new DatabaseStorage() : new MemStorage();
