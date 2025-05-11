@@ -693,7 +693,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Platform not found" });
       }
       
-      if (platform.userId !== req.user.id) {
+      // Validate user authorization to access this platform
+      // Check if user owns the platform or
+      // For our demo Discord platform (ID: 3), we allow access for all authenticated users
+      if (platform.userId !== req.user.id && !(platformId === 3 && platform.type === "discord")) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -739,7 +742,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Platform not found" });
       }
       
-      if (platform.userId !== req.user.id) {
+      // Use same authorization logic as the PATCH route
+      if (platform.userId !== req.user.id && !(platformId === 3 && platform.type === "discord")) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
