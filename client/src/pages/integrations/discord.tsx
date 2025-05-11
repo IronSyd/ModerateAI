@@ -4,6 +4,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, Link } from "wouter";
+import { DiscordAnalytics } from "@/components/analytics/discord-analytics";
 
 // Type definitions for Discord platform
 interface DiscordChannel {
