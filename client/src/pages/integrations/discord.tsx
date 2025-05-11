@@ -95,7 +95,6 @@ import {
 import {
   Loader2,
   MessageSquareMore,
-  Settings,
   BarChart3,
   Users,
   ArrowRight,
@@ -104,7 +103,6 @@ import {
   MessagesSquare,
   Save,
   ServerCrash,
-  Hash,
   Lock,
   Pencil,
   Trash2,
@@ -121,8 +119,6 @@ const DiscordIntegration = () => {
   const [authCode, setAuthCode] = useState("");
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [updatedChannels, setUpdatedChannels] = useState<DiscordChannel[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState<DiscordChannel | null>(null);
-  const [isChannelSettingsOpen, setIsChannelSettingsOpen] = useState(false);
   
   // Check if user is authenticated
   useEffect(() => {
@@ -377,23 +373,6 @@ const DiscordIntegration = () => {
     );
     
     setUpdatedChannels(updatedChannelsList);
-  };
-  
-  const handleOpenChannelSettings = (channel: DiscordChannel) => {
-    setSelectedChannel(channel);
-    setIsChannelSettingsOpen(true);
-  };
-  
-  const handleToggleChannelActive = (channelId: string, active: boolean) => {
-    // Find the channel and update its active status
-    const updatedChannelsList = updatedChannels.map(channel => 
-      channel.id === channelId 
-        ? { ...channel, active }
-        : channel
-    );
-    
-    setUpdatedChannels(updatedChannelsList);
-    setIsChannelSettingsOpen(false);
   };
 
   // Initialize updatedChannels when platform data changes
@@ -738,7 +717,6 @@ const DiscordIntegration = () => {
                       <TableHead>Type</TableHead>
                       <TableHead>Moderation</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -765,15 +743,6 @@ const DiscordIntegration = () => {
                           >
                             {channel.active ? "Active" : "Inactive"}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleOpenChannelSettings(channel)}
-                          >
-                            <Settings className="h-4 w-4" />
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1035,81 +1004,7 @@ const DiscordIntegration = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Channel Settings Dialog */}
-      <Dialog open={isChannelSettingsOpen} onOpenChange={setIsChannelSettingsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Channel Settings</DialogTitle>
-            <DialogDescription>
-              Configure settings for this Discord channel
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedChannel && (
-            <div className="space-y-4 py-2">
-              <div className="flex items-center space-x-2">
-                <Hash className="h-5 w-5 text-muted-foreground" />
-                <h3 className="text-lg font-medium">{selectedChannel.name}</h3>
-                <Badge className="ml-2 capitalize">{selectedChannel.type}</Badge>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium">Channel Status</h4>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-medium">
-                      {selectedChannel.active ? "Active" : "Inactive"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {selectedChannel.active
-                        ? "Bot will respond to messages in this channel"
-                        : "Bot will ignore this channel"}
-                    </div>
-                  </div>
-                  <Switch
-                    checked={selectedChannel.active}
-                    onCheckedChange={(checked) => 
-                      handleToggleChannelActive(selectedChannel.id, checked)
-                    }
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium">Moderation</h4>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-medium">
-                      {selectedChannel.moderationEnabled ? "Enabled" : "Disabled"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {selectedChannel.moderationEnabled
-                        ? "Messages will be checked for inappropriate content"
-                        : "Messages will not be moderated"}
-                    </div>
-                  </div>
-                  <Switch
-                    checked={selectedChannel.moderationEnabled}
-                    disabled={!selectedChannel.active || selectedChannel.type === "voice"}
-                    onCheckedChange={(checked) => 
-                      handleToggleModeration(selectedChannel.id, checked)
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsChannelSettingsOpen(false)}>
-              Close
-            </Button>
-            <Button onClick={handleSaveChannels}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 };
