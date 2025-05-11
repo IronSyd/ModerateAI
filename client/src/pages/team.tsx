@@ -171,8 +171,6 @@ const TeamSettingsContent = () => {
   // State management for form values
   const [formState, setFormState] = useState({
     teamName: "",
-    twoFactorRequired: false,
-    sessionTimeoutMinutes: "60",
     newMemberNotifications: true,
     criticalAlertNotifications: true,
     weeklyActivitySummary: true
@@ -183,8 +181,6 @@ const TeamSettingsContent = () => {
     if (teamSettings) {
       setFormState({
         teamName: teamSettings.name || "ModerateAI Team",
-        twoFactorRequired: teamSettings.securitySettings?.twoFactorRequired || false,
-        sessionTimeoutMinutes: String(teamSettings.securitySettings?.sessionTimeoutMinutes || "60"),
         newMemberNotifications: teamSettings.notificationSettings?.newMemberNotifications !== false,
         criticalAlertNotifications: teamSettings.notificationSettings?.criticalAlertNotifications !== false,
         weeklyActivitySummary: teamSettings.notificationSettings?.weeklyActivitySummary !== false
@@ -263,47 +259,6 @@ const TeamSettingsContent = () => {
               value={formState.teamName}
               onChange={(e) => setFormState({...formState, teamName: e.target.value})}
             />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-lg font-medium">Security Settings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex items-center justify-between p-4 border rounded-md">
-            <div>
-              <h4 className="font-medium">Two-Factor Authentication</h4>
-              <p className="text-sm text-gray-500">
-                Require 2FA for all team members
-              </p>
-            </div>
-            <Switch 
-              checked={formState.twoFactorRequired}
-              onCheckedChange={(checked) => setFormState({...formState, twoFactorRequired: checked})}
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-4 border rounded-md">
-            <div>
-              <h4 className="font-medium">Session Timeout</h4>
-              <p className="text-sm text-gray-500">
-                Automatically log out after inactivity
-              </p>
-            </div>
-            <Select 
-              value={formState.sessionTimeoutMinutes}
-              onValueChange={(value) => setFormState({...formState, sessionTimeoutMinutes: value})}
-            >
-              <SelectTrigger className="w-24">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">30 min</SelectItem>
-                <SelectItem value="60">1 hour</SelectItem>
-                <SelectItem value="120">2 hours</SelectItem>
-                <SelectItem value="240">4 hours</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
       </div>
