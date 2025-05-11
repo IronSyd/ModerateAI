@@ -106,6 +106,7 @@ import {
   Lock,
   Pencil,
   Trash2,
+  Hash,
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 
