@@ -43,15 +43,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/fix-demo-password", async (req, res) => {
     try {
       const { hashPassword } = await import("./auth");
-      const { users } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      const { db } = await import("./db");
+      const { storage } = await import("./storage");
+      
+      // First get the demo user
+      const demoUser = await storage.getUserByUsername("demo");
+      if (!demoUser) {
+        throw new Error("Demo user not found");
+      }
       
       const hashedPassword = await hashPassword("demo123");
       
-      await db.update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.username, "demo"));
+      // Update using storage interface
+      await storage.updateUser(demoUser.id, { password: hashedPassword });
       
       res.json({ success: true, message: "Demo password fixed" });
     } catch (error: any) {
@@ -672,9 +675,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Remove the used backup code
         if (isValid) {
           const updatedBackupCodes = backupCodes.filter(code => code !== token);
-          await db.update(users)
-            .set({ twoFactorBackupCodes: updatedBackupCodes })
-            .where(eq(users.id, userId));
+          const { storage } = await import("./storage");
+          await storage.updateUser(userId, { twoFactorBackupCodes: updatedBackupCodes });
         }
       } else if (user.twoFactorSecret) {
         // Verify the token against the secret
