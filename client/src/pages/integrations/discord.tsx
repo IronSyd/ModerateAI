@@ -336,7 +336,7 @@ const DiscordIntegration = () => {
                 </div>
               ) : platform?.status === "active" ? (
                 <div className="space-y-6">
-                  <div className="rounded-lg bg-emerald-900/20 p-4 border border-emerald-600/30">
+                  <div className="p-4">
                     <div className="flex">
                       <div className="rounded-full bg-emerald-600 p-1 mr-3 flex-shrink-0">
                         <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
