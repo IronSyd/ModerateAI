@@ -138,7 +138,7 @@ const RolesAndPermissionsContent = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
             {role.permissions.map((permission) => (
-              <div key={permission.id} className="flex items-center p-2 rounded-md bg-gray-50">
+              <div key={permission.id} className="flex items-center p-2 rounded-md bg-slate-800 text-white">
                 {permission.granted ? (
                   <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                 ) : (
