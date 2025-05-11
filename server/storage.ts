@@ -9,10 +9,10 @@ import {
   ModerationAction, InsertModerationAction,
   ConversationTraining, InsertConversationTraining,
   TeamInvitation, InsertTeamInvitation,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions, conversationTrainings, teamInvitations
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions, conversationTrainings, teamInvitations, teamSettings, TeamSettings, InsertTeamSettings
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
+import { eq, and, ne, asc, desc, count, sql, InferModel } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -101,54 +101,65 @@ export interface IStorage {
   }[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private platforms: Map<number, Platform>;
-  private conversations: Map<number, Conversation>;
-  private messages: Map<number, Message>;
-  private aiConfigurations: Map<number, AiConfiguration>;
-  private knowledgeBases: Map<number, KnowledgeBase>;
-  private knowledgeDocuments: Map<number, KnowledgeDocument>;
-  private moderationActions: Map<number, ModerationAction>;
-  private conversationTrainings: Map<number, ConversationTraining>;
-  private teamInvitations: Map<number, TeamInvitation>;
+export class DatabaseStorage implements IStorage {
+  constructor() {}
 
-  private userIdCounter: number;
-  private platformIdCounter: number;
-  private conversationIdCounter: number;
-  private messageIdCounter: number;
-  private aiConfigurationIdCounter: number;
-  private knowledgeBaseIdCounter: number;
-  private knowledgeDocumentIdCounter: number;
-  private moderationActionIdCounter: number;
-  private conversationTrainingIdCounter: number;
-  private teamInvitationIdCounter: number;
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
 
-  constructor() {
-    this.users = new Map();
-    this.platforms = new Map();
-    this.conversations = new Map();
-    this.messages = new Map();
-    this.aiConfigurations = new Map();
-    this.knowledgeBases = new Map();
-    this.knowledgeDocuments = new Map();
-    this.moderationActions = new Map();
-    this.conversationTrainings = new Map();
-    this.teamInvitations = new Map();
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
 
-    this.userIdCounter = 1;
-    this.platformIdCounter = 1;
-    this.conversationIdCounter = 1;
-    this.messageIdCounter = 1;
-    this.aiConfigurationIdCounter = 1;
-    this.knowledgeBaseIdCounter = 1;
-    this.knowledgeDocumentIdCounter = 1;
-    this.moderationActionIdCounter = 1;
-    this.conversationTrainingIdCounter = 1;
-    this.teamInvitationIdCounter = 1;
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
 
-    // Initialize with demo data
-    this.initializeDemoData();
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
+  // Platform operations
+  async getPlatform(id: number): Promise<Platform | undefined> {
+    const [platform] = await db.select().from(platforms).where(eq(platforms.id, id));
+    return platform || undefined;
+  }
+
+  async getPlatformsByUserId(userId: number): Promise<Platform[]> {
+    return db.select().from(platforms).where(eq(platforms.userId, userId));
+  }
+
+  async getPlatformsByType(type: string): Promise<Platform[]> {
+    return db.select().from(platforms).where(eq(platforms.type, type));
+  }
+
+  async createPlatform(platform: InsertPlatform): Promise<Platform> {
+    const [newPlatform] = await db.insert(platforms).values(platform).returning();
+    return newPlatform;
+  }
+
+  async updatePlatform(id: number, platform: Partial<Platform>): Promise<Platform | undefined> {
+    const [updatedPlatform] = await db
+      .update(platforms)
+      .set(platform)
+      .where(eq(platforms.id, id))
+      .returning();
+    return updatedPlatform || undefined;
+  }
+
+  async deletePlatform(id: number): Promise<boolean> {
+    const result = await db.delete(platforms).where(eq(platforms.id, id));
+    return result.rowCount > 0;
   }
 
   private initializeDemoData() {
