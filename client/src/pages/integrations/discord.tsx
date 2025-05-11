@@ -120,6 +120,7 @@ const DiscordIntegration = () => {
   const [isCompleteSetupDialogOpen, setIsCompleteSetupDialogOpen] = useState(false);
   const [authCode, setAuthCode] = useState("");
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [updatedChannels, setUpdatedChannels] = useState<DiscordChannel[]>([]);
   
   // Check if user is authenticated
   useEffect(() => {
@@ -248,6 +249,60 @@ const DiscordIntegration = () => {
       });
     },
   });
+  
+  // Refresh Discord channels
+  const refreshChannelsMutation = useMutation({
+    mutationFn: async () => {
+      // In a real app, this would connect to Discord API to fetch the latest channels
+      // For now, simulate refreshing by adding a new timestamp
+      return apiRequest("PATCH", `/api/platforms/3`, {
+        config: {
+          ...platform?.config,
+          lastRefreshed: new Date().toISOString()
+        }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      toast({
+        title: "Success",
+        description: "Discord channels refreshed successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to refresh Discord channels. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Save channel changes
+  const saveChannelChangesMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("PATCH", `/api/platforms/3`, {
+        config: {
+          ...platform?.config,
+          channels: updatedChannels
+        }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      toast({
+        title: "Success",
+        description: "Channel settings updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update channel settings. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Update bot configuration
   const updateBotConfigMutation = useMutation({
@@ -302,13 +357,37 @@ const DiscordIntegration = () => {
   const handleDisconnectBot = () => {
     disconnectBotMutation.mutate();
   };
+  
+  const handleRefreshChannels = () => {
+    refreshChannelsMutation.mutate();
+  };
+  
+  const handleSaveChannels = () => {
+    saveChannelChangesMutation.mutate();
+  };
+  
+  const handleToggleModeration = (channelId: string, enabled: boolean) => {
+    // Find the channel and update its moderation setting
+    const updatedChannelsList = updatedChannels.map(channel => 
+      channel.id === channelId 
+        ? { ...channel, moderationEnabled: enabled }
+        : channel
+    );
+    
+    setUpdatedChannels(updatedChannelsList);
+  };
 
-  // Use channels from the platform config or fallback to demo channels
-  const discordChannels = platform?.config?.channels || [
+  // Initialize updatedChannels when platform data changes
+  useEffect(() => {
+    if (platform?.config?.channels) {
+      setUpdatedChannels([...platform.config.channels]);
+    }
+  }, [platform]);
+
+  // Use channels from the updatedChannels state or fallback to demo channels
+  const discordChannels = updatedChannels.length > 0 ? updatedChannels : platform?.config?.channels || [
     { id: "1", name: "general", type: "text", moderationEnabled: true, active: true },
-    { id: "2", name: "help", type: "text", moderationEnabled: true, active: true },
-    { id: "3", name: "announcements", type: "text", moderationEnabled: false, active: false },
-    { id: "4", name: "voice-chat", type: "voice", moderationEnabled: false, active: false }
+    { id: "2", name: "help", type: "text", moderationEnabled: true, active: true }
   ];
 
   return (
@@ -657,6 +736,7 @@ const DiscordIntegration = () => {
                           <Switch 
                             checked={channel.moderationEnabled} 
                             disabled={!channel.active || channel.type === "voice"}
+                            onCheckedChange={(checked) => handleToggleModeration(channel.id, checked)}
                           />
                         </TableCell>
                         <TableCell>
@@ -679,11 +759,38 @@ const DiscordIntegration = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline">
-                Refresh Channels
+              <Button 
+                variant="outline" 
+                onClick={handleRefreshChannels}
+                disabled={refreshChannelsMutation.isPending}
+              >
+                {refreshChannelsMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    Refresh Channels
+                  </>
+                )}
               </Button>
-              <Button>
-                Save Changes
+              <Button 
+                onClick={handleSaveChannels}
+                disabled={saveChannelChangesMutation.isPending}
+              >
+                {saveChannelChangesMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
