@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -155,6 +155,7 @@ const RolesAndPermissionsContent = () => {
 };
 
 const TeamSettingsContent = () => {
+  const { toast } = useToast();
   // Fetch team settings from API
   const { data: teamSettings, isLoading: isLoadingSettings, refetch: refetchSettings } = useQuery({
     queryKey: ['/api/team/settings'],
@@ -166,6 +167,80 @@ const TeamSettingsContent = () => {
       return await response.json();
     },
   });
+
+  // State management for form values
+  const [formState, setFormState] = useState({
+    teamName: "",
+    twoFactorRequired: false,
+    sessionTimeoutMinutes: "60",
+    newMemberNotifications: true,
+    criticalAlertNotifications: true,
+    weeklyActivitySummary: true
+  });
+
+  // Update form state when API data is loaded
+  useEffect(() => {
+    if (teamSettings) {
+      setFormState({
+        teamName: teamSettings.name || "ModerateAI Team",
+        twoFactorRequired: teamSettings.securitySettings?.twoFactorRequired || false,
+        sessionTimeoutMinutes: String(teamSettings.securitySettings?.sessionTimeoutMinutes || "60"),
+        newMemberNotifications: teamSettings.notificationSettings?.newMemberNotifications !== false,
+        criticalAlertNotifications: teamSettings.notificationSettings?.criticalAlertNotifications !== false,
+        weeklyActivitySummary: teamSettings.notificationSettings?.weeklyActivitySummary !== false
+      });
+    }
+  }, [teamSettings]);
+
+  // Update form API mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: typeof formState) => {
+      const response = await fetch('/api/team/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update settings');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Settings saved",
+        description: `Team settings have been updated successfully`,
+      });
+      refetchSettings();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error saving settings",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle save settings
+  const handleSaveSettings = () => {
+    updateSettingsMutation.mutate(formState);
+  };
+
+  // Make form state available to parent component through a ref
+  const formStateRef = useRef(formState);
+  useEffect(() => {
+    formStateRef.current = formState;
+  }, [formState]);
+
+  // Expose save handler to parent
+  (TeamSettingsContent as any).handleSave = () => {
+    handleSaveSettings();
+  };
 
   if (isLoadingSettings) {
     return (
@@ -185,7 +260,8 @@ const TeamSettingsContent = () => {
             <Input
               id="teamName"
               placeholder="Your Team Name"
-              defaultValue={teamSettings?.name || "ModerateAI Team"}
+              value={formState.teamName}
+              onChange={(e) => setFormState({...formState, teamName: e.target.value})}
             />
           </div>
         </div>
@@ -201,7 +277,10 @@ const TeamSettingsContent = () => {
                 Require 2FA for all team members
               </p>
             </div>
-            <Switch defaultChecked={teamSettings?.securitySettings?.twoFactorRequired} />
+            <Switch 
+              checked={formState.twoFactorRequired}
+              onCheckedChange={(checked) => setFormState({...formState, twoFactorRequired: checked})}
+            />
           </div>
 
           <div className="flex items-center justify-between p-4 border rounded-md">
@@ -211,7 +290,10 @@ const TeamSettingsContent = () => {
                 Automatically log out after inactivity
               </p>
             </div>
-            <Select defaultValue={String(teamSettings?.securitySettings?.sessionTimeoutMinutes || "60")}>
+            <Select 
+              value={formState.sessionTimeoutMinutes}
+              onValueChange={(value) => setFormState({...formState, sessionTimeoutMinutes: value})}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -238,7 +320,10 @@ const TeamSettingsContent = () => {
                 Notify when someone joins your team
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch 
+              checked={formState.newMemberNotifications}
+              onCheckedChange={(checked) => setFormState({...formState, newMemberNotifications: checked})}
+            />
           </div>
 
           <div className="flex items-center justify-between">
@@ -248,7 +333,10 @@ const TeamSettingsContent = () => {
                 Notify on critical moderation events
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch 
+              checked={formState.criticalAlertNotifications}
+              onCheckedChange={(checked) => setFormState({...formState, criticalAlertNotifications: checked})}
+            />
           </div>
 
           <div className="flex items-center justify-between">
@@ -258,7 +346,10 @@ const TeamSettingsContent = () => {
                 Receive weekly email summaries
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch 
+              checked={formState.weeklyActivitySummary}
+              onCheckedChange={(checked) => setFormState({...formState, weeklyActivitySummary: checked})}
+            />
           </div>
         </div>
       </div>
@@ -785,24 +876,9 @@ const Team = () => {
             <CardFooter>
               <Button
                 className="ml-auto"
-                onClick={async () => {
-                  try {
-                    // In real app, this would save to the API
-                    const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
-                    const teamName = teamNameInput ? teamNameInput.value : "ModerateAI Team";
-                    
-                    // For now, just update UI with success message
-                    toast({
-                      title: "Settings saved",
-                      description: `Team name "${teamName}" has been updated`,
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Error saving settings",
-                      description: "Please try again",
-                      variant: "destructive",
-                    });
-                  }
+                onClick={() => {
+                  // Call the exposed handler
+                  (TeamSettingsContent as any).handleSave();
                 }}
               >
                 Save Settings
