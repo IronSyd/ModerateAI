@@ -13,7 +13,6 @@ import { Logo } from "@/components/logo";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { TwoFactorAuthVerification } from "@/components/TwoFactorAuthVerification";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -31,24 +30,13 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation, pendingUserId } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
   const { enableAdminUser } = useAdminUser();
 
   // Redirect if already logged in
   if (user) {
     setLocation("/");
     return null;
-  }
-  
-  // Show 2FA verification if needed
-  if (pendingUserId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="w-full max-w-lg px-4">
-          <TwoFactorAuthVerification onCancel={() => setIsLogin(true)} />
-        </div>
-      </div>
-    );
   }
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({

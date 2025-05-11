@@ -43,18 +43,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/fix-demo-password", async (req, res) => {
     try {
       const { hashPassword } = await import("./auth");
-      const { storage } = await import("./storage");
-      
-      // First get the demo user
-      const demoUser = await storage.getUserByUsername("demo");
-      if (!demoUser) {
-        throw new Error("Demo user not found");
-      }
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const { db } = await import("./db");
       
       const hashedPassword = await hashPassword("demo123");
       
-      // Update using storage interface
-      await storage.updateUser(demoUser.id, { password: hashedPassword });
+      await db.update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.username, "demo"));
       
       res.json({ success: true, message: "Demo password fixed" });
     } catch (error: any) {
@@ -347,73 +344,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Check if 2FA is required for the user based on team settings
-  app.get("/api/user/2fa/required", authMiddleware, async (req, res) => {
-    try {
-      const { db } = await import("./db");
-      const { teamSettings, users } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      
-      const userId = req.user!.id;
-      
-      // Get the user to check if they already have 2FA enabled
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId)
-      });
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // If user already has 2FA enabled, they're compliant
-      if (user.twoFactorEnabled) {
-        return res.json({ required: false });
-      }
-      
-      // Check team settings to see if 2FA is required
-      const settings = await db.query.teamSettings.findFirst({
-        where: eq(teamSettings.userId, userId)
-      });
-      
-      // If no settings or 2FA not required by team, return false
-      if (!settings || !settings.securitySettings || !settings.securitySettings.twoFactorRequired) {
-        return res.json({ required: false });
-      }
-      
-      // 2FA is required by team settings and not set up by user
-      res.json({ 
-        required: true,
-        message: "Your team requires two-factor authentication. Please set it up in your security settings."
-      });
-    } catch (error: any) {
-      console.error("Error checking 2FA requirement:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-  
   // Update team settings API endpoint
   app.post("/api/team/settings", authMiddleware, async (req, res) => {
     try {
       const { db } = await import("./db");
-      const { teamSettings, securitySettingsSchema, notificationSettingsSchema, insertTeamSettingsSchema } = await import("@shared/schema");
+      const { teamSettings } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
       
       const userId = req.user!.id;
       const { teamName, twoFactorRequired, sessionTimeoutMinutes, newMemberNotifications, 
               criticalAlertNotifications, weeklyActivitySummary } = req.body;
-      
-      // Create security settings object with validation
-      const securitySettings = securitySettingsSchema.parse({
-        twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : false,
-        sessionTimeoutMinutes: sessionTimeoutMinutes || 60
-      });
-      
-      // Create notification settings object with validation
-      const notificationSettings = notificationSettingsSchema.parse({
-        newMemberNotifications: newMemberNotifications !== undefined ? newMemberNotifications : true,
-        criticalAlertNotifications: criticalAlertNotifications !== undefined ? criticalAlertNotifications : true,
-        weeklyActivitySummary: weeklyActivitySummary !== undefined ? weeklyActivitySummary : true
-      });
       
       // Check if settings exist
       const existingSettings = await db.query.teamSettings.findFirst({
@@ -421,20 +361,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!existingSettings) {
-        // Create new settings with validated data
-        const newSettingsData = {
-          userId,
-          name: teamName || "ModerateAI Team",
-          securitySettings,
-          notificationSettings
-        };
-        
-        // Validate the full object
-        insertTeamSettingsSchema.parse(newSettingsData);
-        
-        // Insert into database
+        // Create new settings
         const [newSettings] = await db.insert(teamSettings)
-          .values(newSettingsData)
+          .values({
+            userId,
+            name: teamName || "ModerateAI Team",
+            securitySettings: {
+              twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : false,
+              sessionTimeoutMinutes: sessionTimeoutMinutes || 60
+            },
+            notificationSettings: {
+              newMemberNotifications: newMemberNotifications !== undefined ? newMemberNotifications : true,
+              criticalAlertNotifications: criticalAlertNotifications !== undefined ? criticalAlertNotifications : true,
+              weeklyActivitySummary: weeklyActivitySummary !== undefined ? weeklyActivitySummary : true
+            }
+          })
           .returning();
           
         return res.json({ 
@@ -443,30 +384,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           settings: newSettings
         });
       } else {
-        // Update existing settings with validated data
-        const currentSecuritySettings = existingSettings.securitySettings || {};
-        const currentNotificationSettings = existingSettings.notificationSettings || {};
-        
-        // Merge current settings with new settings
-        const mergedSecuritySettings = securitySettingsSchema.parse({
-          twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : 
-                           currentSecuritySettings.twoFactorRequired || false,
-          sessionTimeoutMinutes: sessionTimeoutMinutes !== undefined ? sessionTimeoutMinutes : 
-                               currentSecuritySettings.sessionTimeoutMinutes || 60
-        });
-        
+        // Update existing settings
         const [updatedSettings] = await db.update(teamSettings)
           .set({
             name: teamName !== undefined ? teamName : existingSettings.name,
-            securitySettings: mergedSecuritySettings,
-            notificationSettings: notificationSettingsSchema.parse({
+            securitySettings: {
+              twoFactorRequired: twoFactorRequired !== undefined ? twoFactorRequired : 
+                                existingSettings.securitySettings?.twoFactorRequired || false,
+              sessionTimeoutMinutes: sessionTimeoutMinutes !== undefined ? sessionTimeoutMinutes : 
+                                    existingSettings.securitySettings?.sessionTimeoutMinutes || 60
+            },
+            notificationSettings: {
               newMemberNotifications: newMemberNotifications !== undefined ? newMemberNotifications : 
-                                      currentNotificationSettings.newMemberNotifications || true,
+                                      existingSettings.notificationSettings?.newMemberNotifications || true,
               criticalAlertNotifications: criticalAlertNotifications !== undefined ? criticalAlertNotifications : 
-                                         currentNotificationSettings.criticalAlertNotifications || true,
+                                         existingSettings.notificationSettings?.criticalAlertNotifications || true,
               weeklyActivitySummary: weeklyActivitySummary !== undefined ? weeklyActivitySummary : 
-                                     currentNotificationSettings.weeklyActivitySummary || true
-            }),
+                                     existingSettings.notificationSettings?.weeklyActivitySummary || true
+            },
             updatedAt: new Date()
           })
           .where(eq(teamSettings.userId, userId))
@@ -484,232 +419,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // 2FA API Endpoints
-  
-  // Generate a new 2FA secret
-  app.post("/api/user/2fa/setup", authMiddleware, async (req, res) => {
-    try {
-      const { db } = await import("./db");
-      const { users } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      const { generateSecret, generateQRCode, generateBackupCodes } = await import("./lib/twoFactorAuth");
-      
-      const userId = req.user!.id;
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId)
-      });
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Generate a new secret
-      const secret = generateSecret(user.username);
-      
-      // Generate a QR code
-      const qrCode = await generateQRCode(secret.otpAuthUrl);
-      
-      // Generate backup codes
-      const backupCodes = generateBackupCodes();
-      
-      // Store the secret and backup codes temporarily (not enabled yet)
-      const { storage } = await import("./storage");
-      await storage.updateUser(userId, {
-        twoFactorSecret: secret.base32,
-        twoFactorBackupCodes: backupCodes,
-        twoFactorEnabled: false
-      });
-      
-      res.json({
-        secret: secret.base32,
-        qrCode,
-        backupCodes
-      });
-    } catch (error) {
-      console.error("Error setting up 2FA:", error);
-      res.status(500).json({ message: "Failed to set up 2FA" });
-    }
-  });
-  
-  // Verify and enable 2FA
-  app.post("/api/user/2fa/verify", authMiddleware, async (req, res) => {
-    try {
-      const { db } = await import("./db");
-      const { users } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      const { verifyTOTP, generateBackupCodes } = await import("./lib/twoFactorAuth");
-      
-      // Function to generate a recovery token
-      const generateRecoveryToken = () => {
-        return require('crypto').randomBytes(20).toString('hex');
-      };
-      
-      const userId = req.user!.id;
-      const { token } = req.body;
-      
-      if (!token) {
-        return res.status(400).json({ message: "Token is required" });
-      }
-      
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId)
-      });
-      
-      if (!user || !user.twoFactorSecret) {
-        return res.status(404).json({ message: "User not found or 2FA not set up" });
-      }
-      
-      // Verify the token
-      const isValid = verifyTOTP(user.twoFactorSecret, token);
-      
-      if (!isValid) {
-        return res.status(400).json({ message: "Invalid verification code" });
-      }
-      
-      // Generate a recovery token
-      const recoveryToken = generateRecoveryToken();
-      
-      // Enable 2FA
-      const { storage } = await import("./storage");
-      await storage.updateUser(userId, {
-        twoFactorEnabled: true,
-        twoFactorRecoveryToken: recoveryToken
-      });
-      
-      res.json({
-        enabled: true,
-        recoveryToken
-      });
-    } catch (error) {
-      console.error("Error verifying 2FA:", error);
-      res.status(500).json({ message: "Failed to verify 2FA" });
-    }
-  });
-  
-  // Disable 2FA
-  app.post("/api/user/2fa/disable", authMiddleware, async (req, res) => {
-    try {
-      const { db } = await import("./db");
-      const { users, teamSettings } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      const { verifyTOTP } = await import("./lib/twoFactorAuth");
-      
-      const userId = req.user!.id;
-      const { token, password } = req.body;
-      
-      if (!token || !password) {
-        return res.status(400).json({ message: "Token and password are required" });
-      }
-      
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId)
-      });
-      
-      if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
-        return res.status(404).json({ message: "User not found or 2FA not enabled" });
-      }
-      
-      // Verify the token
-      const isValid = verifyTOTP(user.twoFactorSecret, token);
-      
-      if (!isValid) {
-        return res.status(400).json({ message: "Invalid verification code" });
-      }
-      
-      // Verify if 2FA is required by team settings
-      const teamConfig = await db.query.teamSettings.findFirst({
-        where: eq(teamSettings.userId, userId)
-      });
-      
-      if (teamConfig?.securitySettings?.twoFactorRequired && user.role !== 'admin') {
-        return res.status(403).json({ message: "Cannot disable 2FA as it is required by your team settings" });
-      }
-      
-      // Disable 2FA
-      const { storage } = await import("./storage");
-      await storage.updateUser(userId, {
-        twoFactorEnabled: false,
-        twoFactorSecret: null,
-        twoFactorBackupCodes: null,
-        twoFactorRecoveryToken: null
-      });
-      
-      res.json({
-        enabled: false
-      });
-    } catch (error) {
-      console.error("Error disabling 2FA:", error);
-      res.status(500).json({ message: "Failed to disable 2FA" });
-    }
-  });
-  
-  // Verify 2FA during login
-  app.post("/api/verify-2fa", async (req, res) => {
-    try {
-      const { db } = await import("./db");
-      const { users } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      const { verifyTOTP } = await import("./lib/twoFactorAuth");
-      
-      const { userId, token, useBackupCode } = req.body;
-      
-      if (!userId || (!token && !useBackupCode)) {
-        return res.status(400).json({ message: "User ID and token/backup code are required" });
-      }
-      
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId)
-      });
-      
-      if (!user || !user.twoFactorEnabled) {
-        return res.status(404).json({ message: "User not found or 2FA not enabled" });
-      }
-      
-      let isValid = false;
-      
-      if (useBackupCode && user.twoFactorBackupCodes) {
-        // Check if the token is in the backup codes
-        const backupCodes = user.twoFactorBackupCodes as string[];
-        isValid = backupCodes.includes(token);
-        
-        // Remove the used backup code
-        if (isValid) {
-          const updatedBackupCodes = backupCodes.filter(code => code !== token);
-          const { storage } = await import("./storage");
-          await storage.updateUser(userId, { twoFactorBackupCodes: updatedBackupCodes });
-        }
-      } else if (user.twoFactorSecret) {
-        // Verify the token against the secret
-        isValid = verifyTOTP(user.twoFactorSecret, token);
-      }
-      
-      if (!isValid) {
-        return res.status(400).json({ message: "Invalid verification code" });
-      }
-      
-      // Authentication successful, set up the session
-      if (req.session.passport) {
-        req.session.passport.user = userId;
-      } else {
-        req.session.passport = { user: userId };
-      }
-      
-      res.json({
-        success: true,
-        message: "2FA verification successful",
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role
-        }
-      });
-    } catch (error) {
-      console.error("Error verifying 2FA:", error);
-      res.status(500).json({ message: "Failed to verify 2FA" });
-    }
-  });
-
   // Roles & permissions API endpoint
   app.get("/api/team/roles", async (req, res) => {
     try {

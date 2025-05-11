@@ -20,7 +20,6 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
 
   // Platform operations
@@ -281,15 +280,6 @@ export class MemStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
-  }
-
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const existingUser = this.users.get(id);
-    if (!existingUser) return undefined;
-    
-    const updatedUser = { ...existingUser, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
   }
 
   // Platform operations
@@ -810,14 +800,6 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
-  }
-
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const [updatedUser] = await db.update(users)
-      .set(userData)
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
   }
 
   // Platform operations

@@ -12,10 +12,6 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   role: text("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  twoFactorSecret: text("two_factor_secret"),
-  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
-  twoFactorBackupCodes: jsonb("two_factor_backup_codes"),
-  twoFactorRecoveryToken: text("two_factor_recovery_token"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -330,29 +326,12 @@ export const teamSettings = pgTable("team_settings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Zod schemas for team settings validation
-export const securitySettingsSchema = z.object({
-  twoFactorRequired: z.boolean().default(false),
-  sessionTimeoutMinutes: z.number().int().min(5).max(1440).default(60)
+export const insertTeamSettingsSchema = createInsertSchema(teamSettings).pick({
+  userId: true,
+  name: true,
+  securitySettings: true,
+  notificationSettings: true,
 });
-
-export const notificationSettingsSchema = z.object({
-  newMemberNotifications: z.boolean().default(true),
-  criticalAlertNotifications: z.boolean().default(true),
-  weeklyActivitySummary: z.boolean().default(true)
-});
-
-export const insertTeamSettingsSchema = createInsertSchema(teamSettings)
-  .pick({
-    userId: true,
-    name: true,
-    securitySettings: true,
-    notificationSettings: true,
-  })
-  .extend({
-    securitySettings: securitySettingsSchema,
-    notificationSettings: notificationSettingsSchema
-  });
 
 export const teamSettingsRelations = relations(teamSettings, ({ one }) => ({
   user: one(users, {

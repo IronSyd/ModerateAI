@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import {
   useQuery,
   useMutation,
@@ -12,27 +12,17 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<User | { requires2FA: true, userId: number }, Error, LoginData>;
-  verify2FAMutation: UseMutationResult<User, Error, Verify2FAData>;
+  loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, InsertUser>;
-  pendingUserId: number | null;
-  setPendingUserId: (id: number | null) => void;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
-
-type Verify2FAData = {
-  userId: number;
-  token: string;
-  useBackupCode?: boolean;
-};
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
   
   const {
     data: user,
@@ -46,45 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
-      const data = await res.json();
-      
-      // Check if 2FA is required
-      if (data.requires2FA) {
-        return { requires2FA: true, userId: data.userId };
-      }
-      
-      return data;
-    },
-    onSuccess: (result: User | { requires2FA: true, userId: number }) => {
-      if ('requires2FA' in result) {
-        // Store the userId for the 2FA verification step
-        setPendingUserId(result.userId);
-      } else {
-        // Regular login success - store user data
-        queryClient.setQueryData(["/api/user"], result);
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const verify2FAMutation = useMutation({
-    mutationFn: async (data: Verify2FAData) => {
-      const res = await apiRequest("POST", "/api/verify-2fa", data);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      setPendingUserId(null);
       queryClient.setQueryData(["/api/user"], user);
     },
     onError: (error: Error) => {
       toast({
-        title: "Verification failed",
+        title: "Login failed",
         description: error.message,
         variant: "destructive",
       });
@@ -131,11 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         loginMutation,
-        verify2FAMutation,
         logoutMutation,
         registerMutation,
-        pendingUserId,
-        setPendingUserId
       }}
     >
       {children}
