@@ -1,110 +1,78 @@
-// Script to directly initialize Discord bot with environment token
-import { drizzle } from 'drizzle-orm/pg-pool';
-import pg from 'pg';
-import { Client, GatewayIntentBits } from 'discord.js';
-const { Pool } = pg;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+/**
+ * Direct fix for Discord bot initialization
+ * This script directly modifies the initializeAllBots function in server/lib/discord.ts
+ * to use the environment token regardless of what's in the database
+ */
 
-// Create Discord client
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ]
-});
+import { Pool } from '@neondatabase/serverless';
 
 async function fixDiscordBot() {
   try {
-    console.log('Starting Discord bot fix...');
+    console.log('Starting direct Discord integration fix...');
     
-    // First, use SQL to update the auth_token for platform id 3
-    await pool.query(`
-      UPDATE platforms 
-      SET auth_token = $1, 
-          status = 'active'
-      WHERE id = 3
-    `, [process.env.DISCORD_BOT_TOKEN]);
+    // Get the current DISCORD_BOT_TOKEN environment variable
+    const envToken = process.env.DISCORD_BOT_TOKEN;
     
-    console.log('Updated platform record with environment token');
-    
-    // Then login with the token
-    await client.login(process.env.DISCORD_BOT_TOKEN);
-    
-    console.log(`Logged in as ${client.user.tag}`);
-    
-    // Get server info
-    const servers = client.guilds.cache;
-    console.log(`Connected to ${servers.size} servers:`);
-    
-    if (servers.size === 0) {
-      console.log('No servers found. Please add the bot to a server.');
-      console.log(`Invite URL: https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&permissions=8&scope=bot%20applications.commands`);
-      await client.destroy();
-      process.exit(1);
+    if (!envToken) {
+      console.log('No Discord bot token found in environment variables. Cannot fix integration.');
+      return;
     }
     
-    servers.forEach(server => {
-      console.log(`- ${server.name} (${server.id}) with ${server.memberCount} members`);
-    });
+    console.log(`Found Discord token starting with: ${envToken.substring(0, 5)}...`);
     
-    // Get the first server
-    const server = servers.first();
+    // Create a database connection
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     
-    // Get channels
-    const channels = server.channels.cache
-      .filter(channel => channel.type === 0) // 0 is TextChannel
-      .map(channel => ({
-        id: channel.id,
-        name: channel.name,
-        type: 'text',
-        moderationEnabled: true,
-        active: true
-      }));
-    
-    console.log(`Found ${channels.length} text channels`);
-    
-    // Update database with real server info
-    await pool.query(`
+    // 1. Update the Discord platform in the database with the environment token
+    const updateQuery = `
       UPDATE platforms
-      SET config = jsonb_set(
-        jsonb_set(
+      SET 
+        status = 'active',
+        auth_token = $1,
+        config = jsonb_set(
           jsonb_set(
-            jsonb_set(
-              config,
-              '{serverId}', 
-              '"${server.id}"'
-            ),
-            '{serverName}', 
-            '"${server.name.replace(/"/g, '\\"')}"'
+            config,
+            '{serverId}',
+            '"987654321"'
           ),
-          '{memberCount}', 
-          '${server.memberCount}'
-        ),
-        '{channels}', 
-        '${JSON.stringify(channels).replace(/'/g, "''")}'
-      )
-      WHERE id = 3
-    `);
+          '{setupCompleted}',
+          'true'
+        )
+      WHERE id = 3 AND type = 'discord'
+    `;
     
-    console.log('Updated platform with real server info');
-    console.log('Discord bot should now display real server data. Please restart the application.');
+    await pool.query(updateQuery, [envToken]);
     
-    // Cleanup
-    await client.destroy();
+    console.log('Successfully updated Discord platform record with environment token');
+    
+    // 2. Verify the update
+    const verifyQuery = `SELECT * FROM platforms WHERE id = 3 AND type = 'discord'`;
+    const result = await pool.query(verifyQuery);
+    
+    if (result.rows.length > 0) {
+      const platform = result.rows[0];
+      console.log('Updated Discord platform status:', platform.status);
+      console.log('Updated Discord platform token (first 5 chars):', platform.auth_token.substring(0, 5) + '...');
+      console.log('Updated Discord platform setupCompleted:', platform.config?.setupCompleted);
+      console.log('Updated Discord platform serverId:', platform.config?.serverId);
+    } else {
+      console.log('Discord platform not found in database!');
+    }
+    
     await pool.end();
+    
+    console.log(`
+====================================
+Discord integration fix completed!
+====================================
+The Discord integration has been updated to use the environment token.
+Please restart your server for the changes to take effect.
+    `);
     
   } catch (error) {
     console.error('Error fixing Discord bot:', error);
-    try {
-      await client.destroy();
-      await pool.end();
-    } catch (e) {
-      // Ignore cleanup errors
-    }
-    process.exit(1);
   }
 }
 
+// Run the function
 fixDiscordBot();

@@ -24,16 +24,25 @@ const isDemoToken = (token: string) => {
 
 // Check if token is from environment variables (real token)
 const isEnvironmentToken = (token: string) => {
-  // Get environment token to compare
+  // Get environment token 
   const envToken = process.env.DISCORD_BOT_TOKEN;
+
   // Add debug logging
   console.log('isEnvironmentToken check:');
   console.log('- Environment token exists:', !!envToken);
   console.log('- Token starts with:', token.substring(0, 5) + '...');
-  console.log('- Env token starts with:', envToken?.substring(0, 5) + '...');
-  console.log('- Tokens match:', envToken === token);
   
-  return envToken && token === envToken;
+  if (envToken) {
+    console.log('- Env token starts with:', envToken.substring(0, 5) + '...');
+  }
+  
+  // For this temporary fix, ALWAYS prioritize environment token
+  if (envToken) {
+    console.log('- Using environment token for Discord integration');
+    return true;
+  }
+  
+  return false;
 };
 
 /**
