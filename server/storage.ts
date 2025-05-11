@@ -574,5 +574,355 @@ export class MemStorage implements IStorage {
   }
 }
 
-// For now, continue using the in-memory storage
-export const storage = new MemStorage();
+/**
+ * DatabaseStorage implementation using PostgreSQL database
+ */
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [createdUser] = await db.insert(users).values(user).returning();
+    return createdUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getPlatform(id: number): Promise<Platform | undefined> {
+    const [platform] = await db.select().from(platforms).where(eq(platforms.id, id));
+    return platform;
+  }
+
+  async getPlatformsByUserId(userId: number): Promise<Platform[]> {
+    return await db.select().from(platforms).where(eq(platforms.userId, userId));
+  }
+
+  async getPlatformsByType(type: string): Promise<Platform[]> {
+    return await db.select().from(platforms).where(eq(platforms.type, type));
+  }
+
+  async createPlatform(platform: InsertPlatform): Promise<Platform> {
+    const [createdPlatform] = await db.insert(platforms).values(platform).returning();
+    return createdPlatform;
+  }
+
+  async updatePlatform(id: number, platformUpdate: Partial<Platform>): Promise<Platform | undefined> {
+    const [updatedPlatform] = await db
+      .update(platforms)
+      .set(platformUpdate)
+      .where(eq(platforms.id, id))
+      .returning();
+    return updatedPlatform;
+  }
+
+  async deletePlatform(id: number): Promise<boolean> {
+    const result = await db.delete(platforms).where(eq(platforms.id, id));
+    return true;
+  }
+
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return conversation;
+  }
+  
+  async getConversationByExternalId(externalId: string): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.externalId, externalId));
+    return conversation;
+  }
+
+  async getConversationsByPlatformId(platformId: number): Promise<Conversation[]> {
+    return await db.select().from(conversations).where(eq(conversations.platformId, platformId));
+  }
+
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const [createdConversation] = await db.insert(conversations).values(conversation).returning();
+    return createdConversation;
+  }
+
+  async updateConversation(id: number, conversationUpdate: Partial<Conversation>): Promise<Conversation | undefined> {
+    const [updatedConversation] = await db
+      .update(conversations)
+      .set(conversationUpdate)
+      .where(eq(conversations.id, id))
+      .returning();
+    return updatedConversation;
+  }
+
+  async closeConversation(id: number): Promise<Conversation | undefined> {
+    const [updatedConversation] = await db
+      .update(conversations)
+      .set({ status: "closed" })
+      .where(eq(conversations.id, id))
+      .returning();
+    return updatedConversation;
+  }
+
+  async getMessage(id: number): Promise<Message | undefined> {
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+    return message;
+  }
+
+  async getMessagesByConversationId(conversationId: number): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(asc(messages.createdAt));
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [createdMessage] = await db.insert(messages).values(message).returning();
+    return createdMessage;
+  }
+
+  async getAiConfiguration(id: number): Promise<AiConfiguration | undefined> {
+    const [config] = await db.select().from(aiConfigurations).where(eq(aiConfigurations.id, id));
+    return config;
+  }
+
+  async getAiConfigurationsByUserId(userId: number): Promise<AiConfiguration[]> {
+    return await db.select().from(aiConfigurations).where(eq(aiConfigurations.userId, userId));
+  }
+
+  async getActiveAiConfiguration(userId: number): Promise<AiConfiguration | undefined> {
+    const [config] = await db
+      .select()
+      .from(aiConfigurations)
+      .where(and(
+        eq(aiConfigurations.userId, userId),
+        eq(aiConfigurations.isActive, true)
+      ));
+    return config;
+  }
+
+  // Implement the dashboard stats methods
+  async getConversationCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(conversations);
+    return result[0].count;
+  }
+
+  async getMessageCount(): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(eq(messages.sender, "ai"));
+    return result[0].count;
+  }
+
+  async getModerationActionCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(moderationActions);
+    return result[0].count;
+  }
+
+  async getResponseRate(): Promise<number> {
+    // Calculate the response rate based on user messages that received an AI response
+    // This query is an approximation and might need refinement based on your exact requirements
+    const totalUserMessages = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(eq(messages.sender, "user"));
+    
+    const totalAiResponses = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(eq(messages.sender, "ai"));
+    
+    if (totalUserMessages[0].count === 0) {
+      return 0;
+    }
+    
+    // Calculate the percentage with 2 decimal places
+    return Math.min(100, (totalAiResponses[0].count / totalUserMessages[0].count) * 100);
+  }
+
+  async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
+    // Get the most recent messages from all conversations
+    const recentMessages = await db
+      .select({
+        id: messages.id,
+        conversationId: messages.conversationId,
+        sender: messages.sender,
+        createdAt: messages.createdAt,
+        metadata: messages.metadata
+      })
+      .from(messages)
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+    
+    // Get the platform information for each conversation
+    const messageActivities = await Promise.all(
+      recentMessages.map(async (message) => {
+        const [conversation] = await db
+          .select({
+            platformId: conversations.platformId
+          })
+          .from(conversations)
+          .where(eq(conversations.id, message.conversationId));
+          
+        const [platform] = conversation ? await db
+          .select({
+            type: platforms.type
+          })
+          .from(platforms)
+          .where(eq(platforms.id, conversation.platformId)) : [{ type: 'unknown' }];
+          
+        return {
+          user: message.metadata?.username || message.sender,
+          action: "message",
+          platform: platform.type,
+          time: message.createdAt
+        };
+      })
+    );
+    
+    // Get the most recent moderation actions
+    const recentActions = await db
+      .select({
+        id: moderationActions.id,
+        action: moderationActions.action,
+        platformId: moderationActions.platformId,
+        createdAt: moderationActions.createdAt
+      })
+      .from(moderationActions)
+      .orderBy(desc(moderationActions.createdAt))
+      .limit(Math.floor(limit / 2));
+      
+    // Get the platform information for each moderation action
+    const moderationActivities = await Promise.all(
+      recentActions.map(async (action) => {
+        const [platform] = await db
+          .select({
+            type: platforms.type
+          })
+          .from(platforms)
+          .where(eq(platforms.id, action.platformId));
+          
+        return {
+          user: "Moderator",
+          action: action.action,
+          platform: platform?.type || 'unknown',
+          time: action.createdAt
+        };
+      })
+    );
+    
+    // Combine message and moderation activities, sort by time, and limit to the requested number
+    return [...messageActivities, ...moderationActivities]
+      .sort((a, b) => b.time.getTime() - a.time.getTime())
+      .slice(0, limit);
+  }
+
+  // Implement remaining methods as stubs for now, to be completed as needed
+  async createAiConfiguration(config: InsertAiConfiguration): Promise<AiConfiguration> {
+    const [createdConfig] = await db.insert(aiConfigurations).values(config).returning();
+    return createdConfig;
+  }
+
+  async updateAiConfiguration(id: number, config: Partial<AiConfiguration>): Promise<AiConfiguration | undefined> {
+    const [updatedConfig] = await db
+      .update(aiConfigurations)
+      .set(config)
+      .where(eq(aiConfigurations.id, id))
+      .returning();
+    return updatedConfig;
+  }
+
+  async createModerationAction(action: InsertModerationAction): Promise<ModerationAction> {
+    const [createdAction] = await db.insert(moderationActions).values(action).returning();
+    return createdAction;
+  }
+
+  // The following methods can be implemented as needed
+  async getKnowledgeBase(id: number): Promise<KnowledgeBase | undefined> {
+    const [kb] = await db.select().from(knowledgeBases).where(eq(knowledgeBases.id, id));
+    return kb;
+  }
+
+  async getActiveKnowledgeBase(userId: number): Promise<KnowledgeBase | undefined> {
+    const [kb] = await db
+      .select()
+      .from(knowledgeBases)
+      .where(and(
+        eq(knowledgeBases.userId, userId),
+        eq(knowledgeBases.isActive, true)
+      ));
+    return kb;
+  }
+
+  async getKnowledgeDocument(id: number): Promise<KnowledgeDocument | undefined> {
+    const [doc] = await db.select().from(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
+    return doc;
+  }
+
+  // Implement remaining methods as stubs
+  async getConversationTrainingsByUserId(userId: number): Promise<ConversationTraining[]> {
+    return [];
+  }
+
+  async getConversationTrainingsByPlatformId(platformId: number): Promise<ConversationTraining[]> {
+    return [];
+  }
+
+  async getLatestConversationTraining(userId: number, platformId: number): Promise<ConversationTraining | undefined> {
+    return undefined;
+  }
+
+  async createConversationTraining(training: InsertConversationTraining): Promise<ConversationTraining> {
+    const [createdTraining] = await db.insert(conversationTrainings).values(training).returning();
+    return createdTraining;
+  }
+
+  async updateConversationTraining(id: number, training: Partial<ConversationTraining>): Promise<ConversationTraining | undefined> {
+    return undefined;
+  }
+
+  async getTeamInvitation(id: number): Promise<TeamInvitation | undefined> {
+    return undefined;
+  }
+
+  async getTeamInvitationByToken(token: string): Promise<TeamInvitation | undefined> {
+    return undefined;
+  }
+
+  async getTeamInvitationsByEmail(email: string): Promise<TeamInvitation[]> {
+    return [];
+  }
+
+  async getTeamInvitationsByInviter(inviterId: number): Promise<TeamInvitation[]> {
+    return [];
+  }
+
+  async getPendingTeamInvitations(): Promise<TeamInvitation[]> {
+    return [];
+  }
+
+  async createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation> {
+    const [createdInvitation] = await db.insert(teamInvitations).values(invitation).returning();
+    return createdInvitation;
+  }
+
+  async updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined> {
+    return undefined;
+  }
+
+  async deleteTeamInvitation(id: number): Promise<boolean> {
+    return false;
+  }
+}
+
+// Use the database storage implementation
+export const storage = new DatabaseStorage();
