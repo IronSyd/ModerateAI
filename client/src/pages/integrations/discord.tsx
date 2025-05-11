@@ -492,14 +492,15 @@ const DiscordIntegration = () => {
                         </p>
                         <div className="mt-3 flex gap-2">
                           <Link href="/integrations/discord-fix">
-                            <Button 
-                              variant="outline" 
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            >
-                              <Wrench className="h-4 w-4 mr-2" />
-                              Fix Connection
-                            </Button>
+                            <Button variant="outline" size="sm">Fix Dashboard Display</Button>
                           </Link>
+                          <Button 
+                            variant="outline" 
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Wrench className="h-4 w-4 mr-2" />
+                            Fix Connection
+                          </Button>
                           <Button 
                             variant="outline" 
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"

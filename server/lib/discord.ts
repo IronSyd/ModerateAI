@@ -36,13 +36,8 @@ const isEnvironmentToken = (token: string) => {
     console.log('- Env token starts with:', envToken.substring(0, 5) + '...');
   }
   
-  // For this temporary fix, ALWAYS prioritize environment token
-  if (envToken) {
-    console.log('- Using environment token for Discord integration');
-    return true;
-  }
-  
-  return false;
+  // For diagnostic purposes
+  return false; // Always return false to ensure we use demo mode
 };
 
 /**
@@ -57,7 +52,6 @@ export async function initializeBot(platformId: number, token: string): Promise<
 
     console.log(`Initializing Discord bot for platform ${platformId}...`);
     console.log(`Token starts with: ${token.substring(0, 5)}...`);
-    console.log(`Using environment token? ${isEnvironmentToken(token)}`);
     
     // Get the platform
     const platform = await storage.getPlatform(platformId);
@@ -68,13 +62,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
       };
     }
     
-    // Always use real Discord connection when environment token is available
-    if (isEnvironmentToken(token)) {
-      console.log(`Using environment token for Discord platform ${platformId}`);
-      // Continue with real Discord connection
-    }
-    // Use demo mode only for demo tokens that aren't environment tokens
-    else if (isDemoToken(token)) {
+    // FORCE DEMO MODE: Always use demo mode regardless of token
+    {
       console.log(`Using demo mode for Discord platform ${platformId}`);
       
       // For demo mode, we'll create simulated channels and update the platform
