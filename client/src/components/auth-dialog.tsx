@@ -22,7 +22,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { DarkInput } from "@/components/ui/dark-input";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogIn } from "lucide-react";
 
@@ -85,7 +84,7 @@ export function AuthDialog({ open, onOpenChange, onLoginSuccess }: AuthDialogPro
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <DarkInput placeholder="Enter your username" {...field} />
+                    <Input placeholder="Enter your username" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -99,7 +98,7 @@ export function AuthDialog({ open, onOpenChange, onLoginSuccess }: AuthDialogPro
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <DarkInput
+                    <Input
                       type="password"
                       placeholder="Enter your password"
                       {...field}

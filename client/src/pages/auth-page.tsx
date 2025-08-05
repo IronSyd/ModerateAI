@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { DarkInput } from "@/components/ui/dark-input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -115,7 +114,7 @@ const AuthPage = () => {
                           <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <DarkInput
+                              <Input
                                 placeholder="Enter your username"
                                 {...field}
                               />
@@ -132,7 +131,7 @@ const AuthPage = () => {
                             <FormLabel>Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <DarkInput
+                                <Input
                                   type={showPassword ? "text" : "password"}
                                   placeholder="Enter your password"
                                   {...field}
@@ -178,7 +177,7 @@ const AuthPage = () => {
                           <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <DarkInput
+                              <Input
                                 placeholder="Choose a username"
                                 {...field}
                               />
@@ -189,7 +188,7 @@ const AuthPage = () => {
                       />
                       <div className="space-y-2">
                         <Label htmlFor="register-email">Email</Label>
-                        <DarkInput
+                        <Input
                           id="register-email"
                           type="text"
                           placeholder="Enter your email"
@@ -209,7 +208,7 @@ const AuthPage = () => {
                           <FormItem>
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                              <DarkInput
+                              <Input
                                 placeholder="Enter your full name"
                                 {...field}
                               />
@@ -226,7 +225,7 @@ const AuthPage = () => {
                             <FormLabel>Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <DarkInput
+                                <Input
                                   type={showPassword ? "text" : "password"}
                                   placeholder="Create a password"
                                   {...field}
