@@ -171,32 +171,21 @@ const AuthPage = () => {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => {
-                          console.log('Email field props:', field);
-                          return (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <input
-                                  id="register-email"
-                                  type="text"
-                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Enter your email"
-                                  name={field.name}
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  ref={field.ref}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="register-email">Email</Label>
+                        <Input
+                          id="register-email"
+                          type="text"
+                          placeholder="Enter your email"
+                          value={registerForm.watch("email")}
+                          onChange={(e) => registerForm.setValue("email", e.target.value)}
+                        />
+                        {registerForm.formState.errors.email && (
+                          <p className="text-sm font-medium text-destructive">
+                            {registerForm.formState.errors.email.message}
+                          </p>
+                        )}
+                      </div>
                       <FormField
                         control={registerForm.control}
                         name="fullName"
