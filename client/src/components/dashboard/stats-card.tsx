@@ -8,7 +8,7 @@ type StatsCardProps = {
   icon: ReactNode;
   iconBgColor: string;
   iconColor: string;
-  changeValue: number;
+  changeValue: number | null;
   changeText: string;
 };
 
@@ -21,7 +21,7 @@ const StatsCard = ({
   changeValue,
   changeText
 }: StatsCardProps) => {
-  const isPositive = changeValue >= 0;
+  const isPositive = changeValue !== null && changeValue >= 0;
   
   return (
     <Card className="border border-border">
@@ -36,17 +36,23 @@ const StatsCard = ({
           </div>
         </div>
         
-        <div className="flex items-center mt-4">
-          <span className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-            {isPositive ? (
-              <ArrowUpRight className="h-4 w-4 mr-1" />
-            ) : (
-              <ArrowDownRight className="h-4 w-4 mr-1" />
-            )}
-            {Math.abs(changeValue)}%
-          </span>
-          <span className="text-muted-foreground text-sm ml-2">{changeText}</span>
-        </div>
+        {changeValue !== null ? (
+          <div className="flex items-center mt-4">
+            <span className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+              {isPositive ? (
+                <ArrowUpRight className="h-4 w-4 mr-1" />
+              ) : (
+                <ArrowDownRight className="h-4 w-4 mr-1" />
+              )}
+              {Math.abs(changeValue)}%
+            </span>
+            <span className="text-muted-foreground text-sm ml-2">{changeText}</span>
+          </div>
+        ) : (
+          <div className="flex items-center mt-4">
+            <span className="text-muted-foreground text-sm">No historical data available</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

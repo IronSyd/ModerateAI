@@ -166,7 +166,7 @@ const Dashboard = () => {
         icon: <MessagesSquare className="h-6 w-6" />,
         iconBgColor: "bg-primary/20",
         iconColor: "text-primary",
-        changeValue: 12.5,
+        changeValue: null,
         changeText: "vs last week"
       },
       {
@@ -175,7 +175,7 @@ const Dashboard = () => {
         icon: <MonitorSmartphone className="h-6 w-6" />,
         iconBgColor: "bg-secondary/20",
         iconColor: "text-secondary",
-        changeValue: 8.2,
+        changeValue: null,
         changeText: "vs last week"
       },
       {
@@ -184,16 +184,16 @@ const Dashboard = () => {
         icon: <ShieldAlert className="h-6 w-6" />,
         iconBgColor: "bg-accent/20",
         iconColor: "text-accent",
-        changeValue: -3.1,
+        changeValue: null,
         changeText: "vs last week"
       },
       {
         title: "Response Rate",
-        value: `${stats.responseRate.toFixed(1)}%`,
+        value: stats.responseRate > 0 ? `${stats.responseRate.toFixed(1)}%` : "0%",
         icon: <CheckCircle className="h-6 w-6" />,
         iconBgColor: "bg-green-600/20",
         iconColor: "text-green-500",
-        changeValue: 0.5,
+        changeValue: null,
         changeText: "vs last week"
       }
     ];
