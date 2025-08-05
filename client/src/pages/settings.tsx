@@ -503,35 +503,30 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Logout Option - without title */}
+              {/* Logout Option - without icon */}
               <div className="rounded-md border border-border p-4">
-                <div className="flex">
-                  <LogOut className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                  <div>
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <p>
-                        Sign out of your account on this device.
-                      </p>
-                    </div>
-                    <div className="mt-4">
-                      <Button 
-                        variant="outline"
-                        onClick={handleLogout}
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                      </Button>
-                    </div>
-                  </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>
+                    Sign out of your account on this device.
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
                 </div>
               </div>
               
               {/* Delete Account Option - without title */}
               <div className="rounded-md border border-red-900/30 bg-red-900/10 p-4">
-                <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="mt-2 text-sm text-red-400/90">
+                <div className="flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-red-400/90">
                       <p>
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
