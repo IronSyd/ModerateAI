@@ -144,9 +144,9 @@ const AuthPage = () => {
                                   onClick={() => setShowPassword(!showPassword)}
                                 >
                                   {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    <EyeOff className="h-4 w-4 text-gray-600" />
                                   ) : (
-                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                    <Eye className="h-4 w-4 text-gray-600" />
                                   )}
                                 </Button>
                               </div>
@@ -238,9 +238,9 @@ const AuthPage = () => {
                                   onClick={() => setShowPassword(!showPassword)}
                                 >
                                   {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    <EyeOff className="h-4 w-4 text-gray-600" />
                                   ) : (
-                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                    <Eye className="h-4 w-4 text-gray-600" />
                                   )}
                                 </Button>
                               </div>
