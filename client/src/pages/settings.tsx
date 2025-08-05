@@ -531,17 +531,17 @@ const Settings = () => {
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
                     </div>
+                    <div className="mt-4">
+                      <Button 
+                        variant="outline" 
+                        className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20"
+                        onClick={() => setIsDeleteAccountDialogOpen(true)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4 ml-8">
-                  <Button 
-                    variant="outline" 
-                    className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20"
-                    onClick={() => setIsDeleteAccountDialogOpen(true)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </Button>
                 </div>
               </div>
             </CardContent>
