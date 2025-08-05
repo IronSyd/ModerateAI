@@ -139,6 +139,9 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       return updated;
     });
     
+    // Clear the new notifications indicator since all are now read
+    setHasNewNotifications(false);
+    
     // In a real implementation, this would be an API call
     // apiRequest('/api/notifications/read-all', { method: 'POST' });
   };
