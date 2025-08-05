@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,12 +34,6 @@ const AuthPage = () => {
   const { user, loginMutation, registerMutation } = useAuth();
   const { enableAdminUser } = useAdminUser();
 
-  // Redirect if already logged in
-  if (user) {
-    setLocation("/");
-    return null;
-  }
-
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     mode: "onSubmit",
@@ -60,6 +54,13 @@ const AuthPage = () => {
       fullName: "",
     },
   });
+
+  // Redirect if already logged in - using useEffect to avoid breaking hooks rules
+  useEffect(() => {
+    if (user) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
 
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
     loginMutation.mutate(values, {
