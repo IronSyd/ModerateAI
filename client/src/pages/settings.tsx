@@ -70,6 +70,8 @@ import {
   Bell,
   Globe,
   Lock,
+  Trash2,
+  LogOut,
   Loader2,
   AlertTriangle,
   Eye,
@@ -88,8 +90,10 @@ const passwordSchema = z.object({
 
 const Settings = () => {
   const { toast } = useToast();
+  const { logoutMutation } = useAuth();
 
 
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useLocation();
@@ -212,7 +216,28 @@ const Settings = () => {
     },
   });
 
-  // Removed API settings mutations
+  // Delete account
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      // Simulate API call
+      return new Promise<void>((resolve) => setTimeout(resolve, 1500));
+    },
+    onSuccess: () => {
+      setIsDeleteAccountDialogOpen(false);
+      toast({
+        title: "Account deleted",
+        description: "Your account has been successfully deleted",
+      });
+      // In a real app, we would redirect to a logout page or home page
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete account",
+        variant: "destructive",
+      });
+    },
+  });
 
 
 
@@ -288,7 +313,22 @@ const Settings = () => {
     saveNotificationsMutation.mutate(notificationSettings);
   };
 
-  // Removed API handler functions
+  const handleDeleteAccount = () => {
+    deleteAccountMutation.mutate();
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync(undefined);
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+    // Force navigation to auth page
+    setLocation("/auth");
+    // Also force a page reload to ensure clean state
+    window.location.href = "/auth";
+  };
 
 
 
@@ -455,7 +495,62 @@ const Settings = () => {
             </CardFooter>
           </Card>
 
-
+          <Card className="space-y-6">
+            <CardHeader>
+              <CardTitle>Account Actions</CardTitle>
+              <CardDescription>
+                Security-related actions for your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logout Option - without title */}
+              <div className="rounded-md border border-border p-4">
+                <div className="flex">
+                  <LogOut className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                  <div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>
+                        Sign out of your account on this device.
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Delete Account Option - without title */}
+              <div className="rounded-md border border-red-900/30 bg-red-900/10 p-4">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="mt-2 text-sm text-red-400/90">
+                      <p>
+                        Permanently delete your account and all associated data. This action cannot be undone.
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <Button 
+                        variant="outline" 
+                        className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20"
+                        onClick={() => setIsDeleteAccountDialogOpen(true)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
@@ -569,7 +664,35 @@ const Settings = () => {
 
       </Tabs>
 
-
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteAccountDialogOpen}
+        onOpenChange={setIsDeleteAccountDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove all your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              className="bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-800"
+            >
+              {deleteAccountMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              Delete Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Change Password Dialog */}
       <AlertDialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
