@@ -248,8 +248,8 @@ const Dashboard = () => {
   const getKnowledgeBaseForDisplay = () => {
     if (isLoadingKnowledgeBase || !knowledgeBase) {
       return {
-        name: "Product Documentation",
-        documentCount: 42
+        name: "No Knowledge Base",
+        documentCount: 0
       };
     }
     
