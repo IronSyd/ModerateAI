@@ -73,5 +73,19 @@ export async function sendTwoFactorCode(user: any): Promise<void> {
     `,
   };
   
-  await sendEmail(emailContent);
+  try {
+    await sendEmail(emailContent);
+    console.log(`2FA code sent to ${user.email}`);
+  } catch (error) {
+    // Log to console when email fails (for testing)
+    console.log('\n===========================================');
+    console.log('🔐 2FA CODE FOR TESTING (Email service unavailable)');
+    console.log(`📧 Email: ${user.email}`);
+    console.log(`🔑 Code: ${code}`);
+    console.log('⏰ Valid for: 10 minutes');
+    console.log('===========================================\n');
+    
+    // Don't throw error to allow login flow to continue
+    console.error('Failed to send 2FA email:', error);
+  }
 }
