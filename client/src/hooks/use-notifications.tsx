@@ -78,6 +78,8 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     // Try to get notifications from localStorage
     const storedNotifications = localStorage.getItem('notifications');
+    const notificationsCleared = localStorage.getItem('notificationsCleared');
+    
     if (storedNotifications) {
       try {
         const parsedNotifications = JSON.parse(storedNotifications);
@@ -94,9 +96,15 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error('Error parsing stored notifications', e);
         setNotifications(initialNotifications);
       }
+    } else if (notificationsCleared === 'true') {
+      // If notifications were cleared, keep them empty
+      setNotifications([]);
+      setHasNewNotifications(false);
     } else {
-      // If nothing in storage, use initial notifications
+      // If nothing in storage and not cleared, use initial notifications
       setNotifications(initialNotifications);
+      // Save initial notifications to localStorage
+      localStorage.setItem('notifications', JSON.stringify(initialNotifications));
     }
   }, []);
 
@@ -151,6 +159,9 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     setHasNewNotifications(true);
     
+    // Reset cleared flag when adding new notifications
+    localStorage.removeItem('notificationsCleared');
+    
     // In a real implementation, this would be handled by push notifications or websockets
     // This is just a simulation for the demo
   };
@@ -160,8 +171,9 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     setNotifications([]);
     setHasNewNotifications(false);
     
-    // Clear notifications in localStorage
+    // Clear notifications in localStorage and mark as cleared
     localStorage.removeItem('notifications');
+    localStorage.setItem('notificationsCleared', 'true');
     
     // In a real implementation, this would be an API call
     // apiRequest('/api/notifications/clear-all', { method: 'POST' });
