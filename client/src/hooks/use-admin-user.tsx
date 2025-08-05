@@ -1,5 +1,7 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { User } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 
 interface AdminUserContextType {
   isAdminUser: boolean;
@@ -24,6 +26,12 @@ const ADMIN_USER: User = {
 export function AdminUserProvider({ children }: { children: ReactNode }) {
   const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   
+  // Get current authenticated user
+  const { data: currentUser } = useQuery<User | undefined, Error>({
+    queryKey: ["/api/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+  
   // Check if admin user was previously enabled
   useEffect(() => {
     const storedValue = localStorage.getItem("isAdminUser");
@@ -31,6 +39,14 @@ export function AdminUserProvider({ children }: { children: ReactNode }) {
       setIsAdminUser(true);
     }
   }, []);
+
+  // Automatically disable admin mode for non-admin users
+  useEffect(() => {
+    if (currentUser && currentUser.role !== "admin" && isAdminUser) {
+      setIsAdminUser(false);
+      localStorage.removeItem("isAdminUser");
+    }
+  }, [currentUser, isAdminUser]);
 
   const enableAdminUser = () => {
     setIsAdminUser(true);
