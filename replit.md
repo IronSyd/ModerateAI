@@ -6,6 +6,13 @@ ModerateAI is a multi-platform AI-powered customer support and content moderatio
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes
+
+## January 2025
+- **Fixed username validation issue**: Resolved form field binding problem in registration form that prevented usernames from being captured properly
+- **Improved password field visibility**: Updated show/hide password icons to use darker colors for better visibility against white input backgrounds
+- **Enhanced form validation**: Changed registration form to use manual value tracking for better reliability
+
 # System Architecture
 
 ## Frontend Architecture
