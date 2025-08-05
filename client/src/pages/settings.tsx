@@ -523,24 +523,22 @@ const Settings = () => {
               
               {/* Delete Account Option - without title */}
               <div className="rounded-md border border-red-900/30 bg-red-900/10 p-4">
-                <div className="flex items-start mb-4">
-                  <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0" />
-                  <div className="text-sm text-red-400/90">
+                <div className="text-sm text-red-400/90 mb-4">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0" />
                     <p>
                       Permanently delete your account and all associated data. This action cannot be undone.
                     </p>
                   </div>
                 </div>
-                <div style={{ paddingLeft: '32px' }}>
-                  <Button 
-                    variant="outline" 
-                    className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20"
-                    onClick={() => setIsDeleteAccountDialogOpen(true)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20 ml-8"
+                  onClick={() => setIsDeleteAccountDialogOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Account
+                </Button>
               </div>
             </CardContent>
           </Card>
