@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force dark input styling - highest priority */
+.dark-input,
+* input[type="text"],
+* input[type="password"], 
+* input[type="email"],
+* input {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: white !important;
+}
+
+.dark-input::placeholder,
+* input::placeholder {
+  color: #94a3b8 !important;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -45,31 +61,21 @@
   }
 }
 
-@layer utilities {
-  /* Force dark input styling */
-  input[type="text"], 
-  input[type="password"], 
-  input[type="email"], 
-  input {
-    background-color: #1e293b !important;
-    border-color: #475569 !important;
-    color: white !important;
-  }
-  
-  input::placeholder {
-    color: #94a3b8 !important;
-  }
-  
-  .dark input[type="text"], 
-  .dark input[type="password"], 
-  .dark input[type="email"], 
-  .dark input {
-    background-color: #1e293b !important;
-    border-color: #475569 !important;
-    color: white !important;
-  }
-  
-  .dark input::placeholder {
-    color: #94a3b8 !important;
-  }
+/* Override any theme-generated styles with maximum specificity */
+html.dark input[type="text"],
+html.dark input[type="password"], 
+html.dark input[type="email"],
+html.dark input,
+body input[type="text"],
+body input[type="password"], 
+body input[type="email"],
+body input {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: white !important;
+}
+
+html.dark input::placeholder,
+body input::placeholder {
+  color: #94a3b8 !important;
 }
