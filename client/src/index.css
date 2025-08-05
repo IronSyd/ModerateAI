@@ -79,3 +79,34 @@ html.dark input::placeholder,
 body input::placeholder {
   color: #94a3b8 !important;
 }
+
+/* Final override - must be at the end */
+input,
+input[type],
+input[class*="bg-"],
+*[class*="bg-"] input {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: white !important;
+}
+
+input::placeholder,
+*::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Override any inline styles */
+input[style] {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  color: white !important;
+}
+
+/* Nuclear option - override everything */
+* input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]) {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  border: 1px solid #475569 !important;
+  color: white !important;
+}
