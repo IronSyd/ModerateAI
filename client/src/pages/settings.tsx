@@ -90,7 +90,7 @@ const passwordSchema = z.object({
 
 const Settings = () => {
   const { toast } = useToast();
-  const { logoutMutation } = useAuth();
+  const { user, logoutMutation } = useAuth();
 
 
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
@@ -143,13 +143,29 @@ const Settings = () => {
     }
   }, [location]);
 
-  // General settings state
+  // General settings state - Initialize with user data when available
   const [generalSettings, setGeneralSettings] = useState({
-    firstName: "Demo",
-    lastName: "User",
-    email: "demo@example.com",
+    firstName: "",
+    lastName: "",
+    email: "",
     timezone: "UTC",
   });
+
+  // Update general settings when user data becomes available
+  useEffect(() => {
+    if (user) {
+      const nameParts = (user.fullName || "").split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+      
+      setGeneralSettings(prev => ({
+        ...prev,
+        firstName,
+        lastName,
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
 
   // Define notification settings type
   type NotificationSettings = {
@@ -399,7 +415,7 @@ const Settings = () => {
                         <Input 
                           id="password" 
                           type={showPassword ? "text" : "password"} 
-                          value="DemoPassword123" 
+                          value="••••••••••••" 
                           className="pr-10"
                           disabled 
                         />
