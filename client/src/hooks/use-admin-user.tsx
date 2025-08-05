@@ -18,8 +18,14 @@ const ADMIN_USER: User = {
   username: "admin",
   email: "excelay@gmail.com",
   password: "",
+  passwordHash: null,
+  passwordSalt: null,
   fullName: "Admin User",
   role: "admin",
+  isActive: true,
+  requireTwoFactor: false,
+  twoFactorCode: null,
+  twoFactorCodeExpiry: null,
   createdAt: new Date()
 };
 
