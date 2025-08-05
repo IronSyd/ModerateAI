@@ -7,10 +7,16 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password").notNull(), // Deprecated - use passwordHash/passwordSalt
+  passwordHash: text("password_hash"),
+  passwordSalt: text("password_salt"),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
   role: text("role").notNull().default("user"),
+  isActive: boolean("is_active").notNull().default(true),
+  requireTwoFactor: boolean("require_two_factor").notNull().default(false),
+  twoFactorCode: text("two_factor_code"),
+  twoFactorCodeExpiry: timestamp("two_factor_code_expiry"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

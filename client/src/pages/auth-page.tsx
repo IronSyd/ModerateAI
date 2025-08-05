@@ -28,9 +28,10 @@ const registerSchema = z.object({
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation, registerMutation, verifyTwoFactorMutation, needsTwoFactor, setNeedsTwoFactor } = useAuth();
   const { enableAdminUser } = useAdminUser();
 
   // Redirect if already logged in
@@ -59,12 +60,32 @@ const AuthPage = () => {
 
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
     loginMutation.mutate(values, {
+      onSuccess: (data) => {
+        if (!data.requiresTwoFactor) {
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
+          setLocation("/dashboard");
+        }
+      },
+    });
+  };
+
+  const onVerifyTwoFactor = () => {
+    if (!twoFactorCode) {
+      toast({
+        title: "Code required",
+        description: "Please enter your 2FA code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    verifyTwoFactorMutation.mutate({ code: twoFactorCode }, {
       onSuccess: () => {
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
         setLocation("/dashboard");
+        setTwoFactorCode("");
       },
     });
   };
@@ -93,15 +114,56 @@ const AuthPage = () => {
 
             <Card className="w-full max-w-md mx-auto">
               <CardHeader>
-                <CardTitle>{isLogin ? "Sign In" : "Create Account"}</CardTitle>
+                <CardTitle>
+                  {needsTwoFactor 
+                    ? "Two-Factor Authentication" 
+                    : isLogin 
+                      ? "Sign In" 
+                      : "Create Account"}
+                </CardTitle>
                 <CardDescription>
-                  {isLogin
-                    ? "Sign in to your ModerateAI account"
-                    : "Create a new ModerateAI account"}
+                  {needsTwoFactor
+                    ? "Enter the 6-digit code sent to your email"
+                    : isLogin
+                      ? "Sign in to your ModerateAI account"
+                      : "Create a new ModerateAI account"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLogin ? (
+                {needsTwoFactor ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="2fa-code">Verification Code</Label>
+                      <Input
+                        id="2fa-code"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        value={twoFactorCode}
+                        onChange={(e) => setTwoFactorCode(e.target.value)}
+                        maxLength={6}
+                        className="text-center text-2xl tracking-widest"
+                      />
+                    </div>
+                    <Button
+                      onClick={onVerifyTwoFactor}
+                      className="w-full"
+                      disabled={verifyTwoFactorMutation.isPending || !twoFactorCode}
+                    >
+                      {verifyTwoFactorMutation.isPending ? "Verifying..." : "Verify Code"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        loginMutation.reset();
+                        setTwoFactorCode("");
+                        setNeedsTwoFactor(false);
+                      }}
+                    >
+                      Back to Login
+                    </Button>
+                  </div>
+                ) : isLogin ? (
                   <Form {...loginForm}>
                     <form
                       onSubmit={loginForm.handleSubmit(onLoginSubmit)}
@@ -243,39 +305,7 @@ const AuthPage = () => {
                     {isLogin ? "Sign up" : "Sign in"}
                   </Button>
                 </div>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or
-                    </span>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  className="w-full flex items-center justify-center gap-2 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-800"
-                  onClick={() => {
-                    // Set demo admin credentials
-                    if (isLogin) {
-                      loginForm.setValue("username", "demo");
-                      loginForm.setValue("password", "demo123");
-                      toast({
-                        title: "Demo credentials filled",
-                        description: "Click 'Sign In' to continue as demo admin",
-                      });
-                    } else {
-                      toast({
-                        title: "Demo Account",
-                        description: "Switch to Sign In to use the demo account",
-                        variant: "default",
-                      });
-                    }
-                  }}
-                >
-                  <ShieldAlert className="h-4 w-4" /> Use Demo Account
-                </Button>
+
               </CardFooter>
             </Card>
           </div>
