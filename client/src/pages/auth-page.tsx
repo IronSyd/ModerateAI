@@ -257,43 +257,26 @@ const AuthPage = () => {
                 </div>
                 <Button 
                   variant="outline" 
-                  className="w-full flex items-center justify-center gap-2 text-red-700 border-red-200 hover:bg-red-50 hover:text-red-800"
+                  className="w-full flex items-center justify-center gap-2 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-800"
                   onClick={() => {
-                    // Check if form contains the correct admin email address
+                    // Set demo admin credentials
                     if (isLogin) {
-                      if (loginForm.getValues().username === "excelay@gmail.com") {
-                        enableAdminUser();
-                        toast({
-                          title: "Admin mode enabled",
-                          description: "You're now using ModerateAI as an admin user",
-                        });
-                        setLocation("/dashboard");
-                      } else {
-                        toast({
-                          title: "Unauthorized",
-                          description: "This admin access is restricted",
-                          variant: "destructive",
-                        });
-                      }
+                      loginForm.setValue("username", "demo");
+                      loginForm.setValue("password", "demo123");
+                      toast({
+                        title: "Demo credentials filled",
+                        description: "Click 'Sign In' to continue as demo admin",
+                      });
                     } else {
-                      if (registerForm.getValues().email === "excelay@gmail.com") {
-                        enableAdminUser();
-                        toast({
-                          title: "Admin mode enabled",
-                          description: "You're now using ModerateAI as an admin user",
-                        });
-                        setLocation("/dashboard");
-                      } else {
-                        toast({
-                          title: "Unauthorized",
-                          description: "This admin access is restricted",
-                          variant: "destructive",
-                        });
-                      }
+                      toast({
+                        title: "Demo Account",
+                        description: "Switch to Sign In to use the demo account",
+                        variant: "default",
+                      });
                     }
                   }}
                 >
-                  <ShieldAlert className="h-4 w-4" /> Continue as Admin User
+                  <ShieldAlert className="h-4 w-4" /> Use Demo Account
                 </Button>
               </CardFooter>
             </Card>
