@@ -179,7 +179,10 @@ const AuthPage = () => {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                               <Input
-                                type="email"
+                                id="register-email"
+                                type="text"
+                                inputMode="email"
+                                autoComplete="off"
                                 placeholder="Enter your email"
                                 {...field}
                               />
