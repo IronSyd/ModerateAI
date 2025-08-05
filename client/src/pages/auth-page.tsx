@@ -51,7 +51,8 @@ const AuthPage = () => {
 
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
-    mode: "onSubmit",
+    mode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       username: "",
       email: "",
@@ -182,22 +183,24 @@ const AuthPage = () => {
                       onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
                       className="space-y-4"
                     >
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Choose a username"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-username">Username</Label>
+                        <Input
+                          id="register-username"
+                          type="text"
+                          placeholder="Choose a username"
+                          value={registerForm.watch("username")}
+                          onChange={(e) => {
+                            registerForm.setValue("username", e.target.value);
+                            registerForm.trigger("username");
+                          }}
+                        />
+                        {registerForm.formState.errors.username && (
+                          <p className="text-sm font-medium text-destructive">
+                            {registerForm.formState.errors.username.message}
+                          </p>
                         )}
-                      />
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="register-email">Email</Label>
                         <Input
@@ -286,7 +289,12 @@ const AuthPage = () => {
                   <Button
                     variant="link"
                     className="pl-1 h-auto p-0"
-                    onClick={() => setIsLogin(!isLogin)}
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      // Reset forms when switching modes
+                      loginForm.reset();
+                      registerForm.reset();
+                    }}
                   >
                     {isLogin ? "Sign up" : "Sign in"}
                   </Button>
