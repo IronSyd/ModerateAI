@@ -71,9 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async () => {
       await apiRequest("POST", "/api/logout");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // First clear the user data
       queryClient.setQueryData(["/api/user"], null);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Then invalidate and wait for it to complete
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Also clear all other cached data
+      queryClient.clear();
     },
     onError: (error: Error) => {
       toast({

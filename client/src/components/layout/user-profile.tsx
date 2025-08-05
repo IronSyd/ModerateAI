@@ -19,16 +19,16 @@ const UserProfile = () => {
     return null;
   }
   
-  const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast({
-          title: "Logged out",
-          description: "You have been successfully logged out.",
-        });
-        setLocation("/auth");
-      }
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync(undefined);
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
     });
+    // Force navigation to auth page
+    setLocation("/auth");
+    // Also force a page reload to ensure clean state
+    window.location.href = "/auth";
   };
   
   return (
