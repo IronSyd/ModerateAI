@@ -970,8 +970,8 @@ export class DatabaseStorage implements IStorage {
       .where(eq(messages.sender, 'ai'));
     const aiMessages = aiResult[0]?.count || 0;
     
-    // Calculate response rate
-    return totalMessages > 0 ? aiMessages / totalMessages : 0;
+    // Calculate response rate as percentage
+    return totalMessages > 0 ? (aiMessages / totalMessages) * 100 : 0;
   }
 
   /**
