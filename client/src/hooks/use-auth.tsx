@@ -12,12 +12,9 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<any, Error, LoginData>;
+  loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, InsertUser>;
-  verifyTwoFactorMutation: UseMutationResult<User, Error, { code: string }>;
-  needsTwoFactor: boolean;
-  setNeedsTwoFactor: (value: boolean) => void;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -26,7 +23,6 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
   
   const {
     data: user,
@@ -42,17 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (data: any) => {
-      if (data.requiresTwoFactor) {
-        setNeedsTwoFactor(true);
-        toast({
-          title: "2FA Required",
-          description: "Please check your email for the verification code",
-        });
-      } else {
-        queryClient.setQueryData(["/api/user"], data);
-        setNeedsTwoFactor(false);
-      }
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/user"], user);
     },
     onError: (error: Error) => {
       toast({
@@ -96,28 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const verifyTwoFactorMutation = useMutation({
-    mutationFn: async ({ code }: { code: string }) => {
-      const res = await apiRequest("POST", "/api/verify-2fa", { code });
-      return await res.json();
-    },
-    onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
-      setNeedsTwoFactor(false);
-      toast({
-        title: "Login successful",
-        description: "Welcome to ModerateAI!",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "2FA verification failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   return (
     <AuthContext.Provider
       value={{
@@ -127,9 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
-        verifyTwoFactorMutation,
-        needsTwoFactor,
-        setNeedsTwoFactor,
       }}
     >
       {children}

@@ -28,10 +28,9 @@ const registerSchema = z.object({
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [twoFactorCode, setTwoFactorCode] = useState("");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation, verifyTwoFactorMutation, needsTwoFactor, setNeedsTwoFactor } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
   const { enableAdminUser } = useAdminUser();
 
   // Redirect if already logged in
@@ -60,32 +59,12 @@ const AuthPage = () => {
 
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
     loginMutation.mutate(values, {
-      onSuccess: (data) => {
-        if (!data.requiresTwoFactor) {
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
-          });
-          setLocation("/dashboard");
-        }
-      },
-    });
-  };
-
-  const onVerifyTwoFactor = () => {
-    if (!twoFactorCode) {
-      toast({
-        title: "Code required",
-        description: "Please enter your 2FA code",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    verifyTwoFactorMutation.mutate({ code: twoFactorCode }, {
       onSuccess: () => {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
         setLocation("/dashboard");
-        setTwoFactorCode("");
       },
     });
   };
@@ -115,55 +94,16 @@ const AuthPage = () => {
             <Card className="w-full max-w-md mx-auto">
               <CardHeader>
                 <CardTitle>
-                  {needsTwoFactor 
-                    ? "Two-Factor Authentication" 
-                    : isLogin 
-                      ? "Sign In" 
-                      : "Create Account"}
+                  {isLogin ? "Sign In" : "Create Account"}
                 </CardTitle>
                 <CardDescription>
-                  {needsTwoFactor
-                    ? "Enter the 6-digit code sent to your email"
-                    : isLogin
-                      ? "Sign in to your ModerateAI account"
-                      : "Create a new ModerateAI account"}
+                  {isLogin
+                    ? "Sign in to your ModerateAI account"
+                    : "Create a new ModerateAI account"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {needsTwoFactor ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="2fa-code">Verification Code</Label>
-                      <Input
-                        id="2fa-code"
-                        type="text"
-                        placeholder="Enter 6-digit code"
-                        value={twoFactorCode}
-                        onChange={(e) => setTwoFactorCode(e.target.value)}
-                        maxLength={6}
-                        className="text-center text-2xl tracking-widest"
-                      />
-                    </div>
-                    <Button
-                      onClick={onVerifyTwoFactor}
-                      className="w-full"
-                      disabled={verifyTwoFactorMutation.isPending || !twoFactorCode}
-                    >
-                      {verifyTwoFactorMutation.isPending ? "Verifying..." : "Verify Code"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full"
-                      onClick={() => {
-                        loginMutation.reset();
-                        setTwoFactorCode("");
-                        setNeedsTwoFactor(false);
-                      }}
-                    >
-                      Back to Login
-                    </Button>
-                  </div>
-                ) : isLogin ? (
+                {isLogin ? (
                   <Form {...loginForm}>
                     <form
                       onSubmit={loginForm.handleSubmit(onLoginSubmit)}

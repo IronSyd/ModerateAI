@@ -173,91 +173,15 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
-      // Check if user requires 2FA
-      if (user.requireTwoFactor) {
-        // Dynamic import to avoid circular dependencies
-        import("./lib/twoFactor").then(async ({ sendTwoFactorCode }) => {
-          try {
-            await sendTwoFactorCode(user);
-            
-            // Store user temporarily in session for 2FA verification
-            (req.session as any).pendingUserId = user.id;
-            
-            return res.status(200).json({ 
-              requiresTwoFactor: true,
-              message: "2FA code sent to your email" 
-            });
-          } catch (error) {
-            console.error("Error sending 2FA code:", error);
-            return res.status(500).json({ message: "Failed to send 2FA code" });
-          }
-        }).catch(error => {
-          console.error("Error loading 2FA module:", error);
-          return res.status(500).json({ message: "2FA system error" });
-        });
-      } else {
-        // Normal login without 2FA
-        req.login(user, (loginErr) => {
-          if (loginErr) {
-            console.error("Login session error:", loginErr);
-            return next(loginErr);
-          }
-          
-          console.log(`Login successful for user ${user.id}, session ID: ${req.sessionID}`);
-          console.log(`Session cookie set: ${JSON.stringify(req.session)}`);
-          
-          // Return user without sensitive information
-          const safeUser = {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            fullName: user.fullName,
-            role: user.role
-          };
-          
-          return res.status(200).json(safeUser);
-        });
-      }
-    })(req, res, next);
-  });
-
-  app.post("/api/verify-2fa", async (req: Request, res: Response) => {
-    const { code } = req.body;
-    const pendingUserId = (req.session as any).pendingUserId;
-    
-    if (!pendingUserId) {
-      return res.status(400).json({ message: "No pending 2FA verification" });
-    }
-    
-    if (!code) {
-      return res.status(400).json({ message: "2FA code is required" });
-    }
-    
-    try {
-      const { verifyTwoFactorCode } = await import("./lib/twoFactor");
-      const isValid = await verifyTwoFactorCode(pendingUserId, code);
-      
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid or expired 2FA code" });
-      }
-      
-      // Get the user from storage
-      const user = await storage.getUser(pendingUserId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Clear pending user ID
-      delete (req.session as any).pendingUserId;
-      
-      // Log the user in
+      // Direct login without 2FA
       req.login(user, (loginErr) => {
         if (loginErr) {
           console.error("Login session error:", loginErr);
-          return res.status(500).json({ message: "Login failed" });
+          return next(loginErr);
         }
         
-        console.log(`2FA verification successful for user ${user.id}`);
+        console.log(`Login successful for user ${user.id}, session ID: ${req.sessionID}`);
+        console.log(`Session cookie set: ${JSON.stringify(req.session)}`);
         
         // Return user without sensitive information
         const safeUser = {
@@ -270,11 +194,10 @@ export function setupAuth(app: Express) {
         
         return res.status(200).json(safeUser);
       });
-    } catch (error) {
-      console.error("2FA verification error:", error);
-      return res.status(500).json({ message: "2FA verification failed" });
-    }
+    })(req, res, next);
   });
+
+  // 2FA endpoint removed - authentication now uses username/password only
 
   app.post("/api/logout", (req: Request, res: Response) => {
     req.logout((err) => {
