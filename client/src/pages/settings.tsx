@@ -531,7 +531,7 @@ const Settings = () => {
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 flex justify-start">
                       <Button 
                         variant="outline" 
                         className="text-red-500 hover:text-red-400 hover:bg-red-950/30 border-red-900/20"
