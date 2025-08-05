@@ -73,6 +73,8 @@ const AuthPage = () => {
   };
 
   const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {
+    console.log("Form submitted with values:", values);
+    console.log("Username length:", values.username.length);
     registerMutation.mutate(values, {
       onSuccess: () => {
         toast({
@@ -80,6 +82,14 @@ const AuthPage = () => {
           description: "Your account has been created!",
         });
         setLocation("/dashboard");
+      },
+      onError: (error: any) => {
+        console.error("Registration error:", error);
+        toast({
+          title: "Registration failed",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
       },
     });
   };
@@ -251,6 +261,12 @@ const AuthPage = () => {
                           </FormItem>
                         )}
                       />
+                      {/* Debug info - remove later */}
+                      <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+                        <div>Form Errors: {JSON.stringify(registerForm.formState.errors)}</div>
+                        <div>Username Value: "{registerForm.watch("username")}" (length: {registerForm.watch("username").length})</div>
+                        <div>Is Valid: {registerForm.formState.isValid ? "Yes" : "No"}</div>
+                      </div>
                       <Button
                         type="submit"
                         className="w-full"
