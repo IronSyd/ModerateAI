@@ -7,7 +7,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Conversations from "@/pages/conversations";
 import AiConfiguration from "@/pages/ai-configuration";
-import Templates from "@/pages/templates";
+
 import WebsiteIntegration from "@/pages/integrations/website";
 import WebsiteDemoPage from "@/pages/integrations/website-demo";
 import TelegramIntegration from "@/pages/integrations/telegram";
@@ -103,7 +103,7 @@ function Router() {
         <ProtectedRoute path="/dashboard" component={Dashboard} />
         <ProtectedRoute path="/conversations" component={Conversations} />
         <ProtectedRoute path="/ai-configuration" component={AiConfiguration} />
-        <ProtectedRoute path="/templates" component={Templates} />
+
         <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
         <ProtectedRoute path="/integrations/website-demo" component={WebsiteDemoPage} />
         <ProtectedRoute path="/integrations/telegram" component={TelegramIntegration} />

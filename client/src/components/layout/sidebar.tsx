@@ -4,7 +4,6 @@ import {
   LayoutDashboard, 
   MessagesSquare, 
   Settings as SettingsIcon, 
-  Clipboard, 
   Globe, 
   SendHorizontal, 
   MessageSquareMore,
@@ -37,11 +36,7 @@ const mainItems: SidebarItem[] = [
     label: "AI Configuration",
     path: "/ai-configuration"
   },
-  {
-    icon: <Clipboard className="h-5 w-5 mr-3" />,
-    label: "Templates",
-    path: "/templates"
-  }
+
 ];
 
 const integrationItems: SidebarItem[] = [
