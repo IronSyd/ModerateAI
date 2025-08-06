@@ -29,6 +29,11 @@ Preferred communication style: Simple, everyday language.
   - Added API endpoints for managing chat configurations per platform
   - Updated Telegram bot logic to use chat-specific settings instead of global ones
   - Knowledge bases can now be assigned per-chat for specialized responses
+  - **Extended to Discord**: Implemented identical chat configuration interface for Discord servers/channels:
+    - Reusable ChatConfigurationDialog and ChatConfigurationList components for both platforms
+    - Discord servers and channels can be individually configured with separate AI settings
+    - Per-server content filtering, spam protection, and mention-only modes
+    - Individual knowledge base assignments for specialized Discord communities
 
 # System Architecture
 

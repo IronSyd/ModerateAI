@@ -57,6 +57,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import { ChatConfigurationList } from "@/components/discord/ChatConfigurationList";
 import {
   Tabs,
   TabsContent,
@@ -120,6 +121,7 @@ import {
   Hash,
   Settings,
   Wrench,
+  RefreshCw,
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 
@@ -158,6 +160,26 @@ const DiscordIntegration = () => {
   const { data: platform, isLoading } = useQuery<DiscordPlatform>({
     queryKey: ['/api/platforms/10'], // Discord platform has ID 10
     retry: false,
+  });
+
+  const discordPlatformId = 10; // Discord platform ID
+
+  // Get chat configurations for this platform
+  const { data: chatConfigurations = [] } = useQuery({
+    queryKey: [`/api/platforms/${discordPlatformId}/chat-configurations`],
+    enabled: !!platform && platform.status === "active",
+  });
+
+  // Get AI configurations
+  const { data: aiConfigurations = [] } = useQuery({
+    queryKey: ["/api/ai-configurations"],
+    enabled: !!user,
+  });
+
+  // Get knowledge bases
+  const { data: knowledgeBases = [] } = useQuery({
+    queryKey: ["/api/knowledge-bases"],
+    enabled: !!user,
   });
 
   // Start Discord bot setup
@@ -455,7 +477,7 @@ const DiscordIntegration = () => {
           </TabsTrigger>
           <TabsTrigger value="channels" disabled={platform?.status !== "active"}>
             <Hash className="h-4 w-4 mr-2" />
-            Channels
+            Servers
           </TabsTrigger>
           <TabsTrigger value="settings" disabled={platform?.status !== "active"}>
             <Settings className="h-4 w-4 mr-2" />
@@ -705,86 +727,32 @@ const DiscordIntegration = () => {
         <TabsContent value="channels" className="m-0">
           <Card>
             <CardHeader>
-              <CardTitle>Discord Channels</CardTitle>
+              <CardTitle>Server Configurations</CardTitle>
               <CardDescription>
-                Configure which channels the bot should moderate
+                Manage individual settings for each Discord server and channel where your bot is active
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Channel</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Moderation</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {discordChannels.map(channel => (
-                      <TableRow key={channel.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
-                            {channel.name}
-                          </div>
-                        </TableCell>
-                        <TableCell className="capitalize">{channel.type}</TableCell>
-                        <TableCell>
-                          <Switch 
-                            checked={channel.moderationEnabled} 
-                            disabled={!channel.active || channel.type === "voice"}
-                            onCheckedChange={(checked) => handleToggleModeration(channel.id, checked)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="outline"
-                            className={channel.active ? "bg-green-600/20 text-green-500" : ""}
-                          >
-                            {channel.active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <ChatConfigurationList
+                chatConfigurations={chatConfigurations}
+                aiConfigurations={aiConfigurations}
+                knowledgeBases={knowledgeBases}
+                platformId={discordPlatformId}
+              />
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-end">
               <Button 
                 variant="outline" 
-                onClick={handleRefreshChannels}
-                disabled={refreshChannelsMutation.isPending}
+                onClick={() => {
+                  toast({
+                    title: "Refreshing configurations",
+                    description: "Checking for new Discord servers and channels."
+                  });
+                  queryClient.invalidateQueries({ queryKey: [`/api/platforms/${discordPlatformId}/chat-configurations`] });
+                }}
               >
-                {refreshChannelsMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
-                  </>
-                ) : (
-                  <>
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    Refresh Channels
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={handleSaveChannels}
-                disabled={saveChannelChangesMutation.isPending}
-              >
-                {saveChannelChangesMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Servers
               </Button>
             </CardFooter>
           </Card>
