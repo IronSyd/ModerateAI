@@ -24,7 +24,6 @@ type SetupStepsProps = {
     websiteIntegration: boolean;
     telegramIntegration: boolean;
     discordIntegration: boolean;
-    knowledgeBase: boolean;
   };
 }
 
@@ -54,14 +53,7 @@ const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
       icon: <MessageSquareMore className="h-5 w-5" />,
       completed: completedSteps.discordIntegration
     },
-    {
-      id: 'knowledge-base',
-      title: 'Knowledge Base',
-      description: 'Upload documents to help the AI answer questions accurately',
-      link: '/knowledge-bases',
-      icon: <Database className="h-5 w-5" />,
-      completed: completedSteps.knowledgeBase
-    }
+
   ];
 
   return (

@@ -13,7 +13,6 @@ type WelcomeBannerProps = {
     websiteIntegration: boolean;
     telegramIntegration: boolean;
     discordIntegration: boolean;
-    knowledgeBase: boolean;
   };
 };
 

@@ -5,7 +5,7 @@ import SetupSteps from "@/components/dashboard/setup-steps";
 import StatsCard from "@/components/dashboard/stats-card";
 import PlatformIntegrationCard from "@/components/dashboard/platform-integration-card";
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
-import AIConfigurationPreview from "@/components/dashboard/ai-configuration-preview";
+
 import DemoChatInterface from "@/components/chat/fixed-demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, CheckCircle } from "lucide-react";
 
@@ -33,20 +33,15 @@ const Dashboard = () => {
   
 
   
-  // Fetch active knowledge base
-  const { data: knowledgeBase, isLoading: isLoadingKnowledgeBase } = useQuery({
-    queryKey: ['/api/knowledge-bases/active'],
-    retry: false,
-  });
+
   
   // Setup progress tracker
-  const totalSetupSteps = 4; // Reduced from 5 (removed AI config)
+  const totalSetupSteps = 3; // Website, Telegram, Discord integrations
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupProgress, setSetupProgress] = useState({
     websiteIntegration: false,
     telegramIntegration: false,
     discordIntegration: false,
-    knowledgeBase: false,
   });
   
   // Update completed steps based on data
@@ -58,7 +53,6 @@ const Dashboard = () => {
         websiteIntegration: false,
         telegramIntegration: false,
         discordIntegration: false,
-        knowledgeBase: false,
       };
       
 
@@ -84,16 +78,12 @@ const Dashboard = () => {
         }
       }
       
-      // Check knowledge base
-      if (knowledgeBase) {
-        completed += 1;
-        progress.knowledgeBase = true;
-      }
+
       
       setCompletedSteps(completed);
       setSetupProgress(progress);
     }
-  }, [platforms, knowledgeBase]);
+  }, [platforms]);
   
   // Format stats for display
   const getStatsForDisplay = () => {
@@ -163,20 +153,7 @@ const Dashboard = () => {
   // Format AI config for display
 
   
-  // Format knowledge base for display
-  const getKnowledgeBaseForDisplay = () => {
-    if (isLoadingKnowledgeBase || !knowledgeBase) {
-      return {
-        name: "No Knowledge Base",
-        documentCount: 0
-      };
-    }
-    
-    return {
-      name: knowledgeBase.name,
-      documentCount: knowledgeBase.documentCount
-    };
-  };
+
   
   // Process activity data
   const processActivityData = () => {
@@ -278,28 +255,10 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* AI Configuration Preview & Demo Chat */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* AI Configuration Preview */}
-        <div className="lg:col-span-1">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Knowledge Base</h2>
-          <AIConfigurationPreview 
-            config={{
-              responseStyle: 75,
-              responseStyleText: "Friendly",
-              responseLength: 40,
-              responseLengthText: "Concise"
-            }}
-            knowledgeBase={getKnowledgeBaseForDisplay()}
-            isLoading={isLoadingKnowledgeBase}
-          />
-        </div>
-        
-        {/* Demo Chat Interface */}
-        <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Demo Chat Interface</h2>
-          <DemoChatInterface />
-        </div>
+      {/* Demo Chat Interface */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Demo Chat Interface</h2>
+        <DemoChatInterface />
       </div>
     </div>
   );
