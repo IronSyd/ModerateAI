@@ -632,15 +632,15 @@ const TelegramIntegration = () => {
             <Bot className="h-4 w-4 mr-2" />
             Setup
           </TabsTrigger>
-          <TabsTrigger value="groups" disabled={(platform as any)?.status !== "active"}>
+          <TabsTrigger value="groups" disabled={!(platform as any) || (platform as any)?.status === "setup_required"}>
             <Users className="h-4 w-4 mr-2" />
             Groups
           </TabsTrigger>
-          <TabsTrigger value="settings" disabled={(platform as any)?.status !== "active"}>
+          <TabsTrigger value="settings" disabled={!(platform as any) || (platform as any)?.status === "setup_required"}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </TabsTrigger>
-          <TabsTrigger value="analytics" disabled={(platform as any)?.status !== "active"}>
+          <TabsTrigger value="analytics" disabled={!(platform as any) || (platform as any)?.status === "setup_required"}>
             <PieChart className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
