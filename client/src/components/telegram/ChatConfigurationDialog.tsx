@@ -45,7 +45,6 @@ interface ChatConfigurationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   chatConfig: ChatConfiguration | null;
-  aiConfigurations: AIConfiguration[];
   knowledgeBases: KnowledgeBase[];
 }
 
@@ -53,20 +52,23 @@ export function ChatConfigurationDialog({
   isOpen,
   onClose,
   chatConfig,
-  aiConfigurations,
   knowledgeBases
 }: ChatConfigurationDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
-    aiConfigurationId: chatConfig?.aiConfigurationId || null,
     knowledgeBaseId: chatConfig?.knowledgeBaseId || null,
     isActive: chatConfig?.isActive ?? true,
     contentFilteringEnabled: chatConfig?.settings?.contentFilteringEnabled ?? true,
     spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled ?? true,
     mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode ?? false,
-    welcomeMessage: chatConfig?.settings?.welcomeMessage || ''
+    welcomeMessage: chatConfig?.settings?.welcomeMessage || '',
+    // AI Configuration settings embedded directly
+    aiName: chatConfig?.aiConfiguration?.name || `${chatConfig?.chatName} AI`,
+    systemPrompt: chatConfig?.aiConfiguration?.systemPrompt || '',
+    responseStyle: chatConfig?.aiConfiguration?.responseStyle || 'friendly',
+    maxResponseLength: chatConfig?.aiConfiguration?.maxResponseLength || 300
   });
 
   const updateMutation = useMutation({
@@ -146,23 +148,13 @@ export function ChatConfigurationDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="aiConfiguration">AI Configuration</Label>
-              <Select
-                value={formData.aiConfigurationId?.toString() || ''}
-                onValueChange={(value) => handleInputChange('aiConfigurationId', value ? parseInt(value) : null)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select AI configuration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No AI configuration</SelectItem>
-                  {aiConfigurations.map((config) => (
-                    <SelectItem key={config.id} value={config.id.toString()}>
-                      {config.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="welcomeMessage">Welcome Message</Label>
+              <Textarea
+                id="welcomeMessage"
+                value={formData.welcomeMessage}
+                onChange={(e) => handleInputChange('welcomeMessage', e.target.value)}
+                placeholder="Enter a welcome message for new users..."
+              />
             </div>
 
             <div className="space-y-2">
@@ -183,6 +175,64 @@ export function ChatConfigurationDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* AI Configuration */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">AI Configuration</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="aiName">AI Assistant Name</Label>
+              <Input
+                id="aiName"
+                value={formData.aiName}
+                onChange={(e) => handleInputChange('aiName', e.target.value)}
+                placeholder="Enter AI assistant name..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="systemPrompt">System Prompt</Label>
+              <Textarea
+                id="systemPrompt"
+                value={formData.systemPrompt}
+                onChange={(e) => handleInputChange('systemPrompt', e.target.value)}
+                placeholder="Enter system prompt to define AI behavior..."
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="responseStyle">Response Style</Label>
+                <Select
+                  value={formData.responseStyle}
+                  onValueChange={(value) => handleInputChange('responseStyle', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="formal">Formal</SelectItem>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="friendly">Friendly</SelectItem>
+                    <SelectItem value="casual">Casual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxResponseLength">Max Response Length</Label>
+                <Input
+                  id="maxResponseLength"
+                  type="number"
+                  value={formData.maxResponseLength}
+                  onChange={(e) => handleInputChange('maxResponseLength', parseInt(e.target.value))}
+                  min="50"
+                  max="1000"
+                />
+              </div>
             </div>
           </div>
 

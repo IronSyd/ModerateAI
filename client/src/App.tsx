@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Conversations from "@/pages/conversations";
-import AiConfiguration from "@/pages/ai-configuration";
+
 
 import WebsiteIntegration from "@/pages/integrations/website";
 import WebsiteDemoPage from "@/pages/integrations/website-demo";
@@ -102,7 +102,7 @@ function Router() {
       <Switch>
         <ProtectedRoute path="/dashboard" component={Dashboard} />
         <ProtectedRoute path="/conversations" component={Conversations} />
-        <ProtectedRoute path="/ai-configuration" component={AiConfiguration} />
+
 
         <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
         <ProtectedRoute path="/integrations/website-demo" component={WebsiteDemoPage} />

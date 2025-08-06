@@ -48,14 +48,12 @@ interface KnowledgeBase {
 
 interface ChatConfigurationListProps {
   chatConfigurations: ChatConfiguration[];
-  aiConfigurations: AIConfiguration[];
   knowledgeBases: KnowledgeBase[];
   platformId: number;
 }
 
 export function ChatConfigurationList({ 
   chatConfigurations, 
-  aiConfigurations, 
   knowledgeBases,
   platformId 
 }: ChatConfigurationListProps) {
@@ -240,7 +238,6 @@ export function ChatConfigurationList({
         isOpen={dialogOpen}
         onClose={() => setDialogOpen(false)}
         chatConfig={selectedChat}
-        aiConfigurations={aiConfigurations}
         knowledgeBases={knowledgeBases}
       />
     </>

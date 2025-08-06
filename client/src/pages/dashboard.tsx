@@ -38,11 +38,7 @@ const Dashboard = () => {
     retry: false,
   });
   
-  // Fetch active AI configuration
-  const { data: aiConfig, isLoading: isLoadingAiConfig } = useQuery({
-    queryKey: ['/api/ai-configurations/active'],
-    retry: false,
-  });
+
   
   // Fetch active knowledge base
   const { data: knowledgeBase, isLoading: isLoadingKnowledgeBase } = useQuery({
@@ -51,10 +47,9 @@ const Dashboard = () => {
   });
   
   // Setup progress tracker
-  const totalSetupSteps = 5;
+  const totalSetupSteps = 4; // Reduced from 5 (removed AI config)
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupProgress, setSetupProgress] = useState({
-    aiConfig: false,
     websiteIntegration: false,
     telegramIntegration: false,
     discordIntegration: true, // Force Discord to be completed
@@ -67,7 +62,6 @@ const Dashboard = () => {
       let completed = 0;
       // Create initial progress object
       const progress = {
-        aiConfig: false,
         websiteIntegration: false,
         telegramIntegration: false,
         // Discord is always marked as complete in our override
@@ -78,11 +72,7 @@ const Dashboard = () => {
       // Immediately count Discord as completed
       completed += 1;
       
-      // Check AI configuration
-      if (aiConfig) {
-        completed += 1;
-        progress.aiConfig = true;
-      }
+
       
       // Check platform integrations
       if (platforms) {
@@ -114,7 +104,7 @@ const Dashboard = () => {
       setCompletedSteps(finalCompletedSteps);
       setSetupProgress(finalProgress);
     }
-  }, [platforms, aiConfig, knowledgeBase]);
+  }, [platforms, knowledgeBase]);
   
   // Format stats for display
   const getStatsForDisplay = () => {
@@ -182,38 +172,7 @@ const Dashboard = () => {
   };
   
   // Format AI config for display
-  const getAiConfigForDisplay = () => {
-    if (isLoadingAiConfig || !aiConfig) {
-      return {
-        responseStyle: 75,
-        responseStyleText: "Friendly",
-        responseLength: 40,
-        responseLengthText: "Concise"
-      };
-    }
-    
-    // Convert numeric values to text descriptions
-    const getResponseStyleText = (value: number) => {
-      if (value <= 25) return "Formal";
-      if (value <= 50) return "Professional";
-      if (value <= 75) return "Friendly";
-      return "Casual";
-    };
-    
-    const getResponseLengthText = (value: number) => {
-      if (value <= 25) return "Very Concise";
-      if (value <= 50) return "Concise";
-      if (value <= 75) return "Detailed";
-      return "Comprehensive";
-    };
-    
-    return {
-      responseStyle: aiConfig.responseStyle,
-      responseStyleText: getResponseStyleText(aiConfig.responseStyle),
-      responseLength: aiConfig.responseLength,
-      responseLengthText: getResponseLengthText(aiConfig.responseLength)
-    };
-  };
+
   
   // Format knowledge base for display
   const getKnowledgeBaseForDisplay = () => {
@@ -339,11 +298,16 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* AI Configuration Preview */}
         <div className="lg:col-span-1">
-          <h2 className="text-lg font-semibold text-foreground mb-4">AI Configuration</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Knowledge Base</h2>
           <AIConfigurationPreview 
-            config={getAiConfigForDisplay()}
+            config={{
+              responseStyle: 75,
+              responseStyleText: "Friendly",
+              responseLength: 40,
+              responseLengthText: "Concise"
+            }}
             knowledgeBase={getKnowledgeBaseForDisplay()}
-            isLoading={isLoadingAiConfig || isLoadingKnowledgeBase}
+            isLoading={isLoadingKnowledgeBase}
           />
         </div>
         

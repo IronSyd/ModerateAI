@@ -279,11 +279,7 @@ const TelegramIntegration = () => {
     enabled: !!telegramPlatformId && platform?.status === "active",
   });
 
-  // Get AI configurations
-  const { data: aiConfigurations = [] } = useQuery({
-    queryKey: ["/api/ai-configurations"],
-    enabled: !!user,
-  });
+
 
   // Get knowledge bases
   const { data: knowledgeBases = [] } = useQuery({
@@ -1040,7 +1036,6 @@ const TelegramIntegration = () => {
             <CardContent>
               <ChatConfigurationList
                 chatConfigurations={chatConfigurations}
-                aiConfigurations={aiConfigurations}
                 knowledgeBases={knowledgeBases}
                 platformId={telegramPlatformId}
               />

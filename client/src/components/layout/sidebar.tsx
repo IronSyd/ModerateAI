@@ -31,11 +31,7 @@ const mainItems: SidebarItem[] = [
     label: "Conversations",
     path: "/conversations"
   },
-  {
-    icon: <SettingsIcon className="h-5 w-5 mr-3" />,
-    label: "AI Configuration",
-    path: "/ai-configuration"
-  },
+
 
 ];
 
