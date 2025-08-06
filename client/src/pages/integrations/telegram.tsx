@@ -113,8 +113,8 @@ const TelegramIntegration = () => {
 
   // Sync local state with platform data when it loads
   useEffect(() => {
-    if (platform?.config) {
-      const config = platform.config;
+    if (platform && platform.config) {
+      const config = platform.config as any;
       setGroupMode(config.groupMode || false);
       setPrivateChatMode(config.privateChatMode !== false); // Default to true
       setMentionOnly(config.mentionOnly !== false); // Default to true

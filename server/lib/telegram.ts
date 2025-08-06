@@ -2,6 +2,23 @@ import TelegramBot from 'node-telegram-bot-api';
 import { storage } from '../storage';
 import { generateAIResponse } from './openai';
 
+// Helper functions for content moderation
+async function checkForInappropriateContent(text: string): Promise<boolean> {
+  // Simple content filtering - in production this would use AI or external services
+  const inappropriateWords = ['spam', 'scam', 'hack', 'virus'];
+  const lowercaseText = text.toLowerCase();
+  return inappropriateWords.some(word => lowercaseText.includes(word));
+}
+
+async function checkForSpam(text: string): Promise<boolean> {
+  // Simple spam detection - repeated characters, excessive caps, etc.
+  const hasExcessiveCaps = text.length > 5 && (text.match(/[A-Z]/g) || []).length / text.length > 0.7;
+  const hasRepeatedChars = /(.)\1{4,}/.test(text);
+  const isAllCaps = text.length > 10 && text === text.toUpperCase();
+  
+  return hasExcessiveCaps || hasRepeatedChars || isAllCaps;
+}
+
 // Global map to store all active bot instances
 const activeBots = new Map<number, TelegramBot>();
 
@@ -30,9 +47,66 @@ export async function initializeBot(platformId: number, token: string): Promise<
     });
     
     // Register message handler
-    activatedBot.on('message', async (msg) => {
+    activatedBot.on('message', async (msg: any) => {
       try {
         console.log(`Telegram message received from ${msg.from?.username || 'unknown user'}: ${msg.text}`);
+        
+        // Get platform configuration first to check response settings
+        const platform = await storage.getPlatform(platformId);
+        const config = platform?.config as any || {};
+        
+        // Check if bot should respond based on configuration
+        const isGroupChat = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        const isPrivateChat = msg.chat.type === 'private';
+        const botUsername = (await activatedBot.getMe()).username;
+        const isBotMentioned = msg.text && botUsername && msg.text.toLowerCase().includes(`@${botUsername.toLowerCase()}`);
+        
+        // Apply response logic based on settings
+        if (isGroupChat && !config.groupMode) {
+          console.log('Skipping group message - Group Mode is disabled');
+          return;
+        }
+        
+        if (isPrivateChat && config.privateChatMode === false) {
+          console.log('Skipping private message - Private Chat Mode is disabled');
+          return;
+        }
+        
+        if (isGroupChat && config.mentionOnly && !isBotMentioned) {
+          console.log('Skipping group message - Mention Only mode enabled but bot not mentioned');
+          return;
+        }
+        
+        // Content filtering and spam protection checks
+        if (msg.text && config.contentFilteringEnabled) {
+          const hasInappropriateContent = await checkForInappropriateContent(msg.text);
+          if (hasInappropriateContent) {
+            console.log('Message blocked by content filter');
+            if (isGroupChat) {
+              await activatedBot.deleteMessage(msg.chat.id, msg.message_id);
+              await activatedBot.sendMessage(msg.chat.id, 
+                '⚠️ Message removed due to inappropriate content.', 
+                { reply_to_message_id: msg.message_id }
+              );
+            }
+            return;
+          }
+        }
+        
+        if (msg.text && config.spamProtectionEnabled) {
+          const isSpam = await checkForSpam(msg.text);
+          if (isSpam) {
+            console.log('Message blocked by spam protection');
+            if (isGroupChat) {
+              await activatedBot.deleteMessage(msg.chat.id, msg.message_id);
+              await activatedBot.sendMessage(msg.chat.id, 
+                '🚫 Message removed as spam.', 
+                { reply_to_message_id: msg.message_id }
+              );
+            }
+            return;
+          }
+        }
         
         // Find or create conversation
         const externalUserId = msg.from?.id.toString() || 'unknown';
@@ -51,14 +125,13 @@ export async function initializeBot(platformId: number, token: string): Promise<
           });
           
           // Send welcome message if this is a new conversation
-          const platform = await storage.getPlatform(platformId);
-          if (platform?.config?.welcomeMessage) {
-            activatedBot.sendMessage(msg.chat.id, platform.config.welcomeMessage);
+          if ((config as any).welcomeMessage) {
+            activatedBot.sendMessage(msg.chat.id, (config as any).welcomeMessage);
             
             // Save the welcome message
             await storage.createMessage({
               conversationId: conversation.id,
-              content: platform.config.welcomeMessage,
+              content: (config as any).welcomeMessage,
               sender: 'ai',
               metadata: null
             });
@@ -142,7 +215,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
     });
     
     // Handle commands
-    activatedBot.onText(/\/help/, (msg) => {
+    activatedBot.onText(/\/help/, (msg: any) => {
       activatedBot.sendMessage(msg.chat.id, 
         'I am an AI assistant powered by ModerateAI. I can help answer questions and provide information.\n\n' +
         'Available commands:\n' +
@@ -151,7 +224,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
       );
     });
     
-    activatedBot.onText(/\/about/, (msg) => {
+    activatedBot.onText(/\/about/, (msg: any) => {
       activatedBot.sendMessage(msg.chat.id, 
         'I am an AI assistant powered by ModerateAI - an AI-powered customer support and community moderation platform.\n\n' +
         'I can answer questions, provide information, and help moderate conversations.'
