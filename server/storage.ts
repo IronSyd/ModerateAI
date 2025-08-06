@@ -717,6 +717,91 @@ export class DatabaseStorage implements IStorage {
     return Math.min(100, (totalAiResponses[0].count / totalUserMessages[0].count) * 100);
   }
 
+  async getTelegramAnalytics(platformId: number): Promise<{
+    totalMessages: number;
+    aiResponses: number;
+    conversations: number;
+    responseRate: number;
+    messagesByDay: { date: string; messages: number }[];
+    chatTypes: { private: number; group: number };
+    moderationActions: { contentFiltered: number; spamBlocked: number };
+  }> {
+    // Get all conversations for this Telegram platform
+    const telegramConversations = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.platformId, platformId));
+
+    const conversationIds = telegramConversations.map(c => c.id);
+
+    // Get all messages for this platform
+    const allMessages = conversationIds.length > 0 ? await db
+      .select()
+      .from(messages)
+      .where(inArray(messages.conversationId, conversationIds)) : [];
+
+    const userMessages = allMessages.filter(m => m.sender === 'user');
+    const aiMessages = allMessages.filter(m => m.sender === 'ai');
+
+    // Calculate response rate
+    const responseRate = userMessages.length > 0 ? (aiMessages.length / userMessages.length) * 100 : 0;
+
+    // Messages by day (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentMessages = allMessages.filter(m => m.createdAt >= sevenDaysAgo);
+    const messagesByDay = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      
+      const dayMessages = recentMessages.filter(m => {
+        const msgDate = m.createdAt.toISOString().split('T')[0];
+        return msgDate === dateString;
+      }).length;
+      
+      messagesByDay.push({ date: dateString, messages: dayMessages });
+    }
+
+    // Chat types (estimate from metadata or external IDs)
+    let privateChats = 0;
+    let groupChats = 0;
+    
+    telegramConversations.forEach(conv => {
+      // If externalId starts with negative number, it's likely a group
+      if (conv.externalId && conv.externalId.startsWith('-')) {
+        groupChats++;
+      } else {
+        privateChats++;
+      }
+    });
+
+    // Moderation actions (check message metadata for blocked content)
+    let contentFiltered = 0;
+    let spamBlocked = 0;
+    
+    allMessages.forEach(msg => {
+      if (msg.metadata && typeof msg.metadata === 'object' && msg.metadata !== null) {
+        const metadata = msg.metadata as any;
+        if (metadata.blocked === 'content') contentFiltered++;
+        if (metadata.blocked === 'spam') spamBlocked++;
+      }
+    });
+
+    return {
+      totalMessages: allMessages.length,
+      aiResponses: aiMessages.length,
+      conversations: telegramConversations.length,
+      responseRate: Math.round(responseRate),
+      messagesByDay,
+      chatTypes: { private: privateChats, group: groupChats },
+      moderationActions: { contentFiltered, spamBlocked }
+    };
+  }
+
   async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
     // Get the most recent messages from all conversations
     const recentMessages = await db

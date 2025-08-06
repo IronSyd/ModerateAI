@@ -630,6 +630,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Telegram Analytics endpoint
+  app.get("/api/platforms/:id/analytics", authMiddleware, async (req, res) => {
+    try {
+      const platformId = parseInt(req.params.id);
+      
+      // Verify platform exists and belongs to user
+      const platform = await storage.getPlatform(platformId);
+      if (!platform) {
+        return res.status(404).json({ message: "Platform not found" });
+      }
+      
+      // Check if it's a Telegram platform
+      if (platform.type !== 'telegram') {
+        return res.status(400).json({ message: "Analytics only available for Telegram platforms" });
+      }
+      
+      const analytics = await storage.getTelegramAnalytics(platformId);
+      res.status(200).json(analytics);
+    } catch (error) {
+      console.error("Error fetching Telegram analytics:", error);
+      res.status(500).json({ message: "Error fetching analytics data" });
+    }
+  });
+
   // Platforms
   app.get("/api/platforms", authMiddleware, async (req, res) => {
     try {

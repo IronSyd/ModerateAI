@@ -82,6 +82,21 @@ export async function initializeBot(platformId: number, token: string): Promise<
           const hasInappropriateContent = await checkForInappropriateContent(msg.text);
           if (hasInappropriateContent) {
             console.log('Message blocked by content filter');
+            
+            // Store moderation action for analytics
+            await storage.createMessage({
+              conversationId: conversation?.id || 0,
+              content: msg.text,
+              sender: 'user',
+              metadata: {
+                timestamp: msg.date,
+                chatId: msg.chat.id,
+                messageId: msg.message_id,
+                blocked: 'content',
+                action: 'content_filtered'
+              }
+            });
+            
             if (isGroupChat) {
               await activatedBot.deleteMessage(msg.chat.id, msg.message_id);
               await activatedBot.sendMessage(msg.chat.id, 
@@ -97,6 +112,21 @@ export async function initializeBot(platformId: number, token: string): Promise<
           const isSpam = await checkForSpam(msg.text);
           if (isSpam) {
             console.log('Message blocked by spam protection');
+            
+            // Store moderation action for analytics
+            await storage.createMessage({
+              conversationId: conversation?.id || 0,
+              content: msg.text,
+              sender: 'user',
+              metadata: {
+                timestamp: msg.date,
+                chatId: msg.chat.id,
+                messageId: msg.message_id,
+                blocked: 'spam',
+                action: 'spam_blocked'
+              }
+            });
+            
             if (isGroupChat) {
               await activatedBot.deleteMessage(msg.chat.id, msg.message_id);
               await activatedBot.sendMessage(msg.chat.id, 
