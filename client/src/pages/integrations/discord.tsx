@@ -684,47 +684,7 @@ const DiscordIntegration = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">What you'll get:</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex p-4 border rounded-lg bg-card">
-                        <MessagesSquare className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                          <h4 className="text-sm font-medium">AI Responses</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Bot responds to user questions automatically
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex p-4 border rounded-lg bg-card">
-                        <Shield className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                          <h4 className="text-sm font-medium">Content Moderation</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Filter inappropriate content and spam
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex p-4 border rounded-lg bg-card">
-                        <Users className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                          <h4 className="text-sm font-medium">User Management</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Handle warning and timeouts for rule breakers
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex p-4 border rounded-lg bg-card">
-                        <BarChart3 className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                          <h4 className="text-sm font-medium">Analytics</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Track engagement and moderation actions
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+
 
                   <div className="rounded-lg border p-4 bg-card">
                     <h3 className="text-lg font-medium mb-4">Get Started</h3>
