@@ -15,6 +15,7 @@ Preferred communication style: Simple, everyday language.
 - **Removed Templates functionality**: Completely removed Templates feature from the application including pages, routes, and navigation
 - **Fixed Telegram integration tabs**: Resolved TypeScript errors and database column naming issues that prevented Groups, Settings, and Analytics tabs from being clickable
 - **Removed welcome message feature**: Eliminated welcome message functionality from Telegram bot settings as it's not needed for the use case
+- **Removed bot commands feature**: Eliminated bot commands configuration from Telegram settings to simplify the interface
 
 # System Architecture
 

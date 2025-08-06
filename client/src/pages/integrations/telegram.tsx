@@ -278,11 +278,7 @@ const TelegramIntegration = () => {
           authToken: token,
           status: "active",
           config: {
-            groupMode: true,
-            botCommands: [
-              { command: "help", description: "Show help information" },
-              { command: "about", description: "About this bot" }
-            ]
+            groupMode: true
           }
         })
       });
@@ -951,35 +947,6 @@ const TelegramIntegration = () => {
                   </div>
                   <Switch defaultChecked />
                 </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Commands</h3>
-                <p className="text-sm text-muted-foreground">
-                  Configure the commands your bot responds to in Telegram
-                </p>
-                
-                <div className="space-y-2">
-                  {((platform as any)?.config?.botCommands || [
-                    { command: "help", description: "Show help information" },
-                    { command: "about", description: "About this bot" }
-                  ]).map((cmd: any, index: number) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <code className="bg-accent px-2 py-1 rounded text-sm">/
-                        {cmd.command}
-                      </code>
-                      <span className="text-sm text-muted-foreground">-</span>
-                      <span className="text-sm">{cmd.description}</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <Button variant="outline" size="sm">
-                  <Plus className="mr-2 h-3 w-3" />
-                  Add Command
-                </Button>
               </div>
 
               <Separator />
