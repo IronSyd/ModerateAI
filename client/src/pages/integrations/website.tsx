@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { WebsiteConfigurationList } from "@/components/website/WebsiteConfigurationList";
 import { Link } from "wouter";
 
 import {
@@ -56,9 +57,21 @@ const WebsiteIntegration = () => {
     showAgentAvatar: true,
   });
 
-  // Fetch platform data
-  const { data: platform, isLoading } = useQuery({
-    queryKey: ['/api/platforms/1'], // Assuming website platform has ID 1
+  // Fetch website configurations
+  const { data: websiteConfigurations = [], isLoading } = useQuery({
+    queryKey: ['/api/website-configurations'],
+    retry: false,
+  });
+
+  // Fetch AI configurations
+  const { data: aiConfigurations = [], isLoading: isLoadingAI } = useQuery({
+    queryKey: ['/api/ai-configurations'],
+    retry: false,
+  });
+
+  // Fetch knowledge bases  
+  const { data: knowledgeBases = [], isLoading: isLoadingKB } = useQuery({
+    queryKey: ['/api/knowledge-bases'],
     retry: false,
   });
 
@@ -76,7 +89,7 @@ const WebsiteIntegration = () => {
     fjs.parentNode.insertBefore(js, fjs);
   })(window, document, 'script', 'mai');
   
-  mai('init', '${platform?.authToken || "demo_token_123456789"}');
+  mai('init', 'REPLACE_WITH_YOUR_AUTH_TOKEN');
 </script>`;
 
   // Update platform configuration
@@ -238,28 +251,37 @@ const WebsiteIntegration = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-muted-foreground">Configure and deploy your website chat widget</p>
+          <h1 className="text-3xl font-bold">Website Integration</h1>
+          <p className="text-muted-foreground">Configure multiple website chat instances with different knowledge bases and AI configurations</p>
         </div>
-        <Badge variant={platform?.status === "active" ? "success" : "outline"} className="capitalize">
-          {platform?.status === "active" ? "Active" : platform?.status?.replace("_", " ")}
+        <Badge variant="outline" className="capitalize">
+          {websiteConfigurations.length} Configuration{websiteConfigurations.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
-      <Tabs defaultValue="setup" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="configurations" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
+          <TabsTrigger value="configurations">
+            <Globe className="h-4 w-4 mr-2" />
+            Configurations
+          </TabsTrigger>
           <TabsTrigger value="setup">
             <Code className="h-4 w-4 mr-2" />
-            Setup
+            Setup Guide
           </TabsTrigger>
           <TabsTrigger value="customize">
             <Settings className="h-4 w-4 mr-2" />
-            Customize
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <MonitorSmartphone className="h-4 w-4 mr-2" />
-            Analytics
+            Widget Preview
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="configurations" className="m-0">
+          <WebsiteConfigurationList
+            websiteConfigurations={websiteConfigurations}
+            aiConfigurations={aiConfigurations}
+            knowledgeBases={knowledgeBases}
+          />
+        </TabsContent>
 
         <TabsContent value="setup" className="m-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

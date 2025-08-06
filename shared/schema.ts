@@ -318,6 +318,41 @@ export const insertChatConfigurationSchema = createInsertSchema(chatConfiguratio
   isActive: true,
 });
 
+// Website Configurations table - for managing multiple website instances
+export const websiteConfigurations = pgTable("website_configurations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // Display name for this website instance
+  domain: text("domain"), // Website domain (optional)
+  authToken: text("auth_token").notNull().unique(), // Unique token for this website instance
+  aiConfigurationId: integer("ai_configuration_id").references(() => aiConfigurations.id, { onDelete: "set null" }),
+  knowledgeBaseId: integer("knowledge_base_id").references(() => knowledgeBases.id, { onDelete: "set null" }),
+  config: jsonb("config").notNull().default({
+    widgetTitle: "Chat with us",
+    welcomeMessage: "Hi there! How can I help you today?",
+    primaryColor: "#3B82F6",
+    position: "bottom-right",
+    allowFileUploads: false,
+    collectVisitorInfo: true,
+    showTypingIndicator: true,
+    autoOpenDelay: 3000
+  }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertWebsiteConfigurationSchema = createInsertSchema(websiteConfigurations).pick({
+  userId: true,
+  name: true,
+  domain: true,
+  authToken: true,
+  aiConfigurationId: true,
+  knowledgeBaseId: true,
+  config: true,
+  isActive: true,
+});
+
 // Team Settings table
 export const teamSettings = pgTable("team_settings", {
   id: serial("id").primaryKey(),
@@ -365,6 +400,21 @@ export const teamSettingsRelations = relations(teamSettings, ({ one }) => ({
   })
 }));
 
+export const websiteConfigurationsRelations = relations(websiteConfigurations, ({ one }) => ({
+  user: one(users, {
+    fields: [websiteConfigurations.userId],
+    references: [users.id]
+  }),
+  aiConfiguration: one(aiConfigurations, {
+    fields: [websiteConfigurations.aiConfigurationId],
+    references: [aiConfigurations.id]
+  }),
+  knowledgeBase: one(knowledgeBases, {
+    fields: [websiteConfigurations.knowledgeBaseId],
+    references: [knowledgeBases.id]
+  })
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -400,3 +450,6 @@ export type InsertTeamSettings = z.infer<typeof insertTeamSettingsSchema>;
 
 export type ChatConfiguration = typeof chatConfigurations.$inferSelect;
 export type InsertChatConfiguration = z.infer<typeof insertChatConfigurationSchema>;
+
+export type WebsiteConfiguration = typeof websiteConfigurations.$inferSelect;
+export type InsertWebsiteConfiguration = z.infer<typeof insertWebsiteConfigurationSchema>;

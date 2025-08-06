@@ -1515,10 +1515,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Token is required" });
       }
 
-      // Find platform by auth token
-      const platform = await storage.getPlatformByToken(token);
-      if (!platform || platform.type !== "website") {
-        return res.status(401).json({ message: "Invalid token" });
+      // Find website configuration by auth token
+      const websiteConfig = await storage.getWebsiteConfigurationByToken(token);
+      if (!websiteConfig || !websiteConfig.isActive) {
+        return res.status(401).json({ message: "Invalid token or website configuration disabled" });
+      }
+
+      // Create a virtual platform for this website instance if it doesn't exist
+      let platform = await storage.getPlatformByToken(token);
+      if (!platform) {
+        platform = await storage.createPlatform({
+          type: "website",
+          name: websiteConfig.name,
+          status: "active",
+          userId: websiteConfig.userId,
+          authToken: token,
+          config: websiteConfig.config
+        });
       }
 
       // Create or get existing conversation for this session
@@ -1533,14 +1546,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Return conversation info and platform config
+      // Return conversation info and website config
       res.json({
         conversationId: conversation.id,
-        config: platform.config || {
-          widgetTitle: "Chat with us",
-          welcomeMessage: "Hi there! How can I help you today?",
-          primaryColor: "#3B82F6"
-        }
+        config: websiteConfig.config
       });
     } catch (error) {
       console.error("Error initializing website chat:", error);
@@ -1554,6 +1563,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!token || !sessionId || !message) {
         return res.status(400).json({ message: "Token, sessionId, and message are required" });
+      }
+
+      // Find website configuration by auth token
+      const websiteConfig = await storage.getWebsiteConfigurationByToken(token);
+      if (!websiteConfig || !websiteConfig.isActive) {
+        return res.status(401).json({ message: "Invalid token or website configuration disabled" });
       }
 
       // Find platform by auth token
@@ -1573,10 +1588,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
-      // Get the active AI configuration for the platform owner
-      const aiConfig = await storage.getActiveAiConfiguration(platform.userId);
+      // Use website-specific AI configuration if available, otherwise use user's active AI config
+      let aiConfig = null;
+      if (websiteConfig.aiConfigurationId) {
+        aiConfig = await storage.getAiConfiguration(websiteConfig.aiConfigurationId);
+      } else {
+        aiConfig = await storage.getActiveAiConfiguration(websiteConfig.userId);
+      }
+
       if (!aiConfig) {
-        return res.status(404).json({ message: "No active AI configuration found" });
+        return res.status(404).json({ message: "No AI configuration found" });
       }
 
       // Create user message
@@ -1599,8 +1620,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate AI response using knowledge base if available
       let aiResponse: string;
       try {
-        // Try knowledge-based response first
-        const knowledgeBase = await storage.getActiveKnowledgeBase(platform.userId);
+        // Try knowledge-based response first - use website-specific knowledge base if available
+        let knowledgeBase = null;
+        if (websiteConfig.knowledgeBaseId) {
+          knowledgeBase = await storage.getKnowledgeBase(websiteConfig.knowledgeBaseId);
+        } else {
+          knowledgeBase = await storage.getActiveKnowledgeBase(websiteConfig.userId);
+        }
+        
         if (knowledgeBase) {
           aiResponse = await generateKnowledgeBasedResponse(
             message,
@@ -1608,7 +1635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             aiConfig.systemPrompt || "You are a helpful customer support assistant.",
             aiConfig.responseStyle,
             aiConfig.responseLength,
-            platform.userId
+            websiteConfig.userId
           );
         } else {
           // Fall back to regular AI response
@@ -1644,6 +1671,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing website chat message:", error);
       res.status(500).json({ message: "Error processing message" });
+    }
+  });
+
+  // Website Configuration Management API endpoints
+  app.get("/api/website-configurations", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const configurations = await storage.getWebsiteConfigurationsByUserId(userId);
+      res.json({ configurations });
+    } catch (error) {
+      console.error("Error fetching website configurations:", error);
+      res.status(500).json({ message: "Error fetching configurations" });
+    }
+  });
+
+  app.post("/api/website-configurations", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { name, domain, aiConfigurationId, knowledgeBaseId, config } = req.body;
+      
+      // Generate unique auth token
+      const authToken = `website-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      
+      const websiteConfig = await storage.createWebsiteConfiguration({
+        userId,
+        name: name || "New Website",
+        domain,
+        authToken,
+        aiConfigurationId: aiConfigurationId || null,
+        knowledgeBaseId: knowledgeBaseId || null,
+        config: config || {
+          widgetTitle: "Chat with us",
+          welcomeMessage: "Hi there! How can I help you today?",
+          primaryColor: "#3B82F6",
+          position: "bottom-right",
+          allowFileUploads: false,
+          collectVisitorInfo: true,
+          showTypingIndicator: true,
+          autoOpenDelay: 3000
+        },
+        isActive: true
+      });
+
+      res.json({ configuration: websiteConfig });
+    } catch (error) {
+      console.error("Error creating website configuration:", error);
+      res.status(500).json({ message: "Error creating configuration" });
+    }
+  });
+
+  app.patch("/api/website-configurations/:id", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const configId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Verify ownership
+      const existingConfig = await storage.getWebsiteConfiguration(configId);
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Configuration not found" });
+      }
+
+      const updatedConfig = await storage.updateWebsiteConfiguration(configId, req.body);
+      res.json({ configuration: updatedConfig });
+    } catch (error) {
+      console.error("Error updating website configuration:", error);
+      res.status(500).json({ message: "Error updating configuration" });
+    }
+  });
+
+  app.delete("/api/website-configurations/:id", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const configId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Verify ownership
+      const existingConfig = await storage.getWebsiteConfiguration(configId);
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Configuration not found" });
+      }
+
+      await storage.deleteWebsiteConfiguration(configId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting website configuration:", error);
+      res.status(500).json({ message: "Error deleting configuration" });
     }
   });
 
