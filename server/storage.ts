@@ -880,6 +880,28 @@ export class DatabaseStorage implements IStorage {
     return kb;
   }
 
+  async createKnowledgeBase(knowledgeBase: InsertKnowledgeBase): Promise<KnowledgeBase> {
+    const [created] = await db.insert(knowledgeBases).values(knowledgeBase).returning();
+    return created;
+  }
+
+  async updateKnowledgeBase(id: number, knowledgeBase: Partial<KnowledgeBase>): Promise<KnowledgeBase | undefined> {
+    const [updated] = await db
+      .update(knowledgeBases)
+      .set(knowledgeBase)
+      .where(eq(knowledgeBases.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getKnowledgeBasesByUserId(userId: number): Promise<KnowledgeBase[]> {
+    return await db
+      .select()
+      .from(knowledgeBases)
+      .where(eq(knowledgeBases.userId, userId))
+      .orderBy(desc(knowledgeBases.createdAt));
+  }
+
   async getActiveKnowledgeBase(userId: number): Promise<KnowledgeBase | undefined> {
     const [kb] = await db
       .select()
