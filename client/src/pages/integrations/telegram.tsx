@@ -76,6 +76,7 @@ import {
   Users2,
   Shield,
 } from "lucide-react";
+import { ChatConfigurationList } from "@/components/telegram/ChatConfigurationList";
 
 // Analytics component for Telegram platform
 const TelegramAnalytics = ({ platformId }: { platformId: number }) => {
@@ -270,6 +271,24 @@ const TelegramIntegration = () => {
     queryKey: [`/api/platforms/${telegramPlatformId}`],
     retry: false,
     enabled: !!user && !!telegramPlatformId, // Only fetch if user is logged in and we have the ID
+  });
+
+  // Get chat configurations for this platform
+  const { data: chatConfigurations = [] } = useQuery({
+    queryKey: [`/api/platforms/${telegramPlatformId}/chat-configurations`],
+    enabled: !!telegramPlatformId && platform?.status === "active",
+  });
+
+  // Get AI configurations
+  const { data: aiConfigurations = [] } = useQuery({
+    queryKey: ["/api/ai-configurations"],
+    enabled: !!user,
+  });
+
+  // Get knowledge bases
+  const { data: knowledgeBases = [] } = useQuery({
+    queryKey: ["/api/knowledge-bases"],
+    enabled: !!user,
   });
 
   // Sync local state with platform data when it loads
@@ -1013,67 +1032,32 @@ const TelegramIntegration = () => {
         <TabsContent value="groups" className="m-0">
           <Card>
             <CardHeader>
-              <CardTitle>Telegram Groups</CardTitle>
+              <CardTitle>Chat Configurations</CardTitle>
               <CardDescription>
-                Manage groups where your bot is active
+                Manage individual settings for each Telegram group and chat where your bot is active
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Group Name</TableHead>
-                      <TableHead>Members</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Last Active</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {telegramGroups.map(group => (
-                      <TableRow key={group.id}>
-                        <TableCell className="font-medium">{group.name}</TableCell>
-                        <TableCell>{group.members}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={group.status === "active" ? "secondary" : "outline"}
-                            className="capitalize"
-                          >
-                            {group.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-foreground">{group.lastActive}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
-                            Settings
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">
-                            Leave
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <ChatConfigurationList
+                chatConfigurations={chatConfigurations}
+                aiConfigurations={aiConfigurations}
+                knowledgeBases={knowledgeBases}
+                platformId={telegramPlatformId}
+              />
             </CardContent>
             <CardFooter className="flex justify-end">
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  // Refresh groups action
                   toast({
-                    title: "Refreshing groups",
-                    description: "Checking for new Telegram groups where your bot is a member."
+                    title: "Refreshing configurations",
+                    description: "Checking for new Telegram chats and groups."
                   });
-                  // Refresh platform data
-                  queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}`] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+                  queryClient.invalidateQueries({ queryKey: [`/api/platforms/${telegramPlatformId}/chat-configurations`] });
                 }}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh Groups
+                Refresh Chats
               </Button>
             </CardFooter>
           </Card>
