@@ -139,15 +139,6 @@ const Dashboard = () => {
           changeText: "vs last week"
         },
         {
-          title: "Moderation Actions",
-          value: "-",
-          icon: <ShieldAlert className="h-6 w-6" />,
-          iconBgColor: "bg-accent/20",
-          iconColor: "text-accent",
-          changeValue: 0,
-          changeText: "vs last week"
-        },
-        {
           title: "Response Rate",
           value: "-",
           icon: <CheckCircle className="h-6 w-6" />,
