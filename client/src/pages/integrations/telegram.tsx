@@ -83,7 +83,10 @@ const TelegramIntegration = () => {
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   
-  // Moderation state
+  // Bot settings state
+  const [groupMode, setGroupMode] = useState(false);
+  const [privateChatMode, setPrivateChatMode] = useState(true);
+  const [mentionOnly, setMentionOnly] = useState(true);
   const [contentFilteringEnabled, setContentFilteringEnabled] = useState(true);
   const [spamProtectionEnabled, setSpamProtectionEnabled] = useState(true);
 
@@ -107,6 +110,18 @@ const TelegramIntegration = () => {
     retry: false,
     enabled: !!user && !!telegramPlatformId, // Only fetch if user is logged in and we have the ID
   });
+
+  // Sync local state with platform data when it loads
+  useEffect(() => {
+    if (platform?.config) {
+      const config = platform.config;
+      setGroupMode(config.groupMode || false);
+      setPrivateChatMode(config.privateChatMode !== false); // Default to true
+      setMentionOnly(config.mentionOnly !== false); // Default to true
+      setContentFilteringEnabled(config.contentFilteringEnabled !== false); // Default to true
+      setSpamProtectionEnabled(config.spamProtectionEnabled !== false); // Default to true
+    }
+  }, [platform]);
 
   // Connect Telegram bot
   const connectBotMutation = useMutation({
@@ -923,8 +938,8 @@ const TelegramIntegration = () => {
                     </p>
                   </div>
                   <Switch 
-                    checked={(platform as any)?.config?.groupMode || false}
-                    onCheckedChange={(checked) => updateBotConfig({ groupMode: checked })}
+                    checked={groupMode}
+                    onCheckedChange={setGroupMode}
                   />
                 </div>
                 
@@ -935,7 +950,10 @@ const TelegramIntegration = () => {
                       Respond to direct messages
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={privateChatMode}
+                    onCheckedChange={setPrivateChatMode}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -945,7 +963,10 @@ const TelegramIntegration = () => {
                       Only respond when mentioned in groups
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={mentionOnly}
+                    onCheckedChange={setMentionOnly}
+                  />
                 </div>
               </div>
 
@@ -987,8 +1008,11 @@ const TelegramIntegration = () => {
               <Button 
                 className="ml-auto" 
                 onClick={() => {
-                  // Save the moderation settings
+                  // Save all bot settings
                   updateBotConfig({
+                    groupMode: groupMode,
+                    privateChatMode: privateChatMode,
+                    mentionOnly: mentionOnly,
                     contentFilteringEnabled: contentFilteringEnabled,
                     spamProtectionEnabled: spamProtectionEnabled
                   });
