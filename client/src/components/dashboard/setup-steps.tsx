@@ -21,7 +21,6 @@ type SetupStep = {
 
 type SetupStepsProps = {
   completedSteps: {
-    aiConfig: boolean;
     websiteIntegration: boolean;
     telegramIntegration: boolean;
     discordIntegration: boolean;
@@ -31,14 +30,6 @@ type SetupStepsProps = {
 
 const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
   const setupSteps: SetupStep[] = [
-    {
-      id: 'ai-config',
-      title: 'Configure AI Assistant',
-      description: 'Set up how your AI assistant responds to users across platforms',
-      link: '/ai-configuration',
-      icon: <Settings className="h-5 w-5" />,
-      completed: completedSteps.aiConfig
-    },
     {
       id: 'website-integration',
       title: 'Website Integration',
@@ -67,7 +58,7 @@ const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
       id: 'knowledge-base',
       title: 'Knowledge Base',
       description: 'Upload documents to help the AI answer questions accurately',
-      link: '/ai-configuration',
+      link: '/knowledge-bases',
       icon: <Database className="h-5 w-5" />,
       completed: completedSteps.knowledgeBase
     }

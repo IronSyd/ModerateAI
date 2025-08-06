@@ -10,7 +10,6 @@ type WelcomeBannerProps = {
   title: string;
   description: string;
   setupProgress: {
-    aiConfig: boolean;
     websiteIntegration: boolean;
     telegramIntegration: boolean;
     discordIntegration: boolean;

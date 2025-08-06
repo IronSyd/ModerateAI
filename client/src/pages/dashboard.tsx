@@ -8,9 +8,7 @@ import RecentActivityList from "@/components/dashboard/recent-activity-list";
 import AIConfigurationPreview from "@/components/dashboard/ai-configuration-preview";
 import DemoChatInterface from "@/components/chat/fixed-demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, CheckCircle } from "lucide-react";
-import { 
-  updatePlatformsList
-} from "@/lib/setupCompletionOverride";
+
 
 const Dashboard = () => {
   // Scroll handling now done at the App level
@@ -27,8 +25,7 @@ const Dashboard = () => {
     retry: false,
   });
   
-  // Apply Discord active status override
-  const platforms = rawPlatforms ? updatePlatformsList(rawPlatforms as any[]) : undefined;
+  const platforms = rawPlatforms;
   
   // Fetch recent activity
   const { data: recentActivity, isLoading: isLoadingActivity } = useQuery({
