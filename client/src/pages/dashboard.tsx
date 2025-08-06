@@ -14,19 +14,19 @@ const Dashboard = () => {
   // Scroll handling now done at the App level
 
   // Fetch dashboard stats
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
+  const { data: stats = {}, isLoading: isLoadingStats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
     retry: false,
   });
   
   // Fetch platforms
-  const { data: platforms, isLoading: isLoadingPlatforms } = useQuery({
+  const { data: platforms = [], isLoading: isLoadingPlatforms } = useQuery({
     queryKey: ['/api/platforms'],
     retry: false,
   });
   
   // Fetch recent activity
-  const { data: recentActivity, isLoading: isLoadingActivity } = useQuery({
+  const { data: recentActivity = [], isLoading: isLoadingActivity } = useQuery({
     queryKey: ['/api/dashboard/recent-activity'],
     retry: false,
   });
@@ -58,20 +58,20 @@ const Dashboard = () => {
 
       
       // Check platform integrations
-      if (platforms) {
-        const websitePlatform = platforms.find(p => p.type === "website");
+      if (platforms && Array.isArray(platforms)) {
+        const websitePlatform = platforms.find((p: any) => p.type === "website");
         if (websitePlatform && websitePlatform.status === "active") {
           completed += 1;
           progress.websiteIntegration = true;
         }
         
-        const telegramPlatform = platforms.find(p => p.type === "telegram");
+        const telegramPlatform = platforms.find((p: any) => p.type === "telegram");
         if (telegramPlatform && telegramPlatform.status === "active") {
           completed += 1;
           progress.telegramIntegration = true;
         }
         
-        const discordPlatform = platforms.find(p => p.type === "discord");
+        const discordPlatform = platforms.find((p: any) => p.type === "discord");
         if (discordPlatform && discordPlatform.status === "active") {
           completed += 1;
           progress.discordIntegration = true;
@@ -122,7 +122,7 @@ const Dashboard = () => {
     return [
       {
         title: "Total Conversations",
-        value: stats.totalConversations.toLocaleString(),
+        value: (stats as any)?.totalConversations?.toLocaleString() || "0",
         icon: <MessagesSquare className="h-6 w-6" />,
         iconBgColor: "bg-primary/20",
         iconColor: "text-primary",
@@ -131,7 +131,7 @@ const Dashboard = () => {
       },
       {
         title: "AI Responses",
-        value: stats.aiResponses.toLocaleString(),
+        value: (stats as any)?.aiResponses?.toLocaleString() || "0",
         icon: <MonitorSmartphone className="h-6 w-6" />,
         iconBgColor: "bg-secondary/20",
         iconColor: "text-secondary",
@@ -140,7 +140,7 @@ const Dashboard = () => {
       },
       {
         title: "Response Rate",
-        value: stats.responseRate > 0 ? `${stats.responseRate.toFixed(1)}%` : "0%",
+        value: (stats as any)?.responseRate > 0 ? `${(stats as any).responseRate.toFixed(1)}%` : "0%",
         icon: <CheckCircle className="h-6 w-6" />,
         iconBgColor: "bg-green-600/20",
         iconColor: "text-green-500",
@@ -157,11 +157,11 @@ const Dashboard = () => {
   
   // Process activity data
   const processActivityData = () => {
-    if (isLoadingActivity || !recentActivity) {
+    if (isLoadingActivity || !recentActivity || !Array.isArray(recentActivity)) {
       return [];
     }
     
-    return recentActivity.map((activity, index) => ({
+    return recentActivity.map((activity: any, index: number) => ({
       id: `activity-${index}`,
       user: {
         name: activity.user,
@@ -226,7 +226,7 @@ const Dashboard = () => {
               </>
             ) : (
               // Display platforms
-              platforms?.map((platform) => (
+              Array.isArray(platforms) ? platforms.map((platform: any) => (
                 <PlatformIntegrationCard
                   key={platform.id}
                   type={platform.type as "website" | "telegram" | "discord"}
@@ -240,7 +240,7 @@ const Dashboard = () => {
                   }
                   status={platform.status as "active" | "not_connected" | "setup_required"}
                 />
-              ))
+              )) : null
             )}
           </div>
         </div>
