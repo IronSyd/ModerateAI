@@ -22,6 +22,13 @@ Preferred communication style: Simple, everyday language.
   - Mention Only: Bot only responds when mentioned in groups when enabled
   - Content Filtering: Bot removes inappropriate content and warns users
   - Spam Protection: Bot detects and removes spam messages with notifications
+- **Added per-group chat configurations**: Implemented chat-specific AI configurations and knowledge bases (August 6, 2025):
+  - Added `chatConfigurations` table to database schema for group/chat specific settings
+  - Each Telegram group/chat can now have its own AI configuration and knowledge base
+  - Bot automatically creates chat configurations when first encountering new groups
+  - Added API endpoints for managing chat configurations per platform
+  - Updated Telegram bot logic to use chat-specific settings instead of global ones
+  - Knowledge bases can now be assigned per-chat for specialized responses
 
 # System Architecture
 

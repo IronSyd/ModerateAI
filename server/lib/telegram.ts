@@ -51,9 +51,36 @@ export async function initializeBot(platformId: number, token: string): Promise<
       try {
         console.log(`Telegram message received from ${msg.from?.username || 'unknown user'}: ${msg.text}`);
         
-        // Get platform configuration first to check response settings
-        const platform = await storage.getPlatform(platformId);
-        const config = platform?.config as any || {};
+        // Get or create chat-specific configuration
+        const chatId = msg.chat.id.toString();
+        const chatType = msg.chat.type === 'group' || msg.chat.type === 'supergroup' ? 'group' : msg.chat.type;
+        const chatName = msg.chat.title || msg.chat.first_name || `${chatType} ${chatId}`;
+        
+        let chatConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, chatId);
+        
+        // Create default chat configuration if it doesn't exist
+        if (!chatConfig) {
+          console.log(`Creating new chat configuration for ${chatType}: ${chatName}`);
+          chatConfig = await storage.createChatConfiguration({
+            platformId,
+            externalId: chatId,
+            chatType,
+            chatName,
+            aiConfigurationId: null, // Will use default
+            knowledgeBaseId: null, // Will use default
+            settings: {
+              groupMode: true,
+              privateChatMode: true,
+              mentionOnly: chatType === 'group',
+              contentFilteringEnabled: true,
+              spamProtectionEnabled: true,
+              welcomeMessage: null
+            },
+            isActive: true
+          });
+        }
+        
+        const config = chatConfig.settings as any || {};
         
         // Check if bot should respond based on configuration
         const isGroupChat = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
@@ -77,6 +104,36 @@ export async function initializeBot(platformId: number, token: string): Promise<
           return;
         }
         
+        // Find or create conversation first before any processing
+        const externalUserId = msg.from?.id.toString() || 'unknown';
+        const externalUsername = msg.from?.username || msg.from?.first_name || 'unknown';
+        
+        // Get existing or create new conversation for this chat
+        let conversation = (await storage.getConversationsByPlatformId(platformId))
+          .find(c => c.externalUserId === externalUserId && c.externalId === chatId);
+        
+        if (!conversation) {
+          conversation = await storage.createConversation({
+            platformId,
+            externalUserId,
+            externalUsername,
+            externalId: chatId,
+            status: 'active'
+          });
+          
+          // Send welcome message if configured
+          if (config.welcomeMessage) {
+            activatedBot.sendMessage(msg.chat.id, config.welcomeMessage);
+            
+            await storage.createMessage({
+              conversationId: conversation.id,
+              content: config.welcomeMessage,
+              sender: 'ai',
+              metadata: null
+            });
+          }
+        }
+        
         // Content filtering and spam protection checks
         if (msg.text && config.contentFilteringEnabled) {
           const hasInappropriateContent = await checkForInappropriateContent(msg.text);
@@ -85,7 +142,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
             
             // Store moderation action for analytics
             await storage.createMessage({
-              conversationId: conversation?.id || 0,
+              conversationId: conversation.id,
               content: msg.text,
               sender: 'user',
               metadata: {
@@ -115,7 +172,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
             
             // Store moderation action for analytics
             await storage.createMessage({
-              conversationId: conversation?.id || 0,
+              conversationId: conversation.id,
               content: msg.text,
               sender: 'user',
               metadata: {
@@ -138,36 +195,6 @@ export async function initializeBot(platformId: number, token: string): Promise<
           }
         }
         
-        // Find or create conversation
-        const externalUserId = msg.from?.id.toString() || 'unknown';
-        const externalUsername = msg.from?.username || msg.from?.first_name || 'unknown';
-        
-        // Get existing or create new conversation
-        let conversation = (await storage.getConversationsByPlatformId(platformId))
-          .find(c => c.externalUserId === externalUserId);
-        
-        if (!conversation) {
-          conversation = await storage.createConversation({
-            platformId,
-            externalUserId,
-            externalUsername,
-            status: 'active'
-          });
-          
-          // Send welcome message if this is a new conversation
-          if ((config as any).welcomeMessage) {
-            activatedBot.sendMessage(msg.chat.id, (config as any).welcomeMessage);
-            
-            // Save the welcome message
-            await storage.createMessage({
-              conversationId: conversation.id,
-              content: (config as any).welcomeMessage,
-              sender: 'ai',
-              metadata: null
-            });
-          }
-        }
-        
         // Skip empty messages
         if (!msg.text) return;
         
@@ -187,9 +214,25 @@ export async function initializeBot(platformId: number, token: string): Promise<
         activatedBot.sendChatAction(msg.chat.id, 'typing');
         
         try {
-          // Get AI response - wrap in try/catch to handle any DB issues
-          const activeConfig = await storage.getActiveAiConfiguration(1); // Using demo user ID for now
-          const knowledgeBase = await storage.getActiveKnowledgeBase(1); // Using demo user ID for now
+          // Get chat-specific or default AI configuration
+          let activeConfig;
+          if (chatConfig.aiConfigurationId) {
+            activeConfig = await storage.getAiConfiguration(chatConfig.aiConfigurationId);
+          } else {
+            // Fallback to platform owner's default AI configuration
+            const platform = await storage.getPlatform(platformId);
+            activeConfig = await storage.getActiveAiConfiguration(platform?.userId || 1);
+          }
+          
+          // Get chat-specific or default knowledge base
+          let knowledgeBase;
+          if (chatConfig.knowledgeBaseId) {
+            knowledgeBase = await storage.getKnowledgeBase(chatConfig.knowledgeBaseId);
+          } else {
+            // Fallback to platform owner's default knowledge base
+            const platform = await storage.getPlatform(platformId);
+            knowledgeBase = await storage.getActiveKnowledgeBase(platform?.userId || 1);
+          }
           
           // Get conversation history
           const messages = await storage.getMessagesByConversationId(conversation.id);
@@ -203,14 +246,27 @@ export async function initializeBot(platformId: number, token: string): Promise<
           // Default system prompt if none is configured
           const systemPrompt = activeConfig?.systemPrompt || 'You are a helpful assistant.';
           
-          // Generate AI response with proper parameters
-          const aiResponse = await generateAIResponse(
-            msg.text,
-            conversationHistory,
-            systemPrompt,
-            activeConfig?.responseStyle || 50,
-            activeConfig?.responseLength || 50
-          );
+          // Generate AI response with proper parameters - use knowledge-based response if knowledge base is available
+          let aiResponse;
+          if (knowledgeBase) {
+            const { generateKnowledgeBasedResponse } = await import("../lib/openai");
+            aiResponse = await generateKnowledgeBasedResponse(
+              msg.text,
+              conversationHistory,
+              systemPrompt,
+              activeConfig?.responseStyle || 50,
+              activeConfig?.responseLength || 50
+            );
+          } else {
+            const { generateAIResponse } = await import("../lib/openai");
+            aiResponse = await generateAIResponse(
+              msg.text,
+              conversationHistory,
+              systemPrompt,
+              activeConfig?.responseStyle || 50,
+              activeConfig?.responseLength || 50
+            );
+          }
           
           // Send response
           await activatedBot.sendMessage(msg.chat.id, aiResponse);

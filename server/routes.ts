@@ -654,6 +654,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat Configuration endpoints
+  
+  // Get all chat configurations for a platform
+  app.get("/api/platforms/:id/chat-configurations", authMiddleware, async (req, res) => {
+    try {
+      const platformId = parseInt(req.params.id);
+      
+      // Verify platform belongs to user
+      const platform = await storage.getPlatform(platformId);
+      if (!platform || platform.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Platform not found" });
+      }
+      
+      const chatConfigs = await storage.getChatConfigurationsByPlatformId(platformId);
+      res.json(chatConfigs);
+    } catch (error: any) {
+      console.error("Error fetching chat configurations:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get a specific chat configuration
+  app.get("/api/chat-configurations/:id", authMiddleware, async (req, res) => {
+    try {
+      const configId = parseInt(req.params.id);
+      const chatConfig = await storage.getChatConfiguration(configId);
+      
+      if (!chatConfig) {
+        return res.status(404).json({ message: "Chat configuration not found" });
+      }
+      
+      // Verify platform belongs to user
+      const platform = await storage.getPlatform(chatConfig.platformId);
+      if (!platform || platform.userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(chatConfig);
+    } catch (error: any) {
+      console.error("Error fetching chat configuration:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update chat configuration
+  app.patch("/api/chat-configurations/:id", authMiddleware, async (req, res) => {
+    try {
+      const configId = parseInt(req.params.id);
+      const { aiConfigurationId, knowledgeBaseId, settings } = req.body;
+      
+      const chatConfig = await storage.getChatConfiguration(configId);
+      if (!chatConfig) {
+        return res.status(404).json({ message: "Chat configuration not found" });
+      }
+      
+      // Verify platform belongs to user
+      const platform = await storage.getPlatform(chatConfig.platformId);
+      if (!platform || platform.userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedConfig = await storage.updateChatConfiguration(configId, {
+        aiConfigurationId: aiConfigurationId !== undefined ? aiConfigurationId : chatConfig.aiConfigurationId,
+        knowledgeBaseId: knowledgeBaseId !== undefined ? knowledgeBaseId : chatConfig.knowledgeBaseId,
+        settings: settings || chatConfig.settings
+      });
+      
+      res.json(updatedConfig);
+    } catch (error: any) {
+      console.error("Error updating chat configuration:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Delete chat configuration
+  app.delete("/api/chat-configurations/:id", authMiddleware, async (req, res) => {
+    try {
+      const configId = parseInt(req.params.id);
+      
+      const chatConfig = await storage.getChatConfiguration(configId);
+      if (!chatConfig) {
+        return res.status(404).json({ message: "Chat configuration not found" });
+      }
+      
+      // Verify platform belongs to user
+      const platform = await storage.getPlatform(chatConfig.platformId);
+      if (!platform || platform.userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const deleted = await storage.deleteChatConfiguration(configId);
+      if (deleted) {
+        res.json({ message: "Chat configuration deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete chat configuration" });
+      }
+    } catch (error: any) {
+      console.error("Error deleting chat configuration:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Platforms
   app.get("/api/platforms", authMiddleware, async (req, res) => {
     try {

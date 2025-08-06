@@ -9,7 +9,8 @@ import {
   ConversationTraining, InsertConversationTraining,
   TeamInvitation, InsertTeamInvitation,
   TeamSettings, InsertTeamSettings,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings
+  ChatConfiguration, InsertChatConfiguration,
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
@@ -84,6 +85,14 @@ export interface IStorage {
   createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation>;
   updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined>;
   deleteTeamInvitation(id: number): Promise<boolean>;
+  
+  // Chat Configuration operations
+  getChatConfiguration(id: number): Promise<ChatConfiguration | undefined>;
+  getChatConfigurationByPlatformAndExternalId(platformId: number, externalId: string): Promise<ChatConfiguration | undefined>;
+  getChatConfigurationsByPlatformId(platformId: number): Promise<ChatConfiguration[]>;
+  createChatConfiguration(chatConfig: InsertChatConfiguration): Promise<ChatConfiguration>;
+  updateChatConfiguration(id: number, chatConfig: Partial<ChatConfiguration>): Promise<ChatConfiguration | undefined>;
+  deleteChatConfiguration(id: number): Promise<boolean>;
   
   // Analytics operations
   getConversationCount(): Promise<number>;
@@ -1031,6 +1040,50 @@ export class DatabaseStorage implements IStorage {
     return messageActivities
       .sort((a, b) => b.time.getTime() - a.time.getTime())
       .slice(0, limit);
+  }
+
+  // Chat Configuration methods implementation
+  async getChatConfiguration(id: number): Promise<ChatConfiguration | undefined> {
+    const [config] = await db.select().from(chatConfigurations).where(eq(chatConfigurations.id, id));
+    return config;
+  }
+
+  async getChatConfigurationByPlatformAndExternalId(platformId: number, externalId: string): Promise<ChatConfiguration | undefined> {
+    const [config] = await db
+      .select()
+      .from(chatConfigurations)
+      .where(and(
+        eq(chatConfigurations.platformId, platformId),
+        eq(chatConfigurations.externalId, externalId)
+      ));
+    return config;
+  }
+
+  async getChatConfigurationsByPlatformId(platformId: number): Promise<ChatConfiguration[]> {
+    return await db
+      .select()
+      .from(chatConfigurations)
+      .where(eq(chatConfigurations.platformId, platformId))
+      .orderBy(asc(chatConfigurations.chatName));
+  }
+
+  async createChatConfiguration(chatConfig: InsertChatConfiguration): Promise<ChatConfiguration> {
+    const [createdConfig] = await db.insert(chatConfigurations).values(chatConfig).returning();
+    return createdConfig;
+  }
+
+  async updateChatConfiguration(id: number, chatConfig: Partial<ChatConfiguration>): Promise<ChatConfiguration | undefined> {
+    const [updatedConfig] = await db
+      .update(chatConfigurations)
+      .set({ ...chatConfig, updatedAt: new Date() })
+      .where(eq(chatConfigurations.id, id))
+      .returning();
+    return updatedConfig;
+  }
+
+  async deleteChatConfiguration(id: number): Promise<boolean> {
+    const result = await db.delete(chatConfigurations).where(eq(chatConfigurations.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }
 

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, uuid, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, uuid, json, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -219,8 +219,8 @@ export const platformsRelations = relations(platforms, ({ one, many }) => ({
     references: [users.id]
   }),
   conversations: many(conversations),
-
-  conversationTrainings: many(conversationTrainings)
+  conversationTrainings: many(conversationTrainings),
+  chatConfigurations: many(chatConfigurations)
 }));
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
@@ -283,6 +283,41 @@ export const teamInvitationsRelations = relations(teamInvitations, ({ one }) => 
   })
 }));
 
+// Chat Configurations table - for group/chat specific settings
+export const chatConfigurations = pgTable("chat_configurations", {
+  id: serial("id").primaryKey(),
+  platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
+  externalId: text("external_id").notNull(), // Telegram chat ID or Discord channel ID
+  chatType: text("chat_type").notNull(), // "group", "private", "channel"
+  chatName: text("chat_name"), // Group/channel name for display
+  aiConfigurationId: integer("ai_configuration_id").references(() => aiConfigurations.id, { onDelete: "set null" }),
+  knowledgeBaseId: integer("knowledge_base_id").references(() => knowledgeBases.id, { onDelete: "set null" }),
+  settings: jsonb("settings").notNull().default({
+    groupMode: true,
+    privateChatMode: true,
+    mentionOnly: false,
+    contentFilteringEnabled: true,
+    spamProtectionEnabled: true,
+    welcomeMessage: null
+  }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Remove the separate index table since we can define it directly in the main table
+
+export const insertChatConfigurationSchema = createInsertSchema(chatConfigurations).pick({
+  platformId: true,
+  externalId: true,
+  chatType: true,
+  chatName: true,
+  aiConfigurationId: true,
+  knowledgeBaseId: true,
+  settings: true,
+  isActive: true,
+});
+
 // Team Settings table
 export const teamSettings = pgTable("team_settings", {
   id: serial("id").primaryKey(),
@@ -307,6 +342,21 @@ export const insertTeamSettingsSchema = createInsertSchema(teamSettings).pick({
   securitySettings: true,
   notificationSettings: true,
 });
+
+export const chatConfigurationsRelations = relations(chatConfigurations, ({ one }) => ({
+  platform: one(platforms, {
+    fields: [chatConfigurations.platformId],
+    references: [platforms.id]
+  }),
+  aiConfiguration: one(aiConfigurations, {
+    fields: [chatConfigurations.aiConfigurationId],
+    references: [aiConfigurations.id]
+  }),
+  knowledgeBase: one(knowledgeBases, {
+    fields: [chatConfigurations.knowledgeBaseId],
+    references: [knowledgeBases.id]
+  })
+}));
 
 export const teamSettingsRelations = relations(teamSettings, ({ one }) => ({
   user: one(users, {
@@ -334,8 +384,7 @@ export type InsertAiConfiguration = z.infer<typeof insertAiConfigurationSchema>;
 export type KnowledgeBase = typeof knowledgeBases.$inferSelect;
 export type InsertKnowledgeBase = z.infer<typeof insertKnowledgeBaseSchema>;
 
-export type ModerationAction = typeof moderationActions.$inferSelect;
-export type InsertModerationAction = z.infer<typeof insertModerationActionSchema>;
+// ModerationAction types removed - table not defined yet
 
 export type KnowledgeDocument = typeof knowledgeDocuments.$inferSelect;
 export type InsertKnowledgeDocument = z.infer<typeof insertKnowledgeDocumentSchema>;
@@ -348,3 +397,6 @@ export type InsertTeamInvitation = z.infer<typeof insertTeamInvitationSchema>;
 
 export type TeamSettings = typeof teamSettings.$inferSelect;
 export type InsertTeamSettings = z.infer<typeof insertTeamSettingsSchema>;
+
+export type ChatConfiguration = typeof chatConfigurations.$inferSelect;
+export type InsertChatConfiguration = z.infer<typeof insertChatConfigurationSchema>;
