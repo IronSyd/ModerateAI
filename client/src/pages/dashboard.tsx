@@ -20,12 +20,10 @@ const Dashboard = () => {
   });
   
   // Fetch platforms
-  const { data: rawPlatforms, isLoading: isLoadingPlatforms } = useQuery({
+  const { data: platforms, isLoading: isLoadingPlatforms } = useQuery({
     queryKey: ['/api/platforms'],
     retry: false,
   });
-  
-  const platforms = rawPlatforms;
   
   // Fetch recent activity
   const { data: recentActivity, isLoading: isLoadingActivity } = useQuery({
