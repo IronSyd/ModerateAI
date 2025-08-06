@@ -9,8 +9,6 @@ import AIConfigurationPreview from "@/components/dashboard/ai-configuration-prev
 import DemoChatInterface from "@/components/chat/fixed-demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, CheckCircle } from "lucide-react";
 import { 
-  overrideSetupProgress, 
-  overrideCompletedStepCount,
   updatePlatformsList
 } from "@/lib/setupCompletionOverride";
 
@@ -52,7 +50,7 @@ const Dashboard = () => {
   const [setupProgress, setSetupProgress] = useState({
     websiteIntegration: false,
     telegramIntegration: false,
-    discordIntegration: true, // Force Discord to be completed
+    discordIntegration: false,
     knowledgeBase: false,
   });
   
@@ -64,13 +62,9 @@ const Dashboard = () => {
       const progress = {
         websiteIntegration: false,
         telegramIntegration: false,
-        // Discord is always marked as complete in our override
-        discordIntegration: true,
+        discordIntegration: false,
         knowledgeBase: false,
       };
-      
-      // Immediately count Discord as completed
-      completed += 1;
       
 
       
@@ -88,7 +82,11 @@ const Dashboard = () => {
           progress.telegramIntegration = true;
         }
         
-        // No need to specially handle Discord as it's already marked as completed
+        const discordPlatform = platforms.find(p => p.type === "discord");
+        if (discordPlatform && discordPlatform.status === "active") {
+          completed += 1;
+          progress.discordIntegration = true;
+        }
       }
       
       // Check knowledge base
@@ -97,12 +95,8 @@ const Dashboard = () => {
         progress.knowledgeBase = true;
       }
       
-      // Apply our overrides to ensure Discord integration is counted
-      const finalProgress = overrideSetupProgress(progress);
-      const finalCompletedSteps = overrideCompletedStepCount(completed, progress);
-      
-      setCompletedSteps(finalCompletedSteps);
-      setSetupProgress(finalProgress);
+      setCompletedSteps(completed);
+      setSetupProgress(progress);
     }
   }, [platforms, knowledgeBase]);
   
@@ -272,12 +266,7 @@ const Dashboard = () => {
                       ? "Add AI responses to your Telegram groups"
                       : "Add AI moderation to your Discord server"
                   }
-                  // Force Discord to always show as active
-                  status={
-                    platform.type === "discord" 
-                      ? "active" 
-                      : (platform.status as "active" | "not_connected" | "setup_required")
-                  }
+                  status={platform.status as "active" | "not_connected" | "setup_required"}
                 />
               ))
             )}
