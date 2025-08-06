@@ -70,7 +70,6 @@ const aiConfigFormSchema = z.object({
   }),
   responseStyle: z.number().min(0).max(100),
   responseLength: z.number().min(0).max(100),
-  moderationStrictness: z.number().min(0).max(100),
   isActive: z.boolean(),
   model: z.string().min(1, {
     message: "Please select an AI model.",
@@ -95,7 +94,6 @@ const AIConfiguration = () => {
     name: string;
     responseStyle: number;
     responseLength: number;
-    moderationStrictness: number;
     isActive: boolean;
     model: string;
     systemPrompt?: string;
@@ -162,7 +160,6 @@ const AIConfiguration = () => {
       name: "",
       responseStyle: 75,
       responseLength: 40,
-      moderationStrictness: 50,
       isActive: true,
       model: "gpt-4o",
       systemPrompt: "",
@@ -176,7 +173,6 @@ const AIConfiguration = () => {
         name: activeConfig.name,
         responseStyle: activeConfig.responseStyle,
         responseLength: activeConfig.responseLength,
-        moderationStrictness: activeConfig.moderationStrictness,
         isActive: activeConfig.isActive,
         model: activeConfig.model,
         systemPrompt: activeConfig.systemPrompt || "",
@@ -325,12 +321,7 @@ const AIConfiguration = () => {
     return "Comprehensive";
   };
 
-  const getModerationStrictnessLabel = (value: number) => {
-    if (value <= 25) return "Lenient";
-    if (value <= 50) return "Balanced";
-    if (value <= 75) return "Strict";
-    return "Very Strict";
-  };
+
 
   return (
     <div>
@@ -408,10 +399,9 @@ const AIConfiguration = () => {
                       onValueChange={setActiveTab}
                       className="w-full"
                     >
-                      <TabsList className="grid grid-cols-4 mb-6">
+                      <TabsList className="grid grid-cols-3 mb-6">
                         <TabsTrigger value="general">General</TabsTrigger>
                         <TabsTrigger value="responses">Responses</TabsTrigger>
-                        <TabsTrigger value="moderation">Moderation</TabsTrigger>
                         <TabsTrigger value="training">
                           <Activity className="h-4 w-4 mr-2" />
                           Training
@@ -561,68 +551,7 @@ const AIConfiguration = () => {
                         />
                       </TabsContent>
 
-                      <TabsContent value="moderation" className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="moderationStrictness"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex justify-between mb-2">
-                                <FormLabel>Moderation Strictness</FormLabel>
-                                <span className="text-sm text-muted-foreground">
-                                  {getModerationStrictnessLabel(field.value)}
-                                </span>
-                              </div>
-                              <FormControl>
-                                <Slider
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  defaultValue={[field.value]}
-                                  onValueChange={(vals) => field.onChange(vals[0])}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Set how strictly content is moderated in your community
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
 
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium">Automatic Moderation Actions</h4>
-                            <Switch defaultChecked />
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <Card className="p-3 flex items-center space-x-3">
-                              <Switch id="flag" defaultChecked />
-                              <label htmlFor="flag" className="text-sm font-medium">
-                                Flag inappropriate content
-                              </label>
-                            </Card>
-                            <Card className="p-3 flex items-center space-x-3">
-                              <Switch id="hide" defaultChecked />
-                              <label htmlFor="hide" className="text-sm font-medium">
-                                Hide harmful messages
-                              </label>
-                            </Card>
-                            <Card className="p-3 flex items-center space-x-3">
-                              <Switch id="mute" />
-                              <label htmlFor="mute" className="text-sm font-medium">
-                                Mute repeat offenders
-                              </label>
-                            </Card>
-                            <Card className="p-3 flex items-center space-x-3">
-                              <Switch id="block" />
-                              <label htmlFor="block" className="text-sm font-medium">
-                                Block repeat offenders
-                              </label>
-                            </Card>
-                          </div>
-                        </div>
-                      </TabsContent>
                       
                       <TabsContent value="training" className="space-y-6">
                         <div className="space-y-4">

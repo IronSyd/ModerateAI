@@ -6,11 +6,10 @@ import {
   AiConfiguration, InsertAiConfiguration, 
   KnowledgeBase, InsertKnowledgeBase,
   KnowledgeDocument, InsertKnowledgeDocument,
-  ModerationAction, InsertModerationAction,
   ConversationTraining, InsertConversationTraining,
   TeamInvitation, InsertTeamInvitation,
   TeamSettings, InsertTeamSettings,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, moderationActions, conversationTrainings, teamInvitations, teamSettings
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
@@ -66,11 +65,7 @@ export interface IStorage {
   updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined>;
   deleteKnowledgeDocument(id: number): Promise<boolean>;
 
-  // Moderation Action operations
-  getModerationAction(id: number): Promise<ModerationAction | undefined>;
-  getModerationActionsByPlatformId(platformId: number): Promise<ModerationAction[]>;
-  getModerationActionsByConversationId(conversationId: number): Promise<ModerationAction[]>;
-  createModerationAction(moderationAction: InsertModerationAction): Promise<ModerationAction>;
+
 
   // Conversation Training operations
   getConversationTraining(id: number): Promise<ConversationTraining | undefined>;
@@ -93,7 +88,7 @@ export interface IStorage {
   // Analytics operations
   getConversationCount(): Promise<number>;
   getMessageCount(): Promise<number>;
-  getModerationActionCount(): Promise<number>;
+
   getResponseRate(): Promise<number>;
   getRecentActivity(limit: number): Promise<{
     user: string;
@@ -111,7 +106,7 @@ export class MemStorage implements IStorage {
   private aiConfigurations: Map<number, AiConfiguration>;
   private knowledgeBases: Map<number, KnowledgeBase>;
   private knowledgeDocuments: Map<number, KnowledgeDocument>;
-  private moderationActions: Map<number, ModerationAction>;
+
   private conversationTrainings: Map<number, ConversationTraining>;
   private teamInvitations: Map<number, TeamInvitation>;
 
@@ -122,7 +117,7 @@ export class MemStorage implements IStorage {
   private aiConfigurationIdCounter: number;
   private knowledgeBaseIdCounter: number;
   private knowledgeDocumentIdCounter: number;
-  private moderationActionIdCounter: number;
+
   private conversationTrainingIdCounter: number;
   private teamInvitationIdCounter: number;
 
@@ -134,7 +129,7 @@ export class MemStorage implements IStorage {
     this.aiConfigurations = new Map();
     this.knowledgeBases = new Map();
     this.knowledgeDocuments = new Map();
-    this.moderationActions = new Map();
+
     this.conversationTrainings = new Map();
     this.teamInvitations = new Map();
 
@@ -145,7 +140,7 @@ export class MemStorage implements IStorage {
     this.aiConfigurationIdCounter = 1;
     this.knowledgeBaseIdCounter = 1;
     this.knowledgeDocumentIdCounter = 1;
-    this.moderationActionIdCounter = 1;
+
     this.conversationTrainingIdCounter = 1;
     this.teamInvitationIdCounter = 1;
 
@@ -170,7 +165,7 @@ export class MemStorage implements IStorage {
       name: "Default Configuration",
       responseStyle: 75, // Friendly
       responseLength: 40, // Concise
-      moderationStrictness: 50, // Balanced
+
       isActive: true,
       model: "gpt-4o",
       systemPrompt: "You are a helpful customer support assistant for ModerateAI. ModerateAI is a SaaS platform that provides AI-powered chat support and community moderation across websites, Telegram, and Discord. Be friendly, helpful, and professional when answering questions.",
@@ -262,15 +257,7 @@ export class MemStorage implements IStorage {
     this.createMessage(message2);
 
     // Add moderation actions
-    const modAction: InsertModerationAction = {
-      platformId: website.id,
-      conversationId: conv1.id,
-      messageId: null,
-      action: "flag",
-      reason: "Potential sensitive information",
-      automatic: true
-    };
-    this.createModerationAction(modAction);
+
   }
 
   // User operations
@@ -478,25 +465,7 @@ export class MemStorage implements IStorage {
     return false;
   }
 
-  async getModerationAction(id: number): Promise<ModerationAction | undefined> {
-    return undefined;
-  }
 
-  async getModerationActionsByPlatformId(platformId: number): Promise<ModerationAction[]> {
-    return [];
-  }
-
-  async getModerationActionsByConversationId(conversationId: number): Promise<ModerationAction[]> {
-    return [];
-  }
-
-  async createModerationAction(moderationAction: InsertModerationAction): Promise<ModerationAction> {
-    const id = this.moderationActionIdCounter++;
-    const now = new Date();
-    const newAction = { ...moderationAction, id, createdAt: now };
-    this.moderationActions.set(id, newAction);
-    return newAction;
-  }
 
   async getConversationTraining(id: number): Promise<ConversationTraining | undefined> {
     return undefined;
@@ -562,9 +531,7 @@ export class MemStorage implements IStorage {
     return this.messages.size;
   }
 
-  async getModerationActionCount(): Promise<number> {
-    return this.moderationActions.size;
-  }
+
 
   async getResponseRate(): Promise<number> {
     return 0.95;
@@ -727,10 +694,7 @@ export class DatabaseStorage implements IStorage {
     return result[0].count;
   }
 
-  async getModerationActionCount(): Promise<number> {
-    const result = await db.select({ count: count() }).from(moderationActions);
-    return result[0].count;
-  }
+
 
   async getResponseRate(): Promise<number> {
     // Calculate the response rate based on user messages that received an AI response
@@ -793,39 +757,8 @@ export class DatabaseStorage implements IStorage {
       })
     );
     
-    // Get the most recent moderation actions
-    const recentActions = await db
-      .select({
-        id: moderationActions.id,
-        action: moderationActions.action,
-        platformId: moderationActions.platformId,
-        createdAt: moderationActions.createdAt
-      })
-      .from(moderationActions)
-      .orderBy(desc(moderationActions.createdAt))
-      .limit(Math.floor(limit / 2));
-      
-    // Get the platform information for each moderation action
-    const moderationActivities = await Promise.all(
-      recentActions.map(async (action) => {
-        const [platform] = await db
-          .select({
-            type: platforms.type
-          })
-          .from(platforms)
-          .where(eq(platforms.id, action.platformId));
-          
-        return {
-          user: "Moderator",
-          action: action.action,
-          platform: platform?.type || 'unknown',
-          time: action.createdAt
-        };
-      })
-    );
-    
-    // Combine message and moderation activities, sort by time, and limit to the requested number
-    return [...messageActivities, ...moderationActivities]
+    // Return only message activities, sorted by time and limited to the requested number
+    return messageActivities
       .sort((a, b) => b.time.getTime() - a.time.getTime())
       .slice(0, limit);
   }
@@ -845,10 +778,7 @@ export class DatabaseStorage implements IStorage {
     return updatedConfig;
   }
 
-  async createModerationAction(action: InsertModerationAction): Promise<ModerationAction> {
-    const [createdAction] = await db.insert(moderationActions).values(action).returning();
-    return createdAction;
-  }
+
 
   // The following methods can be implemented as needed
   async getKnowledgeBase(id: number): Promise<KnowledgeBase | undefined> {
@@ -947,13 +877,7 @@ export class DatabaseStorage implements IStorage {
     return result[0]?.count || 0;
   }
 
-  /**
-   * Get total moderation action count from the database
-   */
-  async getModerationActionCount(): Promise<number> {
-    const result = await db.select({ count: count() }).from(moderationActions);
-    return result[0]?.count || 0;
-  }
+
 
   /**
    * Calculate response rate based on the number of AI responses vs total messages
@@ -1018,39 +942,8 @@ export class DatabaseStorage implements IStorage {
       })
     );
     
-    // Get the most recent moderation actions
-    const recentActions = await db
-      .select({
-        id: moderationActions.id,
-        action: moderationActions.action,
-        platformId: moderationActions.platformId,
-        createdAt: moderationActions.createdAt
-      })
-      .from(moderationActions)
-      .orderBy(desc(moderationActions.createdAt))
-      .limit(Math.floor(limit / 2));
-      
-    // Get the platform information for each moderation action
-    const moderationActivities = await Promise.all(
-      recentActions.map(async (action) => {
-        const [platform] = await db
-          .select({
-            type: platforms.type
-          })
-          .from(platforms)
-          .where(eq(platforms.id, action.platformId));
-          
-        return {
-          user: "Moderator",
-          action: action.action,
-          platform: platform?.type || 'unknown',
-          time: action.createdAt
-        };
-      })
-    );
-    
-    // Combine message and moderation activities, sort by time, and limit to the requested number
-    return [...messageActivities, ...moderationActivities]
+    // Return only message activities, sorted by time and limited to the requested number
+    return messageActivities
       .sort((a, b) => b.time.getTime() - a.time.getTime())
       .slice(0, limit);
   }

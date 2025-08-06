@@ -93,7 +93,7 @@ export const aiConfigurations = pgTable("ai_configurations", {
   name: text("name").notNull(),
   responseStyle: integer("response_style").notNull().default(75), // 0-100 scale
   responseLength: integer("response_length").notNull().default(40), // 0-100 scale
-  moderationStrictness: integer("moderation_strictness").notNull().default(50), // 0-100 scale
+
   isActive: boolean("is_active").notNull().default(true),
   model: text("model").notNull().default("gpt-4o"),
   systemPrompt: text("system_prompt"),
@@ -110,7 +110,7 @@ export const insertAiConfigurationSchema = createInsertSchema(aiConfigurations).
   name: true,
   responseStyle: true,
   responseLength: true,
-  moderationStrictness: true,
+
   isActive: true,
   model: true,
   systemPrompt: true,
@@ -157,26 +157,7 @@ export const insertKnowledgeDocumentSchema = createInsertSchema(knowledgeDocumen
   metadata: true,
 });
 
-// Moderation Actions table
-export const moderationActions = pgTable("moderation_actions", {
-  id: serial("id").primaryKey(),
-  platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
-  conversationId: integer("conversation_id").references(() => conversations.id, { onDelete: "set null" }),
-  messageId: integer("message_id").references(() => messages.id, { onDelete: "set null" }),
-  action: text("action").notNull(), // "delete", "warn", "ban", "flag", etc.
-  reason: text("reason"),
-  automatic: boolean("automatic").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
 
-export const insertModerationActionSchema = createInsertSchema(moderationActions).pick({
-  platformId: true,
-  conversationId: true,
-  messageId: true,
-  action: true,
-  reason: true,
-  automatic: true,
-});
 
 // Conversation Training table - tracks AI training on conversation data
 export const conversationTrainings = pgTable("conversation_trainings", {
@@ -238,7 +219,7 @@ export const platformsRelations = relations(platforms, ({ one, many }) => ({
     references: [users.id]
   }),
   conversations: many(conversations),
-  moderationActions: many(moderationActions),
+
   conversationTrainings: many(conversationTrainings)
 }));
 
@@ -248,7 +229,7 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platforms.id]
   }),
   messages: many(messages),
-  moderationActions: many(moderationActions)
+
 }));
 
 export const messagesRelations = relations(messages, ({ one, many }) => ({
@@ -256,7 +237,7 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
     fields: [messages.conversationId],
     references: [conversations.id]
   }),
-  moderationActions: many(moderationActions, { relationName: "message_moderation" })
+
 }));
 
 export const aiConfigurationsRelations = relations(aiConfigurations, ({ one }) => ({
@@ -281,21 +262,7 @@ export const knowledgeDocumentsRelations = relations(knowledgeDocuments, ({ one 
   })
 }));
 
-export const moderationActionsRelations = relations(moderationActions, ({ one }) => ({
-  platform: one(platforms, {
-    fields: [moderationActions.platformId],
-    references: [platforms.id]
-  }),
-  conversation: one(conversations, {
-    fields: [moderationActions.conversationId],
-    references: [conversations.id]
-  }),
-  message: one(messages, {
-    fields: [moderationActions.messageId],
-    references: [messages.id],
-    relationName: "message_moderation"
-  })
-}));
+
 
 export const conversationTrainingsRelations = relations(conversationTrainings, ({ one }) => ({
   platform: one(platforms, {

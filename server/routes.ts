@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import { 
   generateAIResponse, 
   generateKnowledgeBasedResponse, 
-  moderateContent,
   trainOnConversations,
   generateImprovedSystemPrompt
 } from "./lib/openai";
@@ -17,7 +16,6 @@ import {
   insertConversationSchema, 
   insertMessageSchema, 
   insertAiConfigurationSchema,
-  insertModerationActionSchema,
   insertConversationTrainingSchema
 } from "@shared/schema";
 import { z } from "zod";
@@ -583,13 +581,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const conversationCount = await storage.getConversationCount();
       const messageCount = await storage.getMessageCount();
-      const moderationActionCount = await storage.getModerationActionCount();
       const responseRate = await storage.getResponseRate();
 
       res.status(200).json({
         totalConversations: conversationCount,
         aiResponses: messageCount,
-        moderationActions: moderationActionCount,
         responseRate: responseRate
       });
     } catch (error) {
@@ -1003,47 +999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Content moderation
-  app.post("/api/moderate-content", authMiddleware, async (req, res) => {
-    try {
-      const { content, platformId } = req.body;
-      
-      if (!content) {
-        return res.status(400).json({ message: "Content is required" });
-      }
-      
-      if (platformId) {
-        const platform = await storage.getPlatform(parseInt(platformId));
-        if (!platform || platform.userId !== req.user.id) {
-          return res.status(403).json({ message: "Unauthorized" });
-        }
-      }
-      
-      // Get the active AI configuration for strictness level
-      const aiConfig = await storage.getActiveAiConfiguration(req.user.id);
-      const strictnessLevel = aiConfig?.moderationStrictness || 50;
-      
-      // Moderate the content
-      const moderationResult = await moderateContent(content, strictnessLevel);
-      
-      // If flagged and platform ID provided, create a moderation action
-      if (moderationResult.flagged && platformId) {
-        await storage.createModerationAction({
-          platformId: parseInt(platformId),
-          conversationId: null,
-          messageId: null,
-          action: "flag",
-          reason: moderationResult.reason || "Flagged by content moderation",
-          automatic: true
-        });
-      }
-      
-      res.status(200).json(moderationResult);
-    } catch (error) {
-      console.error("Error moderating content:", error);
-      res.status(500).json({ message: "Error moderating content" });
-    }
-  });
+
 
   // AI Configurations
   app.get("/api/ai-configurations", authMiddleware, async (req, res) => {
@@ -1192,67 +1148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Moderation Actions
-  app.get("/api/moderation-actions", authMiddleware, async (req, res) => {
-    try {
-      const platformId = req.query.platformId ? parseInt(req.query.platformId as string) : undefined;
-      const conversationId = req.query.conversationId ? parseInt(req.query.conversationId as string) : undefined;
-      
-      let actions = [];
-      
-      if (platformId) {
-        // Check if user has access to platform
-        const platform = await storage.getPlatform(platformId);
-        if (!platform || platform.userId !== req.user.id) {
-          return res.status(403).json({ message: "Unauthorized" });
-        }
-        
-        actions = await storage.getModerationActionsByPlatformId(platformId);
-      } else if (conversationId) {
-        // Check if user has access to conversation
-        const conversation = await storage.getConversation(conversationId);
-        if (!conversation) {
-          return res.status(404).json({ message: "Conversation not found" });
-        }
-        
-        const platform = await storage.getPlatform(conversation.platformId);
-        if (!platform || platform.userId !== req.user.id) {
-          return res.status(403).json({ message: "Unauthorized" });
-        }
-        
-        actions = await storage.getModerationActionsByConversationId(conversationId);
-      } else {
-        return res.status(400).json({ message: "Either platformId or conversationId is required" });
-      }
-      
-      res.status(200).json(actions);
-    } catch (error) {
-      console.error("Error fetching moderation actions:", error);
-      res.status(500).json({ message: "Error fetching moderation actions" });
-    }
-  });
 
-  app.post("/api/moderation-actions", authMiddleware, async (req, res) => {
-    try {
-      const result = insertModerationActionSchema.safeParse(req.body);
-      
-      if (!result.success) {
-        return res.status(400).json({ message: fromZodError(result.error).message });
-      }
-      
-      // Check if user has access to the platform
-      const platform = await storage.getPlatform(result.data.platformId);
-      if (!platform || platform.userId !== req.user.id) {
-        return res.status(403).json({ message: "Unauthorized" });
-      }
-      
-      const moderationAction = await storage.createModerationAction(result.data);
-      res.status(201).json(moderationAction);
-    } catch (error) {
-      console.error("Error creating moderation action:", error);
-      res.status(500).json({ message: "Error creating moderation action" });
-    }
-  });
 
   // Conversation Training routes
   app.get("/api/conversation-trainings", authMiddleware, async (req, res) => {
