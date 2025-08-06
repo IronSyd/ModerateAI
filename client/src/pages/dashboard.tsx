@@ -7,7 +7,7 @@ import PlatformIntegrationCard from "@/components/dashboard/platform-integration
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
 import AIConfigurationPreview from "@/components/dashboard/ai-configuration-preview";
 import DemoChatInterface from "@/components/chat/fixed-demo-chat-interface";
-import { MessagesSquare, MonitorSmartphone, ShieldAlert, CheckCircle } from "lucide-react";
+import { MessagesSquare, MonitorSmartphone, CheckCircle } from "lucide-react";
 import { 
   overrideSetupProgress, 
   overrideCompletedStepCount,
@@ -179,15 +179,6 @@ const Dashboard = () => {
         changeText: "vs last week"
       },
       {
-        title: "Moderation Actions",
-        value: stats.moderationActions.toLocaleString(),
-        icon: <ShieldAlert className="h-6 w-6" />,
-        iconBgColor: "bg-accent/20",
-        iconColor: "text-accent",
-        changeValue: null,
-        changeText: "vs last week"
-      },
-      {
         title: "Response Rate",
         value: stats.responseRate > 0 ? `${stats.responseRate.toFixed(1)}%` : "0%",
         icon: <CheckCircle className="h-6 w-6" />,
@@ -206,9 +197,7 @@ const Dashboard = () => {
         responseStyle: 75,
         responseStyleText: "Friendly",
         responseLength: 40,
-        responseLengthText: "Concise",
-        moderationStrictness: 50,
-        moderationStrictnessText: "Balanced"
+        responseLengthText: "Concise"
       };
     }
     
@@ -227,20 +216,11 @@ const Dashboard = () => {
       return "Comprehensive";
     };
     
-    const getModerationStrictnessText = (value: number) => {
-      if (value <= 25) return "Lenient";
-      if (value <= 50) return "Balanced";
-      if (value <= 75) return "Strict";
-      return "Very Strict";
-    };
-    
     return {
       responseStyle: aiConfig.responseStyle,
       responseStyleText: getResponseStyleText(aiConfig.responseStyle),
       responseLength: aiConfig.responseLength,
-      responseLengthText: getResponseLengthText(aiConfig.responseLength),
-      moderationStrictness: aiConfig.moderationStrictness,
-      moderationStrictnessText: getModerationStrictnessText(aiConfig.moderationStrictness)
+      responseLengthText: getResponseLengthText(aiConfig.responseLength)
     };
   };
   
