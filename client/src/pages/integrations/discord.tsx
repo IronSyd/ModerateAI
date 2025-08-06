@@ -156,7 +156,7 @@ const DiscordIntegration = () => {
 
   // Fetch platform data
   const { data: platform, isLoading } = useQuery<DiscordPlatform>({
-    queryKey: ['/api/platforms/3'], // Discord platform has ID 3
+    queryKey: ['/api/platforms/10'], // Discord platform has ID 10
     retry: false,
   });
 
@@ -166,7 +166,7 @@ const DiscordIntegration = () => {
       // Add console logs to debug the Discord client ID
       console.log("Discord Client ID:", import.meta.env.VITE_DISCORD_CLIENT_ID);
       
-      return apiRequest("PATCH", `/api/platforms/3`, {
+      return apiRequest("PATCH", `/api/platforms/10`, {
         name: "Discord Bot",
         status: "setup_required",
         config: {
@@ -177,7 +177,7 @@ const DiscordIntegration = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/10'] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
       
       // Check if Discord client ID is available
@@ -212,7 +212,7 @@ const DiscordIntegration = () => {
   // Complete Discord bot setup
   const completeSetupMutation = useMutation({
     mutationFn: async (data: { serverId: string, authCode?: string }) => {
-      return apiRequest("PATCH", `/api/platforms/3`, {
+      return apiRequest("PATCH", `/api/platforms/10`, {
         name: "Discord Bot",
         status: "active",
         // Only include authToken if authCode is provided
@@ -227,7 +227,7 @@ const DiscordIntegration = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/10'] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
       setIsCompleteSetupDialogOpen(false);
       toast({
@@ -247,13 +247,13 @@ const DiscordIntegration = () => {
   // Disconnect Discord bot
   const disconnectBotMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("PATCH", `/api/platforms/3`, {
+      return apiRequest("PATCH", `/api/platforms/10`, {
         status: "not_connected",
         authToken: null
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/10'] });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
       setIsDisconnectDialogOpen(false);
       toast({
@@ -275,7 +275,7 @@ const DiscordIntegration = () => {
     mutationFn: async () => {
       // In a real app, this would connect to Discord API to fetch the latest channels
       // For now, simulate refreshing by adding a new timestamp
-      return apiRequest("PATCH", `/api/platforms/3`, {
+      return apiRequest("PATCH", `/api/platforms/10`, {
         config: {
           ...platform?.config,
           lastRefreshed: new Date().toISOString()
@@ -283,7 +283,7 @@ const DiscordIntegration = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/10'] });
       toast({
         title: "Success",
         description: "Discord channels refreshed successfully.",
@@ -301,7 +301,7 @@ const DiscordIntegration = () => {
   // Save channel changes
   const saveChannelChangesMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("PATCH", `/api/platforms/3`, {
+      return apiRequest("PATCH", `/api/platforms/10`, {
         config: {
           ...platform?.config,
           channels: updatedChannels
@@ -309,7 +309,7 @@ const DiscordIntegration = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/10'] });
       toast({
         title: "Success",
         description: "Channel settings updated successfully.",
@@ -327,7 +327,7 @@ const DiscordIntegration = () => {
   // Update bot configuration
   const updateBotConfigMutation = useMutation({
     mutationFn: async (config: any) => {
-      return apiRequest("PATCH", `/api/platforms/3`, {
+      return apiRequest("PATCH", `/api/platforms/10`, {
         config: {
           ...platform?.config,
           ...config
@@ -335,7 +335,7 @@ const DiscordIntegration = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms/3'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms/10'] });
       toast({
         title: "Success",
         description: "Bot settings updated successfully.",
