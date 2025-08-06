@@ -278,7 +278,6 @@ const TelegramIntegration = () => {
           authToken: token,
           status: "active",
           config: {
-            welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
             groupMode: true,
             botCommands: [
               { command: "help", description: "Show help information" },
@@ -429,11 +428,7 @@ const TelegramIntegration = () => {
       const currentConfig = (platform as any)?.config || {};
       const newConfig = {
         ...currentConfig,
-        // Ensure welcome message exists
-        welcomeMessage: currentConfig.welcomeMessage || "Hello! I'm your AI assistant. How can I help you today?",
-        // Add the moderation settings
-        contentFilteringEnabled: configUpdate.contentFilteringEnabled,
-        spamProtectionEnabled: configUpdate.spamProtectionEnabled,
+        ...configUpdate
       };
       
       console.log('Final config being sent:', newConfig);
@@ -921,22 +916,6 @@ const TelegramIntegration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="welcomeMessage">Welcome Message</Label>
-                <Textarea
-                  id="welcomeMessage"
-                  placeholder="Hello! I'm your AI assistant. How can I help you today?"
-                  value={(platform as any)?.config?.welcomeMessage || ""}
-                  onChange={(e) => updateBotConfig({ welcomeMessage: e.target.value })}
-                  rows={3}
-                />
-                <p className="text-sm text-muted-foreground">
-                  This message is sent when someone starts a conversation with your bot
-                </p>
-              </div>
-
-              <Separator />
-
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Response Settings</h3>
                 

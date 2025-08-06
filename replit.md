@@ -12,6 +12,9 @@ Preferred communication style: Simple, everyday language.
 - **Fixed username validation issue**: Resolved form field binding problem in registration form that prevented usernames from being captured properly
 - **Improved password field visibility**: Updated show/hide password icons to use darker colors for better visibility against white input backgrounds
 - **Enhanced form validation**: Changed registration form to use manual value tracking for better reliability
+- **Removed Templates functionality**: Completely removed Templates feature from the application including pages, routes, and navigation
+- **Fixed Telegram integration tabs**: Resolved TypeScript errors and database column naming issues that prevented Groups, Settings, and Analytics tabs from being clickable
+- **Removed welcome message feature**: Eliminated welcome message functionality from Telegram bot settings as it's not needed for the use case
 
 # System Architecture
 
