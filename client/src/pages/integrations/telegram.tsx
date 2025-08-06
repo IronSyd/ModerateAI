@@ -225,7 +225,7 @@ const TelegramIntegration = () => {
           const platforms = await response.json();
           console.log("Fetched platforms:", platforms);
           
-          const telegramPlatform = platforms.find(p => p.type === 'telegram');
+          const telegramPlatform = platforms.find((p: any) => p.type === 'telegram');
           
           if (telegramPlatform) {
             // We found the platform after refresh
@@ -426,7 +426,7 @@ const TelegramIntegration = () => {
       console.log('Updating bot config with:', configUpdate);
       
       // Create a clean config object to avoid issues with undefined/null values
-      const currentConfig = platform?.config || {};
+      const currentConfig = (platform as any)?.config || {};
       const newConfig = {
         ...currentConfig,
         // Ensure welcome message exists
@@ -498,18 +498,18 @@ const TelegramIntegration = () => {
   
   // Initialize moderation settings from platform config
   useEffect(() => {
-    if (platform?.config) {
+    if ((platform as any)?.config) {
       // Set content filtering
       setContentFilteringEnabled(
-        platform.config.contentFilteringEnabled !== undefined 
-          ? platform.config.contentFilteringEnabled 
+        (platform as any).config.contentFilteringEnabled !== undefined 
+          ? (platform as any).config.contentFilteringEnabled 
           : true
       );
       
       // Set spam protection
       setSpamProtectionEnabled(
-        platform.config.spamProtectionEnabled !== undefined 
-          ? platform.config.spamProtectionEnabled 
+        (platform as any).config.spamProtectionEnabled !== undefined 
+          ? (platform as any).config.spamProtectionEnabled 
           : true
       );
     }
@@ -612,17 +612,17 @@ const TelegramIntegration = () => {
         </div>
         <Badge 
           variant={
-            platform?.status === "active" 
-              ? "success" 
-              : platform?.status === "not_connected" 
+            (platform as any)?.status === "active" 
+              ? "secondary" 
+              : (platform as any)?.status === "not_connected" 
                 ? "outline" 
                 : "secondary"
           } 
           className="capitalize"
         >
-          {platform?.status === "active" 
+          {(platform as any)?.status === "active" 
             ? "Active" 
-            : platform?.status?.replace("_", " ")}
+            : (platform as any)?.status?.replace("_", " ")}
         </Badge>
       </div>
 
@@ -632,15 +632,15 @@ const TelegramIntegration = () => {
             <Bot className="h-4 w-4 mr-2" />
             Setup
           </TabsTrigger>
-          <TabsTrigger value="groups" disabled={platform?.status !== "active"}>
+          <TabsTrigger value="groups" disabled={(platform as any)?.status !== "active"}>
             <Users className="h-4 w-4 mr-2" />
             Groups
           </TabsTrigger>
-          <TabsTrigger value="settings" disabled={platform?.status !== "active"}>
+          <TabsTrigger value="settings" disabled={(platform as any)?.status !== "active"}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </TabsTrigger>
-          <TabsTrigger value="analytics" disabled={platform?.status !== "active"}>
+          <TabsTrigger value="analytics" disabled={(platform as any)?.status !== "active"}>
             <PieChart className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
@@ -659,7 +659,7 @@ const TelegramIntegration = () => {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : platform?.status === "active" ? (
+              ) : (platform as any)?.status === "active" ? (
                 <div className="space-y-6">
                   <div className="rounded-lg bg-accent p-4 border">
                     <div className="flex">
@@ -697,7 +697,7 @@ const TelegramIntegration = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Status:</span>
-                          <Badge variant="success">Active</Badge>
+                          <Badge variant="secondary">Active</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Groups:</span>
@@ -870,7 +870,7 @@ const TelegramIntegration = () => {
                         <TableCell>{group.members}</TableCell>
                         <TableCell>
                           <Badge 
-                            variant={group.status === "active" ? "success" : "outline"}
+                            variant={group.status === "active" ? "secondary" : "outline"}
                             className="capitalize"
                           >
                             {group.status}
@@ -926,7 +926,7 @@ const TelegramIntegration = () => {
                 <Textarea
                   id="welcomeMessage"
                   placeholder="Hello! I'm your AI assistant. How can I help you today?"
-                  value={platform?.config?.welcomeMessage || ""}
+                  value={(platform as any)?.config?.welcomeMessage || ""}
                   onChange={(e) => updateBotConfig({ welcomeMessage: e.target.value })}
                   rows={3}
                 />
@@ -948,7 +948,7 @@ const TelegramIntegration = () => {
                     </p>
                   </div>
                   <Switch 
-                    checked={platform?.config?.groupMode || false}
+                    checked={(platform as any)?.config?.groupMode || false}
                     onCheckedChange={(checked) => updateBotConfig({ groupMode: checked })}
                   />
                 </div>
@@ -983,10 +983,10 @@ const TelegramIntegration = () => {
                 </p>
                 
                 <div className="space-y-2">
-                  {(platform?.config?.botCommands || [
+                  {((platform as any)?.config?.botCommands || [
                     { command: "help", description: "Show help information" },
                     { command: "about", description: "About this bot" }
-                  ]).map((cmd, index) => (
+                  ]).map((cmd: any, index: number) => (
                     <div key={index} className="flex items-center space-x-2">
                       <code className="bg-accent px-2 py-1 rounded text-sm">/
                         {cmd.command}
