@@ -1506,6 +1506,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Website Chat API endpoints
+  app.post("/api/website-chat/init", async (req, res) => {
+    try {
+      const { token, sessionId, visitorInfo } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token is required" });
+      }
+
+      // Find platform by auth token
+      const platform = await storage.getPlatformByToken(token);
+      if (!platform || platform.type !== "website") {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+
+      // Create or get existing conversation for this session
+      let conversation = await storage.getConversationByExternalId(sessionId);
+      if (!conversation) {
+        conversation = await storage.createConversation({
+          platformId: platform.id,
+          externalUserId: sessionId,
+          externalUsername: visitorInfo?.name || "Website Visitor",
+          externalId: sessionId,
+          status: "active"
+        });
+      }
+
+      // Return conversation info and platform config
+      res.json({
+        conversationId: conversation.id,
+        config: platform.config || {
+          widgetTitle: "Chat with us",
+          welcomeMessage: "Hi there! How can I help you today?",
+          primaryColor: "#3B82F6"
+        }
+      });
+    } catch (error) {
+      console.error("Error initializing website chat:", error);
+      res.status(500).json({ message: "Error initializing chat" });
+    }
+  });
+
+  app.post("/api/website-chat/message", async (req, res) => {
+    try {
+      const { token, sessionId, message, conversationId } = req.body;
+
+      if (!token || !sessionId || !message) {
+        return res.status(400).json({ message: "Token, sessionId, and message are required" });
+      }
+
+      // Find platform by auth token
+      const platform = await storage.getPlatformByToken(token);
+      if (!platform || platform.type !== "website") {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+
+      // Get conversation
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+
+      // Verify conversation belongs to this platform
+      if (conversation.platformId !== platform.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      // Get the active AI configuration for the platform owner
+      const aiConfig = await storage.getActiveAiConfiguration(platform.userId);
+      if (!aiConfig) {
+        return res.status(404).json({ message: "No active AI configuration found" });
+      }
+
+      // Create user message
+      const userMessage = await storage.createMessage({
+        conversationId: conversation.id,
+        content: message,
+        sender: "user",
+        metadata: { sessionId, timestamp: new Date().toISOString() }
+      });
+
+      // Get conversation history
+      const previousMessages = await storage.getMessagesByConversationId(conversation.id);
+      const conversationHistory = previousMessages
+        .filter(msg => msg.id !== userMessage.id) // Exclude the current message
+        .map(msg => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.content
+        }));
+
+      // Generate AI response using knowledge base if available
+      let aiResponse: string;
+      try {
+        // Try knowledge-based response first
+        const knowledgeBase = await storage.getActiveKnowledgeBase(platform.userId);
+        if (knowledgeBase) {
+          aiResponse = await generateKnowledgeBasedResponse(
+            message,
+            conversationHistory,
+            aiConfig.systemPrompt || "You are a helpful customer support assistant.",
+            aiConfig.responseStyle,
+            aiConfig.responseLength,
+            platform.userId
+          );
+        } else {
+          // Fall back to regular AI response
+          aiResponse = await generateAIResponse(
+            message,
+            conversationHistory,
+            aiConfig.systemPrompt || "You are a helpful customer support assistant.",
+            aiConfig.responseStyle,
+            aiConfig.responseLength
+          );
+        }
+      } catch (error) {
+        console.error("Error generating AI response:", error);
+        aiResponse = "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.";
+      }
+
+      // Save AI response
+      const aiMessage = await storage.createMessage({
+        conversationId: conversation.id,
+        content: aiResponse,
+        sender: "ai",
+        metadata: { timestamp: new Date().toISOString() }
+      });
+
+      res.json({
+        message: {
+          id: aiMessage.id,
+          content: aiMessage.content,
+          sender: aiMessage.sender,
+          timestamp: aiMessage.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Error processing website chat message:", error);
+      res.status(500).json({ message: "Error processing message" });
+    }
+  });
+
+  app.get("/api/website-chat/history/:conversationId", async (req, res) => {
+    try {
+      const { token } = req.query;
+      const conversationId = parseInt(req.params.conversationId);
+
+      if (!token) {
+        return res.status(400).json({ message: "Token is required" });
+      }
+
+      // Find platform by auth token
+      const platform = await storage.getPlatformByToken(token);
+      if (!platform || platform.type !== "website") {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+
+      // Get conversation and verify it belongs to this platform
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || conversation.platformId !== platform.id) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+
+      // Get messages
+      const messages = await storage.getMessagesByConversationId(conversationId);
+      
+      res.json({
+        messages: messages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender: msg.sender,
+          timestamp: msg.createdAt
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching website chat history:", error);
+      res.status(500).json({ message: "Error fetching chat history" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

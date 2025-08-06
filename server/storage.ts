@@ -26,6 +26,7 @@ export interface IStorage {
 
   // Platform operations
   getPlatform(id: number): Promise<Platform | undefined>;
+  getPlatformByToken(token: string): Promise<Platform | undefined>;
   getPlatformsByUserId(userId: number): Promise<Platform[]>;
   getPlatformsByType(type: string): Promise<Platform[]>;
   createPlatform(platform: InsertPlatform): Promise<Platform>;
@@ -297,6 +298,15 @@ export class MemStorage implements IStorage {
   // Platform operations
   async getPlatform(id: number): Promise<Platform | undefined> {
     return this.platforms.get(id);
+  }
+
+  async getPlatformByToken(token: string): Promise<Platform | undefined> {
+    for (const platform of this.platforms.values()) {
+      if (platform.authToken === token) {
+        return platform;
+      }
+    }
+    return undefined;
   }
 
   async getPlatformsByUserId(userId: number): Promise<Platform[]> {
@@ -584,6 +594,11 @@ export class DatabaseStorage implements IStorage {
 
   async getPlatform(id: number): Promise<Platform | undefined> {
     const [platform] = await db.select().from(platforms).where(eq(platforms.id, id));
+    return platform;
+  }
+
+  async getPlatformByToken(token: string): Promise<Platform | undefined> {
+    const [platform] = await db.select().from(platforms).where(eq(platforms.authToken, token));
     return platform;
   }
 

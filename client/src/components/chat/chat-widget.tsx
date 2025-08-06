@@ -49,8 +49,20 @@ const ChatWidget = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  const [sessionId] = useState(() => `session-${Date.now()}-${Math.random()}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Website auth token - in production this would be provided by the website owner
+  const authToken = "website-token-12345";
+  
+  // Initialize chat session when widget is first opened
+  useEffect(() => {
+    if (isOpen && conversationId === null) {
+      initializeChatSession();
+    }
+  }, [isOpen, conversationId]);
+
   // Open the chat widget after a short delay
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,6 +71,26 @@ const ChatWidget = () => {
     
     return () => clearTimeout(timer);
   }, []);
+
+  const initializeChatSession = async () => {
+    try {
+      const response = await apiRequest("POST", "/api/website-chat/init", {
+        token: authToken,
+        sessionId: sessionId,
+        visitorInfo: {
+          name: "Website Visitor",
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      const data = await response.json();
+      setConversationId(data.conversationId);
+    } catch (error) {
+      console.error("Failed to initialize chat session:", error);
+      // Fall back to demo mode if initialization fails
+    }
+  };
   
   // Hide suggestions after user starts chatting
   useEffect(() => {
@@ -175,53 +207,46 @@ const ChatWidget = () => {
     setIsLoading(true);
     
     try {
-      let aiResponse: string;
-      
-      try {
-        // Try calling demo endpoint
-        console.log("Sending to OpenAI demo endpoint...");
-        const response = await apiRequest("POST", "/api/openai-demo", {
-          message: userMessage.content
-        });
-        
-        const directResponse = response as unknown as { 
-          content?: string, 
-          error?: string,
-          errorType?: string,
-          message?: string,
-          status?: number 
-        };
-        
-        // If the response contains an error field or has no content,
-        // switch to the fallback demo generator
-        if (directResponse?.error || 
-            !directResponse?.content || 
-            directResponse.errorType === "rate_limit_exceeded" ||
-            directResponse.status === 429 ||
-            (directResponse.content && directResponse.content.includes("I'm sorry, there was an error"))) {
-          
-          console.log("API response indicated an error, using fallback generator", directResponse);
-          aiResponse = generateDemoResponse(userMessage.content);
-        } else {
-          aiResponse = directResponse.content;
+      // Use the full backend if conversation is initialized
+      if (conversationId && authToken) {
+        try {
+          console.log("Sending message via website chat API...");
+          const response = await apiRequest("POST", "/api/website-chat/message", {
+            token: authToken,
+            sessionId: sessionId,
+            message: userMessage.content,
+            conversationId: conversationId
+          });
+
+          const data = await response.json();
+          // Add AI response from the backend
+          setMessages(prev => [...prev, {
+            id: `ai-${data.message.id}`,
+            content: data.message.content,
+            sender: data.message.sender,
+            timestamp: new Date(data.message.timestamp)
+          }]);
+        } catch (error: any) {
+          console.error("Website chat API failed:", error);
+          // Fall back to demo response
+          const aiResponse = generateDemoResponse(userMessage.content);
+          setMessages(prev => [...prev, {
+            id: `ai-${Date.now()}`,
+            content: aiResponse,
+            sender: "ai",
+            timestamp: new Date()
+          }]);
         }
-      } catch (error: any) {
-        // Log error for troubleshooting
-        console.error("OpenAI demo failed:", error);
-        
-        // If the API call fails, use the demo response generator
-        console.log("Using fallback demo response generator due to API error");
-        aiResponse = generateDemoResponse(userMessage.content);
+      } else {
+        // Use demo response if not properly initialized
+        const aiResponse = generateDemoResponse(userMessage.content);
+        setMessages(prev => [...prev, {
+          id: `ai-${Date.now()}`,
+          content: aiResponse,
+          sender: "ai",
+          timestamp: new Date()
+        }]);
       }
-      
-      // Add AI response to chat
-      setMessages(prev => [...prev, {
-        id: `ai-${Date.now()}`,
-        content: aiResponse,
-        sender: "ai",
-        timestamp: new Date()
-      }]);
-      
     } catch (error) {
       console.error("Error sending message:", error);
       
