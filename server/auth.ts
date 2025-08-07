@@ -68,7 +68,7 @@ export function setupAuth(app: Express) {
 
   // Email-only authentication - no password required
   passport.use(
-    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    new LocalStrategy({ usernameField: 'email', passwordField: 'email' }, async (email, password, done) => {
       try {
         console.log(`Authenticating user: ${email}`);
         

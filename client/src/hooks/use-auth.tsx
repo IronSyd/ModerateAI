@@ -34,7 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
+      // Send email as both username and password for LocalStrategy compatibility
+      const res = await apiRequest("POST", "/api/login", {
+        email: credentials.email,
+        password: credentials.email
+      });
       return await res.json();
     },
     onSuccess: (user: User) => {
