@@ -579,9 +579,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get("/api/dashboard/stats", authMiddleware, async (req, res) => {
     try {
-      const conversationCount = await storage.getConversationCount();
-      const messageCount = await storage.getMessageCount();
-      const responseRate = await storage.getResponseRate();
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const conversationCount = await storage.getConversationCountForUser(userId);
+      const messageCount = await storage.getMessageCountForUser(userId);
+      const responseRate = await storage.getResponseRateForUser(userId);
 
       res.status(200).json({
         totalConversations: conversationCount,

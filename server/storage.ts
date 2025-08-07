@@ -1031,6 +1031,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Get conversation count for a specific user (only conversations with messages)
+   */
+  async getConversationCountForUser(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(conversations)
+      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
+      .innerJoin(messages, eq(messages.conversationId, conversations.id))
+      .where(eq(platforms.userId, userId));
+    return result[0]?.count || 0;
+  }
+
+  /**
    * Get total message count from the database
    * This represents AI responses
    */
@@ -1039,6 +1052,19 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(messages)
       .where(eq(messages.sender, 'ai'));
+    return result[0]?.count || 0;
+  }
+
+  /**
+   * Get message count for a specific user
+   */
+  async getMessageCountForUser(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(messages)
+      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
+      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
+      .where(and(eq(messages.sender, 'ai'), eq(platforms.userId, userId)));
     return result[0]?.count || 0;
   }
 
@@ -1057,6 +1083,32 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(messages)
       .where(eq(messages.sender, 'ai'));
+    const aiMessages = aiResult[0]?.count || 0;
+    
+    // Calculate response rate as percentage
+    return totalMessages > 0 ? (aiMessages / totalMessages) * 100 : 0;
+  }
+
+  /**
+   * Calculate response rate for a specific user
+   */
+  async getResponseRateForUser(userId: number): Promise<number> {
+    // Get total message count for user
+    const totalResult = await db
+      .select({ count: count() })
+      .from(messages)
+      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
+      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
+      .where(eq(platforms.userId, userId));
+    const totalMessages = totalResult[0]?.count || 0;
+    
+    // Get AI message count for user
+    const aiResult = await db
+      .select({ count: count() })
+      .from(messages)
+      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
+      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
+      .where(and(eq(messages.sender, 'ai'), eq(platforms.userId, userId)));
     const aiMessages = aiResult[0]?.count || 0;
     
     // Calculate response rate as percentage
