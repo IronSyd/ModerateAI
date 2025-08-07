@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useAdminUser } from "@/hooks/use-admin-user";
-import { MessagesSquare, ShieldAlert } from "lucide-react";
+import { MessagesSquare } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "@/components/logo";
 import { useForm } from "react-hook-form";
@@ -21,7 +20,6 @@ const AuthPage = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, loginMutation } = useAuth();
-  const { enableAdminUser } = useAdminUser();
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -112,16 +110,6 @@ const AuthPage = () => {
               <CardFooter className="flex flex-col space-y-4">
                 <div className="text-sm text-muted-foreground text-center">
                   New users must be invited by an administrator
-                </div>
-                <div className="text-center">
-                  <Button
-                    variant="outline"
-                    onClick={enableAdminUser}
-                    className="text-xs"
-                  >
-                    <ShieldAlert className="h-3 w-3 mr-1" />
-                    Enable Admin User
-                  </Button>
                 </div>
               </CardFooter>
             </Card>
