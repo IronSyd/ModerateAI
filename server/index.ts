@@ -59,30 +59,17 @@ async function initializeDemoData() {
     // This is a one-time fix for the demo environment
     const recreateDemo = process.env.RECREATE_DEMO === "true" || true; // Force recreation for now
     
-    // Check if demo user exists
-    let demoUser = await storage.getUserByUsername("demo");
+    // Check if demo user exists by email
+    let demoUser = await storage.getUserByEmail("demo@example.com");
     
     if (recreateDemo && demoUser) {
-      // Update the existing demo user's password directly
-      log("Fixing demo user password");
-      
-      // Create a properly hashed password
-      const hashedPassword = await hashPassword("demo123");
-      
-      // Update the user directly through storage
-      await db.update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.username, "demo"));
-      
-      log("Demo user password updated");
+      // No password update needed with email-only auth
+      log("Demo user already exists");
     }
     
     if (!demoUser) {
       log("Creating demo user");
-      const hashedPassword = await hashPassword("demo123");
       demoUser = await storage.createUser({
-        username: "demo",
-        password: hashedPassword,
         email: "demo@example.com",
         fullName: "Demo User",
         role: "admin"
