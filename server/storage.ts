@@ -123,6 +123,7 @@ export interface IStorage {
   addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist>;
   removeEmailFromWhitelist(email: string): Promise<boolean>;
   getWhitelistedEmails(): Promise<EmailWhitelist[]>;
+  getEmailsWhitelistedBy(userId: number): Promise<EmailWhitelist[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -1286,6 +1287,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(emailWhitelist)
       .where(eq(emailWhitelist.isActive, true))
+      .orderBy(emailWhitelist.createdAt);
+  }
+
+  async getEmailsWhitelistedBy(userId: number): Promise<EmailWhitelist[]> {
+    return db
+      .select()
+      .from(emailWhitelist)
+      .where(and(eq(emailWhitelist.addedBy, userId), eq(emailWhitelist.isActive, true)))
       .orderBy(emailWhitelist.createdAt);
   }
 }

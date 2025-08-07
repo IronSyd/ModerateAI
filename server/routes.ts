@@ -61,10 +61,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Team members API endpoint
   app.get("/api/team/members", authMiddleware, async (req, res) => {
     try {
-      const teamMembers = await storage.getAllUsers();
+      const currentUserId = req.user?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Get emails whitelisted by the current user
+      const whitelistedEmails = await storage.getEmailsWhitelistedBy(currentUserId);
+      const emailList = whitelistedEmails.map(w => w.email);
       
-      // Get pending invitations
+      // Include the current user in the team (they can see themselves)
+      emailList.push(req.user.email);
+      
+      // Get users whose emails were whitelisted by this admin
+      const allUsers = await storage.getAllUsers();
+      const teamMembers = allUsers.filter(user => emailList.includes(user.email));
+      
+      // Get pending invitations created by the current user
       const pendingInvitations = await storage.getPendingTeamInvitations();
+      const userInvitations = pendingInvitations.filter(inv => 
+        whitelistedEmails.some(w => w.email === inv.email)
+      );
       
       // Map users to team members format
       const formattedMembers = teamMembers.map(user => ({
@@ -72,18 +89,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: user.fullName,
         email: user.email,
         role: user.role,
-        status: "active", // All users are active by default
-        lastActive: user.id === req.user?.id ? "Just now" : "Recently"
+        status: "active",
+        lastActive: user.id === currentUserId ? "Just now" : "Recently"
       }));
       
       // Map pending invitations to team members format
-      const invitedMembers = pendingInvitations.map(invitation => ({
+      const invitedMembers = userInvitations.map(invitation => ({
         id: invitation.id,
         name: "",
         email: invitation.email,
         role: invitation.role,
-        status: "invited", // Invitation status
-        lastActive: "Never", // Never logged in
+        status: "invited",
+        lastActive: "Never",
         invitedAt: invitation.createdAt
       }));
       
