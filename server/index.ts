@@ -94,7 +94,6 @@ async function initializeDemoData() {
         userId: demoUser.id,
         responseStyle: 75,
         responseLength: 40,
-        moderationStrictness: 50,
         isActive: true,
         model: "gpt-4o",
         systemPrompt: "You are a helpful customer support assistant. Be concise and professional."

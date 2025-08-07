@@ -1818,6 +1818,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email Whitelist Management API endpoints
+  app.get("/api/email-whitelist", authMiddleware, async (req, res) => {
+    try {
+      const whitelistedEmails = await storage.getWhitelistedEmails();
+      res.json(whitelistedEmails);
+    } catch (error) {
+      console.error("Error fetching email whitelist:", error);
+      res.status(500).json({ message: "Error fetching email whitelist" });
+    }
+  });
+
+  app.post("/api/email-whitelist", authMiddleware, async (req, res) => {
+    try {
+      const { email } = req.body;
+      const userId = req.user?.id;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if email is already whitelisted
+      const isAlreadyWhitelisted = await storage.isEmailWhitelisted(email);
+      if (isAlreadyWhitelisted) {
+        return res.status(400).json({ message: "Email is already whitelisted" });
+      }
+
+      const whitelistEntry = await storage.addEmailToWhitelist(email, userId);
+      res.status(201).json(whitelistEntry);
+    } catch (error) {
+      console.error("Error adding email to whitelist:", error);
+      res.status(500).json({ message: "Error adding email to whitelist" });
+    }
+  });
+
+  app.delete("/api/email-whitelist/:email", authMiddleware, async (req, res) => {
+    try {
+      const email = decodeURIComponent(req.params.email);
+      const success = await storage.removeEmailFromWhitelist(email);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Email not found in whitelist" });
+      }
+
+      res.json({ message: "Email removed from whitelist successfully" });
+    } catch (error) {
+      console.error("Error removing email from whitelist:", error);
+      res.status(500).json({ message: "Error removing email from whitelist" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -28,6 +28,21 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 });
 
+// Email whitelist table
+export const emailWhitelist = pgTable("email_whitelist", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  addedBy: integer("added_by").references(() => users.id),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertEmailWhitelistSchema = createInsertSchema(emailWhitelist).pick({
+  email: true,
+  addedBy: true,
+  isActive: true,
+});
+
 // Platforms table
 export const platforms = pgTable("platforms", {
   id: serial("id").primaryKey(),
@@ -453,3 +468,6 @@ export type InsertChatConfiguration = z.infer<typeof insertChatConfigurationSche
 
 export type WebsiteConfiguration = typeof websiteConfigurations.$inferSelect;
 export type InsertWebsiteConfiguration = z.infer<typeof insertWebsiteConfigurationSchema>;
+
+export type EmailWhitelist = typeof emailWhitelist.$inferSelect;
+export type InsertEmailWhitelist = z.infer<typeof insertEmailWhitelistSchema>;

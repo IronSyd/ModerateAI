@@ -8,6 +8,17 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## August 2025
+- **Implemented Email Whitelisting Authentication System** (August 7, 2025):
+  - Added `emailWhitelist` table to database schema for controlling user access
+  - Enhanced authentication to check email whitelisting during both login and registration
+  - Only whitelisted email addresses can now register and access the system
+  - Built comprehensive API endpoints for email whitelist management (GET, POST, DELETE)
+  - Added email validation logic to auth.ts with proper error messaging
+  - Seeded database with initial whitelisted emails for authorized users
+  - Email addresses are stored in lowercase for case-insensitive matching
+  - System tracks who added emails to whitelist and includes soft-delete functionality
+
 ## January 2025
 - **Fixed username validation issue**: Resolved form field binding problem in registration form that prevented usernames from being captured properly
 - **Improved password field visibility**: Updated show/hide password icons to use darker colors for better visibility against white input backgrounds

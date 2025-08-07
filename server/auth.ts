@@ -96,6 +96,13 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Incorrect password" });
         }
         
+        // Check if email is whitelisted
+        const isWhitelisted = await storage.isEmailWhitelisted(user.email);
+        if (!isWhitelisted) {
+          console.log(`Email not whitelisted for ${username}: ${user.email}`);
+          return done(null, false, { message: "Email not authorized" });
+        }
+        
         console.log(`User ${username} authenticated successfully`);
         return done(null, user);
       } catch (error) {
@@ -131,6 +138,12 @@ export function setupAuth(app: Express) {
         const existingEmail = await storage.getUserByEmail(req.body.email);
         if (existingEmail) {
           return res.status(400).json({ message: "Email already in use" });
+        }
+        
+        // Check if email is whitelisted
+        const isWhitelisted = await storage.isEmailWhitelisted(req.body.email);
+        if (!isWhitelisted) {
+          return res.status(403).json({ message: "Email not authorized for registration" });
         }
       }
 

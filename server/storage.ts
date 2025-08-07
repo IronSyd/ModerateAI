@@ -11,7 +11,8 @@ import {
   TeamSettings, InsertTeamSettings,
   ChatConfiguration, InsertChatConfiguration,
   WebsiteConfiguration, InsertWebsiteConfiguration,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations
+  EmailWhitelist, InsertEmailWhitelist,
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations, emailWhitelist
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
@@ -115,6 +116,12 @@ export interface IStorage {
     platform: string;
     time: Date;
   }[]>;
+
+  // Email Whitelist operations
+  isEmailWhitelisted(email: string): Promise<boolean>;
+  addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist>;
+  removeEmailFromWhitelist(email: string): Promise<boolean>;
+  getWhitelistedEmails(): Promise<EmailWhitelist[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -1245,6 +1252,45 @@ export class DatabaseStorage implements IStorage {
   async deleteWebsiteConfiguration(id: number): Promise<boolean> {
     const result = await db.delete(websiteConfigurations).where(eq(websiteConfigurations.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Email Whitelist methods implementation
+  async isEmailWhitelisted(email: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(emailWhitelist)
+      .where(and(eq(emailWhitelist.email, email.toLowerCase()), eq(emailWhitelist.isActive, true)))
+      .limit(1);
+    return result.length > 0;
+  }
+
+  async addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist> {
+    const [whitelist] = await db
+      .insert(emailWhitelist)
+      .values({
+        email: email.toLowerCase(),
+        addedBy,
+        isActive: true
+      })
+      .returning();
+    return whitelist;
+  }
+
+  async removeEmailFromWhitelist(email: string): Promise<boolean> {
+    const result = await db
+      .update(emailWhitelist)
+      .set({ isActive: false })
+      .where(eq(emailWhitelist.email, email.toLowerCase()))
+      .returning();
+    return result.length > 0;
+  }
+
+  async getWhitelistedEmails(): Promise<EmailWhitelist[]> {
+    return db
+      .select()
+      .from(emailWhitelist)
+      .where(eq(emailWhitelist.isActive, true))
+      .orderBy(emailWhitelist.createdAt);
   }
 }
 
