@@ -373,12 +373,6 @@ const Settings = () => {
 
         <TabsContent value="account" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-              <CardDescription>
-                Manage your account information and preferences
-              </CardDescription>
-            </CardHeader>
             <CardContent className="space-y-6">
 
               <div className="space-y-4">
