@@ -58,10 +58,12 @@ const WebsiteIntegration = () => {
   });
 
   // Fetch website configurations
-  const { data: websiteConfigurations = [], isLoading } = useQuery({
+  const { data: websiteConfigurationsResponse, isLoading } = useQuery({
     queryKey: ['/api/website-configurations'],
     retry: false,
   });
+  
+  const websiteConfigurations = (websiteConfigurationsResponse as any)?.configurations || [];
 
   // Fetch AI configurations
   const { data: aiConfigurations = [], isLoading: isLoadingAI } = useQuery({
@@ -243,7 +245,7 @@ const WebsiteIntegration = () => {
           <p className="text-muted-foreground">Configure multiple website chat instances with different knowledge bases and AI configurations</p>
         </div>
         <Badge variant="outline" className="capitalize">
-          {(websiteConfigurations as any[]).length} Configuration{(websiteConfigurations as any[]).length !== 1 ? 's' : ''}
+          {websiteConfigurations.length} Configuration{websiteConfigurations.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
@@ -265,7 +267,7 @@ const WebsiteIntegration = () => {
 
         <TabsContent value="configurations" className="m-0">
           <WebsiteConfigurationList
-            websiteConfigurations={websiteConfigurations as any[]}
+            websiteConfigurations={websiteConfigurations}
             aiConfigurations={aiConfigurations as any[]}
             knowledgeBases={knowledgeBases as any[]}
           />
