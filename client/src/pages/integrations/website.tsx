@@ -94,7 +94,7 @@ const WebsiteIntegration = () => {
 
   // Update platform configuration
   const updatePlatformMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: typeof configFormData) => {
       return apiRequest("PATCH", `/api/platforms/1`, {
         name: "Website Chat Widget",
         config: data,
@@ -128,7 +128,7 @@ const WebsiteIntegration = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setConfigFormData(prev => ({
       ...prev,
@@ -136,14 +136,14 @@ const WebsiteIntegration = () => {
     }));
   };
 
-  const handleSwitchChange = (name, checked) => {
+  const handleSwitchChange = (name: string, checked: boolean) => {
     setConfigFormData(prev => ({
       ...prev,
       [name]: checked
     }));
   };
 
-  const handleSelectChange = (name, value) => {
+  const handleSelectChange = (name: string, value: string) => {
     setConfigFormData(prev => ({
       ...prev,
       [name]: value
@@ -154,19 +154,7 @@ const WebsiteIntegration = () => {
     updatePlatformMutation.mutate(configFormData);
   };
 
-  // Set initial form data based on platform config
-  useState(() => {
-    if (platform?.config && !updatePlatformMutation.isPending) {
-      setConfigFormData({
-        widgetTitle: platform.config.widgetTitle || "Chat with us",
-        welcomeMessage: platform.config.welcomeMessage || "Hi there! How can I help you today?",
-        primaryColor: platform.config.primaryColor || "#3B82F6",
-        position: platform.config.position || "right",
-        autoOpen: platform.config.autoOpen || false,
-        showAgentAvatar: platform.config.showAgentAvatar || true,
-      });
-    }
-  });
+  // Note: Platform config initialization removed as platform data is not currently fetched
 
   // Widget preview
   const WidgetPreview = () => (
@@ -255,7 +243,7 @@ const WebsiteIntegration = () => {
           <p className="text-muted-foreground">Configure multiple website chat instances with different knowledge bases and AI configurations</p>
         </div>
         <Badge variant="outline" className="capitalize">
-          {websiteConfigurations.length} Configuration{websiteConfigurations.length !== 1 ? 's' : ''}
+          {(websiteConfigurations as any[]).length} Configuration{(websiteConfigurations as any[]).length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
@@ -277,9 +265,9 @@ const WebsiteIntegration = () => {
 
         <TabsContent value="configurations" className="m-0">
           <WebsiteConfigurationList
-            websiteConfigurations={websiteConfigurations}
-            aiConfigurations={aiConfigurations}
-            knowledgeBases={knowledgeBases}
+            websiteConfigurations={websiteConfigurations as any[]}
+            aiConfigurations={aiConfigurations as any[]}
+            knowledgeBases={knowledgeBases as any[]}
           />
         </TabsContent>
 
