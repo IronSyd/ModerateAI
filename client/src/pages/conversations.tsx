@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,18 +14,107 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Search, Plus, Filter } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+
+// Type definitions
+type Conversation = {
+  id: number;
+  platformId: number;
+  externalUserId: string;
+  externalUsername?: string;
+  externalId?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Platform = {
+  id: number;
+  type: string;
+  name: string;
+  status: string;
+};
 
 const Conversations = () => {
+  const { toast } = useToast();
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
+  const [newConversationData, setNewConversationData] = useState({
+    platformId: "",
+    externalUserId: "",
+    externalUsername: "",
+    externalId: "",
+    status: "active"
+  });
   
   // Fetch conversations
-  const { data: conversations, isLoading } = useQuery({
+  const { data: conversations, isLoading, refetch: refetchConversations } = useQuery({
     queryKey: ['/api/conversations', platformFilter !== "all" ? platformFilter : null],
     retry: false,
+  });
+  
+  // Fetch platforms for new conversation dialog
+  const { data: platforms } = useQuery({
+    queryKey: ['/api/platforms'],
+    retry: false,
+  });
+  
+  // Create conversation mutation
+  const createConversationMutation = useMutation({
+    mutationFn: async (conversationData: any) => {
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(conversationData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create conversation');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Conversation created",
+        description: "New conversation has been created successfully.",
+      });
+      setIsNewConversationOpen(false);
+      setNewConversationData({
+        platformId: "",
+        externalUserId: "",
+        externalUsername: "",
+        externalId: "",
+        status: "active"
+      });
+      refetchConversations();
+      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error creating conversation",
+        description: error.message || "Failed to create conversation",
+        variant: "destructive",
+      });
+    },
   });
   
   // Platform type to display label
@@ -43,7 +132,7 @@ const Conversations = () => {
   };
   
   // Filter conversations based on search and filters
-  const filteredConversations = conversations?.filter(conversation => {
+  const filteredConversations = (conversations as Conversation[] || []).filter((conversation: Conversation) => {
     // Filter by status
     if (statusFilter !== "all" && conversation.status !== statusFilter) {
       return false;
@@ -55,16 +144,111 @@ const Conversations = () => {
     }
     
     return true;
-  }) || [];
+  });
   
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div className="mt-4 md:mt-0 space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row md:ml-auto">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Conversation
-          </Button>
+          <Dialog open={isNewConversationOpen} onOpenChange={setIsNewConversationOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Conversation
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Create New Conversation</DialogTitle>
+                <DialogDescription>
+                  Start a new conversation with a user on one of your connected platforms.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="platform" className="text-right">
+                    Platform
+                  </Label>
+                  <Select
+                    value={newConversationData.platformId}
+                    onValueChange={(value) => setNewConversationData({...newConversationData, platformId: value})}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(platforms as Platform[] || []).map((platform: Platform) => (
+                        <SelectItem key={platform.id} value={platform.id.toString()}>
+                          {platform.name} ({platform.type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="username" className="text-right">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    placeholder="Enter username"
+                    className="col-span-3"
+                    value={newConversationData.externalUsername}
+                    onChange={(e) => setNewConversationData({...newConversationData, externalUsername: e.target.value})}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="userId" className="text-right">
+                    User ID
+                  </Label>
+                  <Input
+                    id="userId"
+                    placeholder="Enter user ID"
+                    className="col-span-3"
+                    value={newConversationData.externalUserId}
+                    onChange={(e) => setNewConversationData({...newConversationData, externalUserId: e.target.value})}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="externalId" className="text-right">
+                    Channel/Chat ID
+                  </Label>
+                  <Input
+                    id="externalId"
+                    placeholder="Optional: Channel or Chat ID"
+                    className="col-span-3"
+                    value={newConversationData.externalId}
+                    onChange={(e) => setNewConversationData({...newConversationData, externalId: e.target.value})}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  onClick={() => {
+                    if (!newConversationData.platformId || !newConversationData.externalUserId) {
+                      toast({
+                        title: "Validation Error",
+                        description: "Platform and User ID are required",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    createConversationMutation.mutate({
+                      platformId: parseInt(newConversationData.platformId),
+                      externalUserId: newConversationData.externalUserId,
+                      externalUsername: newConversationData.externalUsername || "Unknown User",
+                      externalId: newConversationData.externalId || null,
+                      status: "active"
+                    });
+                  }}
+                  disabled={createConversationMutation.isPending}
+                >
+                  {createConversationMutation.isPending ? "Creating..." : "Create Conversation"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       
@@ -134,7 +318,7 @@ const Conversations = () => {
     </div>
   );
   
-  function renderConversationsTable(conversations, isLoading) {
+  function renderConversationsTable(conversations: Conversation[], isLoading: boolean) {
     if (isLoading) {
       return (
         <div className="animate-pulse">
@@ -150,7 +334,7 @@ const Conversations = () => {
       return (
         <div className="py-12 text-center">
           <p className="text-muted-foreground mb-4">No conversations found</p>
-          <Button>Start a conversation</Button>
+          <Button onClick={() => setIsNewConversationOpen(true)}>Start a conversation</Button>
         </div>
       );
     }
@@ -168,7 +352,7 @@ const Conversations = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {conversations.map(conversation => {
+            {conversations.map((conversation: Conversation) => {
               const platform = conversation.platformId ? 
                 { type: "website" } : // This would come from the API in a real app
                 { type: "website" };
@@ -180,11 +364,11 @@ const Conversations = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
-                      {platformLabel[platform.type]}
+                      {platformLabel[platform.type as keyof typeof platformLabel] || platform.type}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusBadgeVariant[conversation.status] as any}>
+                    <Badge variant={statusBadgeVariant[conversation.status as keyof typeof statusBadgeVariant] as any}>
                       {conversation.status.charAt(0).toUpperCase() + conversation.status.slice(1)}
                     </Badge>
                   </TableCell>
