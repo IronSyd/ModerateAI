@@ -21,10 +21,11 @@ import type { QueryResult } from 'pg';
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
 
   // Platform operations
   getPlatform(id: number): Promise<Platform | undefined>;
@@ -171,19 +172,19 @@ export class MemStorage implements IStorage {
     this.teamInvitationIdCounter = 1;
 
     // Initialize with demo data
-    this.initializeDemoData();
+    this.initializeDemoData().catch(error => {
+      console.error("Error initializing demo data:", error);
+    });
   }
 
-  private initializeDemoData() {
+  private async initializeDemoData() {
     // Create demo user
     const demoUser: InsertUser = {
-      username: "demo",
-      password: "password123", // This would be hashed in a real app
       email: "demo@example.com",
       fullName: "Demo User",
       role: "admin"
     };
-    const user = this.createUser(demoUser);
+    const user = await this.createUser(demoUser);
 
     // Create example AI configuration
     const aiConfig: InsertAiConfiguration = {
@@ -200,7 +201,7 @@ export class MemStorage implements IStorage {
       enableSentimentAnalysis: true,
       enableConversationTraining: false,
     };
-    this.createAiConfiguration(aiConfig);
+    await this.createAiConfiguration(aiConfig);
 
     // Create knowledge base
     const knowledgeBase: InsertKnowledgeBase = {
@@ -210,7 +211,7 @@ export class MemStorage implements IStorage {
       documentCount: 42,
       isActive: true
     };
-    this.createKnowledgeBase(knowledgeBase);
+    await this.createKnowledgeBase(knowledgeBase);
 
     // Create platforms
     const websitePlatform: InsertPlatform = {
@@ -221,7 +222,7 @@ export class MemStorage implements IStorage {
       config: { widgetColor: "#3B82F6", welcomeMessage: "Hi there! How can I help you today?" },
       authToken: "website-token-12345"
     };
-    const website = this.createPlatform(websitePlatform);
+    const website = await this.createPlatform(websitePlatform);
 
     const telegramPlatform: InsertPlatform = {
       type: "telegram",
@@ -231,7 +232,7 @@ export class MemStorage implements IStorage {
       config: null,
       authToken: null
     };
-    this.createPlatform(telegramPlatform);
+    await this.createPlatform(telegramPlatform);
 
     const discordPlatform: InsertPlatform = {
       type: "discord",
@@ -255,7 +256,7 @@ export class MemStorage implements IStorage {
       },
       authToken: "discord-token-partial"
     };
-    this.createPlatform(discordPlatform);
+    await this.createPlatform(discordPlatform);
 
     // Create some conversations and messages
     const conversation1: InsertConversation = {
@@ -264,7 +265,7 @@ export class MemStorage implements IStorage {
       externalUsername: "Chelsea Hagon",
       status: "active"
     };
-    const conv1 = this.createConversation(conversation1);
+    const conv1 = await this.createConversation(conversation1);
 
     const message1: InsertMessage = {
       conversationId: conv1.id,
@@ -272,7 +273,7 @@ export class MemStorage implements IStorage {
       sender: "user",
       metadata: null
     };
-    this.createMessage(message1);
+    await this.createMessage(message1);
 
     const message2: InsertMessage = {
       conversationId: conv1.id,
@@ -280,7 +281,7 @@ export class MemStorage implements IStorage {
       sender: "ai",
       metadata: null
     };
-    this.createMessage(message2);
+    await this.createMessage(message2);
 
     // Add moderation actions
 
@@ -291,9 +292,7 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
-  }
+
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
@@ -614,10 +613,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
+
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));

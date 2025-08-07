@@ -66,47 +66,30 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Email-only authentication - no password required
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
       try {
-        console.log(`Authenticating user: ${username}`);
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          console.log(`User not found: ${username}`);
-          return done(null, false, { message: "Incorrect username" });
-        }
+        console.log(`Authenticating user: ${email}`);
         
-        console.log(`User found: ${username}, checking password`);
-        
-        // Check for new passwordHash/passwordSalt fields first
-        let passwordValid = false;
-        
-        if (user.passwordHash && user.passwordSalt) {
-          // Use the new secure password hashing
-          const hash = scryptSync(password, user.passwordSalt, 64)
-            .toString("hex");
-          passwordValid = hash === user.passwordHash;
-        } else {
-          // Fallback to old password field
-          passwordValid = await comparePasswords(password, user.password);
-        }
-        
-        if (!passwordValid) {
-          console.log(`Invalid password for ${username}`);
-          return done(null, false, { message: "Incorrect password" });
-        }
-        
-        // Check if email is whitelisted
-        const isWhitelisted = await storage.isEmailWhitelisted(user.email);
+        // Check if email is whitelisted first
+        const isWhitelisted = await storage.isEmailWhitelisted(email);
         if (!isWhitelisted) {
-          console.log(`Email not whitelisted for ${username}: ${user.email}`);
+          console.log(`Email not whitelisted: ${email}`);
           return done(null, false, { message: "Email not authorized" });
         }
         
-        console.log(`User ${username} authenticated successfully`);
+        // Find user by email
+        const user = await storage.getUserByEmail(email);
+        if (!user) {
+          console.log(`User not found: ${email}`);
+          return done(null, false, { message: "User not found" });
+        }
+        
+        console.log(`User ${email} authenticated successfully`);
         return done(null, user);
       } catch (error) {
-        console.error(`Authentication error for ${username}:`, error);
+        console.error(`Authentication error for ${email}:`, error);
         return done(error);
       }
     }),
@@ -127,33 +110,29 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+      const { email, fullName } = req.body;
+      
+      if (!email || !fullName) {
+        return res.status(400).json({ message: "Email and full name are required" });
+      }
+
+      // Check if email is whitelisted
+      const isWhitelisted = await storage.isEmailWhitelisted(email);
+      if (!isWhitelisted) {
+        return res.status(403).json({ message: "Email not authorized for registration" });
       }
 
       // Check if email already exists
-      if (req.body.email) {
-        const existingEmail = await storage.getUserByEmail(req.body.email);
-        if (existingEmail) {
-          return res.status(400).json({ message: "Email already in use" });
-        }
-        
-        // Check if email is whitelisted
-        const isWhitelisted = await storage.isEmailWhitelisted(req.body.email);
-        if (!isWhitelisted) {
-          return res.status(403).json({ message: "Email not authorized for registration" });
-        }
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
       }
 
-      // Hash the password
-      const hashedPassword = await hashPassword(req.body.password);
-
-      // Create the user with hashed password
+      // Create the user without password
       const user = await storage.createUser({
-        ...req.body,
-        password: hashedPassword,
+        email,
+        fullName,
+        role: req.body.role || "user"
       });
 
       // Log the user in automatically
@@ -167,11 +146,11 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
-    console.log("Login attempt for:", req.body.username);
+    console.log("Login attempt for:", req.body.email);
     
-    if (!req.body.username || !req.body.password) {
-      console.error("Missing username or password");
-      return res.status(400).json({ message: "Username and password are required" });
+    if (!req.body.email) {
+      console.error("Missing email");
+      return res.status(400).json({ message: "Email is required" });
     }
     
     passport.authenticate("local", (err: Error, user: UserType, info: { message: string }) => {
@@ -199,7 +178,6 @@ export function setupAuth(app: Express) {
         // Return user without sensitive information
         const safeUser = {
           id: user.id,
-          username: user.username,
           email: user.email,
           fullName: user.fullName,
           role: user.role

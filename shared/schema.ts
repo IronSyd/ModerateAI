@@ -3,13 +3,9 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table
+// Users table - Email-only authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(), // Deprecated - use passwordHash/passwordSalt
-  passwordHash: text("password_hash"),
-  passwordSalt: text("password_salt"),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
   role: text("role").notNull().default("user"),
@@ -21,8 +17,6 @@ export const users = pgTable("users", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
   email: true,
   fullName: true,
   role: true,

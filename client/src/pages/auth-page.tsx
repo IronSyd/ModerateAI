@@ -3,11 +3,10 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useAdminUser } from "@/hooks/use-admin-user";
-import { MessagesSquare, ShieldAlert, Eye, EyeOff } from "lucide-react";
+import { MessagesSquare, ShieldAlert } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "@/components/logo";
 import { useForm } from "react-hook-form";
@@ -15,20 +14,16 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const loginSchema = z.object({
-  username: z.string().trim().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Please enter a valid email address"),
 });
 
 const registerSchema = z.object({
-  username: z.string().trim().min(3, "Username must be at least 3 characters").max(50, "Username cannot exceed 50 characters"),
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
 });
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
@@ -38,8 +33,7 @@ const AuthPage = () => {
     resolver: zodResolver(loginSchema),
     mode: "onSubmit",
     defaultValues: {
-      username: "",
-      password: "",
+      email: "",
     },
   });
 
@@ -48,9 +42,7 @@ const AuthPage = () => {
     mode: "onBlur",
     reValidateMode: "onChange",
     defaultValues: {
-      username: "",
       email: "",
-      password: "",
       fullName: "",
     },
   });
@@ -121,47 +113,16 @@ const AuthPage = () => {
                       >
                         <FormField
                           control={loginForm.control}
-                          name="username"
+                          name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username</FormLabel>
+                              <FormLabel>Email</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter your username"
+                                  type="email"
+                                  placeholder="Enter your email address"
                                   {...field}
                                 />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={loginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Input
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Enter your password"
-                                    {...field}
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                  >
-                                    {showPassword ? (
-                                      <EyeOff className="h-4 w-4 text-gray-600" />
-                                    ) : (
-                                      <Eye className="h-4 w-4 text-gray-600" />
-                                    )}
-                                  </Button>
-                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -189,42 +150,26 @@ const AuthPage = () => {
                       onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
                       className="space-y-4"
                     >
-                      <div className="space-y-2">
-                        <Label htmlFor="register-username">Username</Label>
-                        <Input
-                          id="register-username"
-                          type="text"
-                          placeholder="Choose a username"
-                          value={registerForm.watch("username")}
-                          onChange={(e) => {
-                            registerForm.setValue("username", e.target.value);
-                            registerForm.trigger("username");
-                          }}
-                        />
-                        {registerForm.formState.errors.username && (
-                          <p className="text-sm font-medium text-destructive">
-                            {registerForm.formState.errors.username.message}
-                          </p>
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="Enter your email address"
+                                {...field}
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Only whitelisted email addresses can register for access
+                            </p>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="register-email">Email</Label>
-                        <Input
-                          id="register-email"
-                          type="text"
-                          placeholder="Enter your email"
-                          value={registerForm.watch("email")}
-                          onChange={(e) => registerForm.setValue("email", e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Only whitelisted email addresses can register for access
-                        </p>
-                        {registerForm.formState.errors.email && (
-                          <p className="text-sm font-medium text-destructive">
-                            {registerForm.formState.errors.email.message}
-                          </p>
-                        )}
-                      </div>
+                      />
                       <FormField
                         control={registerForm.control}
                         name="fullName"
@@ -236,38 +181,6 @@ const AuthPage = () => {
                                 placeholder="Enter your full name"
                                 {...field}
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input
-                                  type={showPassword ? "text" : "password"}
-                                  placeholder="Create a password"
-                                  {...field}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                  onClick={() => setShowPassword(!showPassword)}
-                                >
-                                  {showPassword ? (
-                                    <EyeOff className="h-4 w-4 text-gray-600" />
-                                  ) : (
-                                    <Eye className="h-4 w-4 text-gray-600" />
-                                  )}
-                                </Button>
-                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>

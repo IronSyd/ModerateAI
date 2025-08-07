@@ -9,15 +9,16 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## August 2025
-- **Implemented Email Whitelisting Authentication System** (August 7, 2025):
-  - Added `emailWhitelist` table to database schema for controlling user access
-  - Enhanced authentication to check email whitelisting during both login and registration
-  - Only whitelisted email addresses can now register and access the system
-  - Built comprehensive API endpoints for email whitelist management (GET, POST, DELETE)
-  - Added email validation logic to auth.ts with proper error messaging
-  - Seeded database with initial whitelisted emails for authorized users
-  - Email addresses are stored in lowercase for case-insensitive matching
-  - System tracks who added emails to whitelist and includes soft-delete functionality
+- **Transitioned to Email-Only Authentication System** (August 7, 2025):
+  - Completely removed username and password authentication in favor of email-only access
+  - Updated database schema by removing username, password, password_hash, and password_salt columns from users table
+  - Modified authentication logic to use only email validation against whitelist
+  - Updated frontend forms to remove username and password fields
+  - Simplified registration process to require only email and full name
+  - Enhanced login process to authenticate users based solely on whitelisted email addresses
+  - Updated authentication hooks and API endpoints to work with email-only credentials
+  - Maintained email whitelisting as primary access control mechanism
+  - System now provides secure access without traditional password requirements
 
 ## January 2025
 - **Fixed username validation issue**: Resolved form field binding problem in registration form that prevented usernames from being captured properly
