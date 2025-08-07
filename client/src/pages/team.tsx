@@ -430,9 +430,8 @@ const Team = () => {
   // Delete team member mutation
   const deleteMemberMutation = useMutation({
     mutationFn: async (id: number) => {
-      // For actual users, we would have a different endpoint
-      // For invitations, we use the cancel invitation endpoint
-      const response = await fetch(`/api/team/invite/${id}`, {
+      // Remove user from whitelist
+      const response = await fetch(`/api/team/members/${id}`, {
         method: 'DELETE'
       });
       
@@ -446,9 +445,7 @@ const Team = () => {
     onSuccess: () => {
       toast({
         title: "Team member removed",
-        description: selectedMember?.status === "invited" 
-          ? `Invitation to ${selectedMember?.email} has been cancelled` 
-          : `${selectedMember?.name} has been removed from your team`,
+        description: `${selectedMember?.name} has been removed from your whitelist and can no longer access the system`,
       });
       setIsDeleteDialogOpen(false);
       setSelectedMember(null);

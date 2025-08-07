@@ -247,6 +247,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Remove user from whitelist API endpoint
+  app.delete("/api/team/members/:id", authMiddleware, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const currentUserId = req.user!.id;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Prevent admin from removing themselves
+      if (userId === currentUserId) {
+        return res.status(400).json({ message: "You cannot remove yourself from the team" });
+      }
+      
+      // Get user to find their email
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if current user has whitelisted this email
+      const whitelistedEmails = await storage.getEmailsWhitelistedBy(currentUserId);
+      const hasWhitelisted = whitelistedEmails.some(w => w.email === user.email);
+      
+      if (!hasWhitelisted) {
+        return res.status(403).json({ message: "You can only remove users you have whitelisted" });
+      }
+      
+      // Remove email from whitelist
+      const removed = await storage.removeEmailFromWhitelist(user.email);
+      
+      if (!removed) {
+        return res.status(500).json({ message: "Failed to remove user from whitelist" });
+      }
+      
+      res.json({ message: "User removed from whitelist successfully" });
+    } catch (error: any) {
+      console.error("Error removing user from whitelist:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
   // Accept invitation endpoint
   app.get("/api/team/accept-invitation/:token", async (req, res) => {
     try {
