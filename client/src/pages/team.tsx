@@ -573,7 +573,7 @@ const Team = () => {
             <CardHeader>
               <CardTitle>Manage Team</CardTitle>
               <CardDescription>
-                Invite and manage your team members who have access to ModerateAI
+                Whitelist and manage your team members who have access to ModerateAI
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -684,7 +684,7 @@ const Team = () => {
                   <p className="mt-2 text-sm text-gray-500">
                     {searchQuery
                       ? "Try adjusting your search query"
-                      : "Invite your first team member to get started"}
+                      : "Whitelist your first team member to get started"}
                   </p>
                   {searchQuery && (
                     <Button
@@ -705,101 +705,17 @@ const Team = () => {
                   ? ` (filtered from ${teamMembers?.length || 0})`
                   : ""}
               </div>
-              {teamMembers && teamMembers.length > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => setIsInviteDialogOpen(true)}
-                >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Invite Team Member
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={() => setIsInviteDialogOpen(true)}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Whitelist New Account
+              </Button>
             </CardFooter>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Invitations</CardTitle>
-              <CardDescription>
-                These are invitations that have been sent but not yet accepted
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {filteredMembers && filteredMembers.length > 0 ? (
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Sent</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredMembers
-                        .filter((member) => member.status === "invited")
-                        .map((member) => (
-                          <TableRow key={`invitation-${member.id}`}>
-                            <TableCell className="font-medium">
-                              {member.email}
-                            </TableCell>
-                            <TableCell>{getRoleBadge(member.role)}</TableCell>
-                            <TableCell className="text-gray-500">
-                              2 days ago
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  title="View invitation link"
-                                  onClick={() => getInvitationLinkMutation.mutate(member.id)}
-                                >
-                                  <Mail className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  title="Resend invitation email"
-                                  onClick={() => {
-                                    toast({
-                                      title: "Invitation resent",
-                                      description: `Invitation to ${member.email} has been resent`,
-                                    });
-                                  }}
-                                >
-                                  <RefreshCw className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-500"
-                                  title="Cancel invitation"
-                                  onClick={() => {
-                                    setSelectedMember(member);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-8 border rounded-lg">
-                  <CheckCircle2 className="mx-auto h-6 w-6 text-gray-300" />
-                  <p className="mt-2 text-sm text-gray-500">
-                    No pending invitations
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-6">
@@ -847,10 +763,9 @@ const Team = () => {
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogTitle>Whitelist New Account</DialogTitle>
             <DialogDescription>
-              Invite a new member to your team. They'll receive an email with
-              instructions to join.
+              Add an email address to the whitelist. Users with whitelisted emails can access the system using just their email.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -901,9 +816,9 @@ const Team = () => {
               {inviteMemberMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Link className="mr-2 h-4 w-4" />
+                <UserPlus className="mr-2 h-4 w-4" />
               )}
-              Create Invitation Link
+              Add to Whitelist
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -913,9 +828,9 @@ const Team = () => {
       <Dialog open={isInviteLinkDialogOpen} onOpenChange={setIsInviteLinkDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Team Invitation Created</DialogTitle>
+            <DialogTitle>Email Whitelisted Successfully</DialogTitle>
             <DialogDescription>
-              Share this secure link with your team member. They can use it to join your team.
+              The email has been added to your whitelist. The user can now access the system by signing in with their email.
             </DialogDescription>
           </DialogHeader>
           

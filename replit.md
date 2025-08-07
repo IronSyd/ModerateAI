@@ -24,6 +24,13 @@ Preferred communication style: Simple, everyday language.
     - Removed registration API endpoint and related frontend code
     - New users must be invited and whitelisted by existing administrators
     - Authentication interface now shows only sign-in option with admin invitation messaging
+- **Updated Team Management for Email Whitelisting** (August 7, 2025):
+  - Modified team members endpoint to only show users whitelisted by current admin
+  - Changed "Invite Team Member" to "Whitelist New Account" throughout the interface
+  - Removed "Pending Invitations" section from team management page
+  - Updated team invitation API to directly add emails to whitelist instead of creating invitations
+  - Team management now properly isolates each admin's whitelisted users
+  - Added tracking of which admin added each email via addedBy column in emailWhitelist table
 
 ## January 2025
 - **Fixed username validation issue**: Resolved form field binding problem in registration form that prevented usernames from being captured properly

@@ -77,12 +77,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allUsers = await storage.getAllUsers();
       const teamMembers = allUsers.filter(user => emailList.includes(user.email));
       
-      // Get pending invitations created by the current user
-      const pendingInvitations = await storage.getPendingTeamInvitations();
-      const userInvitations = pendingInvitations.filter(inv => 
-        whitelistedEmails.some(w => w.email === inv.email)
-      );
-      
       // Map users to team members format
       const formattedMembers = teamMembers.map(user => ({
         id: user.id,
@@ -93,28 +87,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastActive: user.id === currentUserId ? "Just now" : "Recently"
       }));
       
-      // Map pending invitations to team members format
-      const invitedMembers = userInvitations.map(invitation => ({
-        id: invitation.id,
-        name: "",
-        email: invitation.email,
-        role: invitation.role,
-        status: "invited",
-        lastActive: "Never",
-        invitedAt: invitation.createdAt
-      }));
-      
-      // Combine active members and pending invitations
-      const combinedMembers = [...formattedMembers, ...invitedMembers];
-      
-      res.json(combinedMembers);
+      res.json(formattedMembers);
     } catch (error: any) {
       console.error("Error fetching team members:", error);
       res.status(500).json({ message: error.message });
     }
   });
   
-  // Send team invitation API endpoint
+  // Whitelist team member API endpoint
   app.post("/api/team/invite", authMiddleware, async (req, res) => {
     try {
       const { email, role } = req.body;
@@ -123,51 +103,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and role are required" });
       }
       
+      const currentUserId = req.user!.id;
+      
+      // Check if email is already whitelisted
+      const isAlreadyWhitelisted = await storage.isEmailWhitelisted(email);
+      if (isAlreadyWhitelisted) {
+        return res.status(400).json({ message: "This email is already whitelisted" });
+      }
+      
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "User with this email already exists" });
       }
       
-      // Check if there's already a pending invitation for this email
-      const existingInvitations = await storage.getTeamInvitationsByEmail(email);
-      const pendingInvitation = existingInvitations.find(inv => inv.status === "pending");
+      // Add email to whitelist
+      const whitelistEntry = await storage.addEmailToWhitelist(email, currentUserId);
       
-      if (pendingInvitation) {
-        return res.status(400).json({ message: "There's already a pending invitation for this email" });
-      }
+      console.log(`Email ${email} whitelisted by user ${currentUserId}`);
       
-      // Create invitation with 7-day expiration
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-      
-      const invitation = await storage.createTeamInvitation({
-        email,
-        role,
-        invitedBy: req.user!.id,
-        expiresAt
-      });
-      
-      // Get the inviter's name for the email
-      const inviter = await storage.getUser(req.user!.id);
-      
-      // Generate invite link
-      const baseUrl = process.env.BASE_URL || `http://localhost:5000`;
-      const inviteLink = `${baseUrl}/accept-invitation?token=${invitation.token}`;
-      
-      // Instead of sending an email, we'll just return the invitation with the link
-      // This new approach focuses on directly sharing the referral link
-      console.log(`Created invitation link for ${email}: ${inviteLink}`);
-      
-      // Return success with the invitation link for manual sharing
+      // Return success
       return res.status(201).json({ 
-        message: "Invitation created successfully. Share the referral link with the team member.",
-        invitation,
-        inviteLink,
+        message: "Email successfully added to whitelist. The user can now access the system.",
+        whitelistEntry,
         status: "success"
       });
     } catch (error: any) {
-      console.error("Error sending team invitation:", error);
+      console.error("Error whitelisting email:", error);
       res.status(500).json({ message: error.message });
     }
   });
