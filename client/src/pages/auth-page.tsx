@@ -17,16 +17,10 @@ const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
 
-const registerSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
-});
-
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation } = useAuth();
   const { enableAdminUser } = useAdminUser();
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -37,15 +31,7 @@ const AuthPage = () => {
     },
   });
 
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    defaultValues: {
-      email: "",
-      fullName: "",
-    },
-  });
+
 
   // Redirect if already logged in - using useEffect to avoid breaking hooks rules
   useEffect(() => {
@@ -66,24 +52,7 @@ const AuthPage = () => {
     });
   };
 
-  const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {
-    registerMutation.mutate(values, {
-      onSuccess: () => {
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created!",
-        });
-        setLocation("/dashboard");
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Registration failed",
-          description: error.message || "Please try again",
-          variant: "destructive",
-        });
-      },
-    });
-  };
+
 
   return (
     <div className="min-h-screen bg-background flex items-center">
@@ -98,125 +67,62 @@ const AuthPage = () => {
             <Card className="w-full max-w-md mx-auto">
               <CardHeader>
                 <CardDescription className="text-lg">
-                  {isLogin
-                    ? "Sign in to your ModerateAI account"
-                    : "Create a new ModerateAI account"}
+                  Sign in to your ModerateAI account
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLogin ? (
-                  <div>
-                    <Form {...loginForm}>
-                      <form
-                        onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={loginForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="email"
-                                  placeholder="Enter your email address"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          disabled={loginMutation.isPending}
-                        >
-                          {loginMutation.isPending ? "Signing in..." : "Sign In"}
-                        </Button>
-                      </form>
-                    </Form>
-                    
-                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground text-center">
-                        Access restricted to authorized email addresses only
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <Form {...registerForm}>
-                    <form
-                      onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
-                      className="space-y-4"
+                <Form {...loginForm}>
+                  <form
+                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="Enter your email address"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loginMutation.isPending}
                     >
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="email"
-                                placeholder="Enter your email address"
-                                {...field}
-                              />
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground">
-                              Only whitelisted email addresses can register for access
-                            </p>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter your full name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={registerMutation.isPending}
-                      >
-                        {registerMutation.isPending
-                          ? "Creating account..."
-                          : "Create Account"}
-                      </Button>
-                    </form>
-                  </Form>
-                )}
+                      {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </form>
+                </Form>
+                
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground text-center">
+                    Access restricted to authorized email addresses only
+                  </p>
+                </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
                 <div className="text-sm text-muted-foreground text-center">
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  New users must be invited by an administrator
+                </div>
+                <div className="text-center">
                   <Button
-                    variant="link"
-                    className="pl-1 h-auto p-0"
-                    onClick={() => {
-                      setIsLogin(!isLogin);
-                      // Reset forms when switching modes
-                      loginForm.reset();
-                      registerForm.reset();
-                    }}
+                    variant="outline"
+                    onClick={enableAdminUser}
+                    className="text-xs"
                   >
-                    {isLogin ? "Sign up" : "Sign in"}
+                    <ShieldAlert className="h-3 w-3 mr-1" />
+                    Enable Admin User
                   </Button>
                 </div>
-
               </CardFooter>
             </Card>
           </div>

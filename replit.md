@@ -19,6 +19,11 @@ Preferred communication style: Simple, everyday language.
   - Updated authentication hooks and API endpoints to work with email-only credentials
   - Maintained email whitelisting as primary access control mechanism
   - System now provides secure access without traditional password requirements
+  - **Removed Sign-Up Option** (August 7, 2025):
+    - Eliminated public registration functionality from authentication forms
+    - Removed registration API endpoint and related frontend code
+    - New users must be invited and whitelisted by existing administrators
+    - Authentication interface now shows only sign-in option with admin invitation messaging
 
 ## January 2025
 - **Fixed username validation issue**: Resolved form field binding problem in registration form that prevented usernames from being captured properly

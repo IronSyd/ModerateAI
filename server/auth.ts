@@ -108,42 +108,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, fullName } = req.body;
-      
-      if (!email || !fullName) {
-        return res.status(400).json({ message: "Email and full name are required" });
-      }
 
-      // Check if email is whitelisted
-      const isWhitelisted = await storage.isEmailWhitelisted(email);
-      if (!isWhitelisted) {
-        return res.status(403).json({ message: "Email not authorized for registration" });
-      }
-
-      // Check if email already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already in use" });
-      }
-
-      // Create the user without password
-      const user = await storage.createUser({
-        email,
-        fullName,
-        role: req.body.role || "user"
-      });
-
-      // Log the user in automatically
-      req.login(user, (err) => {
-        if (err) return next(err);
-        return res.status(201).json(user);
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
 
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
     console.log("Login attempt for:", req.body.email);
