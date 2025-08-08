@@ -578,6 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const demoUsers = await storage.getAllUsers();
       const demoUser = demoUsers.find(user => user.email === "michael@x8c.io") || demoUsers.find(user => user.email === "demo@example.com") || demoUsers[0];
       
+      
       if (!demoUser) {
         // Fallback if no demo user exists
         return res.status(500).json({ 
@@ -614,9 +615,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 - AI Configuration: Adjustable response style, length, and tone; knowledge base customization`;
       
       try {
-        // Log the user message for debugging
-        console.log(`[openai-demo] Processing request: "${message}"`);
-        
         // Use knowledge-based response generation
         const response = await generateKnowledgeBasedResponse(
           message,
@@ -626,8 +624,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           aiConfig?.responseLength || 50,  // Moderate length
           demoUser.id // Pass demo user ID for knowledge base access
         );
-        
-        console.log(`[openai-demo] Generated response: "${response.substring(0, 100)}..."`);
         res.status(200).json({ content: response });
       } catch (openaiError: any) {
         // Log the specific OpenAI error for debugging
