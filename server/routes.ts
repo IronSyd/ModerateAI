@@ -876,13 +876,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               botId: result.botInfo.botId
             };
             
-            console.log('Bot info received:', result.botInfo);
-            console.log('Updated config to be stored:', updatedConfig);
-            
             // Update the request body to include the bot information
             req.body.config = updatedConfig;
-          } else {
-            console.log('No bot info returned from Telegram initialization');
           }
           
           console.log(`Telegram bot connected successfully for platform ${platformId}`);

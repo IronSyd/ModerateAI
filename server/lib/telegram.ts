@@ -25,7 +25,7 @@ const activeBots = new Map<number, TelegramBot>();
 /**
  * Initialize a Telegram bot with the given token 
  */
-export async function initializeBot(platformId: number, token: string): Promise<{ success: boolean; message: string }> {
+export async function initializeBot(platformId: number, token: string): Promise<{ success: boolean; message: string; botInfo?: { botName: string; botUsername: string; botId: number } }> {
   try {
     // Validate token by creating a bot instance and getting bot info
     const bot = new TelegramBot(token, { polling: false });
