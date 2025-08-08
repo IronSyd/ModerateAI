@@ -865,17 +865,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
           
-          // Store bot information in platform config
+          // Store bot information in platform config by merging with the request body
           if (result.botInfo) {
             const currentConfig = platform.config || {};
-            await storage.updatePlatform(platformId, {
-              config: {
-                ...currentConfig,
-                botName: result.botInfo.botName,
-                botUsername: result.botInfo.botUsername,
-                botId: result.botInfo.botId
-              }
-            });
+            const updatedConfig = {
+              ...currentConfig,
+              ...(req.body.config || {}),
+              botName: result.botInfo.botName,
+              botUsername: result.botInfo.botUsername,
+              botId: result.botInfo.botId
+            };
+            
+            // Update the request body to include the bot information
+            req.body.config = updatedConfig;
           }
           
           console.log(`Telegram bot connected successfully for platform ${platformId}`);
