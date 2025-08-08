@@ -1408,7 +1408,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // Update knowledge document
+  app.put("/api/knowledge-documents/:id", authMiddleware, async (req, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      const document = await storage.getKnowledgeDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Check if user owns the knowledge base that contains this document
+      const knowledgeBase = await storage.getKnowledgeBase(document.knowledgeBaseId);
+      if (!knowledgeBase || knowledgeBase.userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const { title, content } = req.body;
+      
+      if (!title || !content) {
+        return res.status(400).json({ message: "Title and content are required" });
+      }
+      
+      const updatedDocument = await storage.updateKnowledgeDocument(documentId, {
+        title,
+        content
+      });
+      
+      res.status(200).json(updatedDocument);
+    } catch (error) {
+      console.error("Error updating knowledge document:", error);
+      res.status(500).json({ message: "Error updating knowledge document" });
+    }
+  });
 
   // Conversation Training routes
   app.get("/api/conversation-trainings", authMiddleware, async (req, res) => {

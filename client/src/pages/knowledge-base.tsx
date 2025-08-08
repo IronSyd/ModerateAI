@@ -33,6 +33,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface KnowledgeBase {
   id: number;
@@ -52,11 +58,15 @@ interface KnowledgeDocument {
 }
 
 export default function KnowledgeBasePage() {
+  const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewingDocument, setViewingDocument] = useState<KnowledgeDocument | null>(null);
+  const [editingDocument, setEditingDocument] = useState<KnowledgeDocument | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
 
   // Fetch knowledge bases
   const { data: knowledgeBases = [], isLoading: isLoadingBases } = useQuery<KnowledgeBase[]>({
@@ -68,6 +78,57 @@ export default function KnowledgeBasePage() {
     queryKey: [`/api/knowledge-bases/${selectedKnowledgeBase}/documents`],
     enabled: !!selectedKnowledgeBase,
   });
+
+  // Update document mutation
+  const updateDocumentMutation = useMutation({
+    mutationFn: async (data: { id: number; title: string; content: string }) => {
+      return apiRequest("PUT", `/api/knowledge-documents/${data.id}`, {
+        title: data.title,
+        content: data.content
+      });
+    },
+    onSuccess: () => {
+      setEditingDocument(null);
+      setEditTitle("");
+      setEditContent("");
+      toast({
+        title: "Document updated",
+        description: "Your document has been updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/knowledge-bases/${selectedKnowledgeBase}/documents`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update document. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditDocument = (doc: KnowledgeDocument) => {
+    setEditingDocument(doc);
+    setEditTitle(doc.title);
+    setEditContent(doc.content);
+    setViewingDocument(null);
+  };
+
+  const handleSaveDocument = () => {
+    if (!editingDocument || !editTitle.trim() || !editContent.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide both a title and content",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateDocumentMutation.mutate({
+      id: editingDocument.id,
+      title: editTitle,
+      content: editContent
+    });
+  };
 
   const filteredBases = knowledgeBases.filter(base =>
     base.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -272,7 +333,7 @@ export default function KnowledgeBasePage() {
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditDocument(doc)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -348,16 +409,89 @@ export default function KnowledgeBasePage() {
             <Button variant="outline" onClick={() => setViewingDocument(null)}>
               Close
             </Button>
-            <Button onClick={() => {
-              if (viewingDocument) {
-                setViewingDocument(null);
-                // TODO: Implement document editing functionality
-                alert('Document editing functionality will be implemented soon!');
-              }
-            }}>
+            <Button onClick={() => handleEditDocument(viewingDocument!)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Document
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Document Editor Dialog */}
+      <Dialog open={!!editingDocument} onOpenChange={() => {
+        if (!updateDocumentMutation.isPending) {
+          setEditingDocument(null);
+          setEditTitle("");
+          setEditContent("");
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Edit Document
+            </DialogTitle>
+            <DialogDescription>
+              Make changes to your document content
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 space-y-4 mt-4 overflow-hidden flex flex-col">
+            <div>
+              <Label htmlFor="editTitle">Title</Label>
+              <Input
+                id="editTitle"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Document title"
+                disabled={updateDocumentMutation.isPending}
+                className="mt-1"
+              />
+            </div>
+            
+            <div className="flex-1 flex flex-col">
+              <Label htmlFor="editContent">Content</Label>
+              <Textarea
+                id="editContent"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="Document content"
+                disabled={updateDocumentMutation.isPending}
+                className="flex-1 mt-1 min-h-[300px] resize-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center mt-4 pt-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              {editContent.length.toLocaleString()} characters
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setEditingDocument(null);
+                  setEditTitle("");
+                  setEditContent("");
+                }}
+                disabled={updateDocumentMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveDocument}
+                disabled={updateDocumentMutation.isPending || !editTitle.trim() || !editContent.trim()}
+              >
+                {updateDocumentMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
