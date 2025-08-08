@@ -289,10 +289,15 @@ const TelegramIntegration = () => {
 
   // Sync local state with platform data when it loads
   useEffect(() => {
+    console.log('=== PLATFORM DEBUG ===');
+    console.log('Platform object:', platform);
+    console.log('Platform config:', platform?.config);
+    console.log('Bot name from config:', platform?.config?.botName);
+    console.log('Bot username from config:', platform?.config?.botUsername);
+    console.log('=== END DEBUG ===');
+    
     if (platform && platform.config) {
       const config = platform.config as any;
-      console.log('Platform data loaded:', platform);
-      console.log('Platform config:', config);
       setGroupMode(config.groupMode || false);
       setPrivateChatMode(config.privateChatMode !== false); // Default to true
       setMentionOnly(config.mentionOnly !== false); // Default to true
@@ -311,6 +316,10 @@ const TelegramIntegration = () => {
         config: {
           welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
           groupMode: true,
+          privateChatMode: true,
+          mentionOnly: true,
+          contentFilteringEnabled: true,
+          spamProtectionEnabled: true,
           botCommands: [
             { command: "help", description: "Show help information" },
             { command: "about", description: "About this bot" }

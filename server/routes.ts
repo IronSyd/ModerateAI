@@ -808,6 +808,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Successfully retrieved platform: ${platform.name} (${platform.type})`);
+      
+      // Debug: Log what we're sending to frontend
+      console.log('=== GET PLATFORM RESPONSE ===');
+      console.log('Platform config being sent:', platform.config);
+      console.log('Bot name in config:', platform.config?.botName);
+      console.log('Bot username in config:', platform.config?.botUsername);
+      console.log('=== END GET PLATFORM RESPONSE ===');
+      
       res.status(200).json(platform);
     } catch (error) {
       console.error(`Error fetching platform ${req.params.id}:`, error);
@@ -925,6 +933,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedPlatform = await storage.updatePlatform(platformId, req.body);
+      
+      // Debug: Log what we're returning
+      console.log('=== PLATFORM UPDATE RESPONSE ===');
+      console.log('Updated platform config:', updatedPlatform.config);
+      console.log('Bot name in config:', updatedPlatform.config?.botName);
+      console.log('Bot username in config:', updatedPlatform.config?.botUsername);
+      console.log('=== END PLATFORM UPDATE RESPONSE ===');
+      
       res.status(200).json(updatedPlatform);
     } catch (error) {
       console.error("Error updating platform:", error);
