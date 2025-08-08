@@ -89,6 +89,7 @@ export function DocumentUploadDialog({
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-bases"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/knowledge-bases/${knowledgeBaseId}/documents`] });
     },
     onError: (error: any) => {
       toast({
