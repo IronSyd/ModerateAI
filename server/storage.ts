@@ -1097,14 +1097,14 @@ export class DatabaseStorage implements IStorage {
    * Calculate response rate for a specific user
    */
   async getResponseRateForUser(userId: number): Promise<number> {
-    // Get total message count for user
-    const totalResult = await db
+    // Get user message count 
+    const userResult = await db
       .select({ count: count() })
       .from(messages)
       .innerJoin(conversations, eq(messages.conversationId, conversations.id))
       .innerJoin(platforms, eq(conversations.platformId, platforms.id))
-      .where(eq(platforms.userId, userId));
-    const totalMessages = totalResult[0]?.count || 0;
+      .where(and(eq(messages.sender, 'user'), eq(platforms.userId, userId)));
+    const userMessages = userResult[0]?.count || 0;
     
     // Get AI message count for user
     const aiResult = await db
@@ -1115,8 +1115,8 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(messages.sender, 'ai'), eq(platforms.userId, userId)));
     const aiMessages = aiResult[0]?.count || 0;
     
-    // Calculate response rate as percentage
-    return totalMessages > 0 ? (aiMessages / totalMessages) * 100 : 0;
+    // Calculate response rate as percentage (AI responses / User messages)
+    return userMessages > 0 ? (aiMessages / userMessages) * 100 : 0;
   }
 
   /**
