@@ -253,6 +253,9 @@ export async function initializeBot(platformId: number, token: string): Promise<
           
           // Generate AI response with proper parameters - use knowledge-based response if knowledge base is available
           let aiResponse;
+          const platform = await storage.getPlatform(platformId);
+          const userId = platform?.userId || 1;
+          
           if (knowledgeBase) {
             const { generateKnowledgeBasedResponse } = await import("../lib/openai");
             aiResponse = await generateKnowledgeBasedResponse(
@@ -260,7 +263,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
               conversationHistory,
               systemPrompt,
               activeConfig?.responseStyle || 50,
-              activeConfig?.responseLength || 50
+              activeConfig?.responseLength || 50,
+              userId
             );
           } else {
             const { generateAIResponse } = await import("../lib/openai");

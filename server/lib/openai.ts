@@ -73,6 +73,7 @@ export async function generateKnowledgeBasedResponse(
   systemPrompt: string,
   responseStyle: number = 50,
   responseLength: number = 50,
+  userId?: number,
 ): Promise<string> {
   try {
     console.log(`[generateKnowledgeBasedResponse] Processing query: "${message.substring(0, 50)}..."`);
@@ -80,16 +81,32 @@ export async function generateKnowledgeBasedResponse(
     // First, retrieve relevant documents from knowledge base using semantic search
     // This could be implemented with embeddings, but for simplicity we'll use keywords
     const keywords = extractKeywords(message);
+    console.log(`[generateKnowledgeBasedResponse] Extracted keywords:`, keywords);
     
-    // For demo purposes, just use the default knowledge base if any
-    const knowledgeBases = await storage.getKnowledgeBases(0, 100);
-    const knowledgeBase = knowledgeBases.find(kb => kb.isActive) || knowledgeBases[0];
+    // Get knowledge bases for the user, or get all for demo if no userId provided
+    let knowledgeBases = [];
+    console.log(`[generateKnowledgeBasedResponse] Looking for knowledge bases for userId: ${userId}`);
+    if (userId) {
+      knowledgeBases = await storage.getKnowledgeBasesByUserId(userId);
+      console.log(`[generateKnowledgeBasedResponse] Found ${knowledgeBases.length} knowledge bases for user ${userId}:`, knowledgeBases.map(kb => `${kb.name}(active: ${kb.isActive})`));
+    } else {
+      // For demo purposes without user context, try to get any active knowledge base
+      const allUsers = await storage.getAllUsers();
+      for (const user of allUsers) {
+        const userKbs = await storage.getKnowledgeBasesByUserId(user.id);
+        knowledgeBases.push(...userKbs);
+      }
+      console.log(`[generateKnowledgeBasedResponse] Found ${knowledgeBases.length} total knowledge bases from all users`);
+    }
+    const knowledgeBase = knowledgeBases.find((kb: any) => kb.isActive) || knowledgeBases[0];
+    console.log(`[generateKnowledgeBasedResponse] Selected knowledge base:`, knowledgeBase ? `${knowledgeBase.name} (id: ${knowledgeBase.id}, active: ${knowledgeBase.isActive})` : 'none');
     
     let relevantDocuments: Array<{ title: string; content: string }> = [];
     
     if (knowledgeBase) {
       // Get documents from the knowledge base
       const documents = await storage.getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBase.id);
+      console.log(`[generateKnowledgeBasedResponse] Found ${documents.length} documents in knowledge base`);
       
       // Search for relevant documents
       relevantDocuments = documents
@@ -99,12 +116,16 @@ export async function generateKnowledgeBasedResponse(
           const contentMatches = keywords.filter(kw => doc.content.toLowerCase().includes(kw.toLowerCase())).length;
           const score = titleMatches * 2 + contentMatches;
           
+          console.log(`[generateKnowledgeBasedResponse] Document "${doc.title}": titleMatches=${titleMatches}, contentMatches=${contentMatches}, score=${score}`);
+          
           return { doc, score };
         })
         .filter(item => item.score > 0)
         .sort((a, b) => b.score - a.score)
         .slice(0, 3) // Top 3 most relevant documents
         .map(item => ({ title: item.doc.title, content: item.doc.content }));
+      
+      console.log(`[generateKnowledgeBasedResponse] Found ${relevantDocuments.length} relevant documents`);
     }
     
     // Convert conversation history to OpenAI format
@@ -169,8 +190,8 @@ export async function moderateContent(
     });
     
     const result = moderationResponse.results[0];
-    const categories = result.categories as Record<string, boolean>;
-    const scores = result.category_scores as Record<string, number>;
+    const categories = result.categories as unknown as Record<string, boolean>;
+    const scores = result.category_scores as unknown as Record<string, number>;
     
     // Adjust flagging threshold based on strictness level (0-100)
     // Lower strictness level = higher threshold (more permissive)

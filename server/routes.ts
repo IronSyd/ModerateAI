@@ -576,7 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get a demo user for accessing the knowledge base and AI configuration
       const demoUsers = await storage.getAllUsers();
-      const demoUser = demoUsers.find(user => user.username === "demo") || demoUsers[0];
+      const demoUser = demoUsers.find(user => user.email === "michael@x8c.io") || demoUsers.find(user => user.email === "demo@example.com") || demoUsers[0];
       
       if (!demoUser) {
         // Fallback if no demo user exists
@@ -623,7 +623,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [], // No conversation history 
           aiConfig?.systemPrompt || systemPrompt,
           aiConfig?.responseStyle || 75, // Friendly tone
-          aiConfig?.responseLength || 50  // Moderate length
+          aiConfig?.responseLength || 50,  // Moderate length
+          demoUser.id // Pass demo user ID for knowledge base access
         );
         
         console.log(`[openai-demo] Generated response: "${response.substring(0, 100)}..."`);

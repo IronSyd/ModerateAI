@@ -162,8 +162,9 @@ export async function initializeBot(platformId: number, token: string): Promise<
               return;
             }
             
-            // Get the active AI configuration
+            // Get the active AI configuration and knowledge base
             const aiConfig = await storage.getActiveAiConfiguration(userId);
+            const knowledgeBase = await storage.getActiveKnowledgeBase(userId);
             
             // Create or get conversation
             // Get channel name for logging
@@ -202,14 +203,28 @@ export async function initializeBot(platformId: number, token: string): Promise<
             // Default system prompt if none is configured
             const systemPrompt = aiConfig?.systemPrompt || 'You are a helpful assistant for Discord. Provide concise and accurate responses.';
             
-            // Generate AI response
-            const aiResponse = await generateAIResponse(
-              message.content,
-              conversationHistory,
-              systemPrompt,
-              aiConfig?.responseStyle || 50,
-              aiConfig?.responseLength || 50
-            );
+            // Generate AI response with knowledge base if available
+            let aiResponse;
+            if (knowledgeBase) {
+              const { generateKnowledgeBasedResponse } = await import("../lib/openai");
+              aiResponse = await generateKnowledgeBasedResponse(
+                message.content,
+                conversationHistory,
+                systemPrompt,
+                aiConfig?.responseStyle || 50,
+                aiConfig?.responseLength || 50,
+                userId
+              );
+            } else {
+              const { generateAIResponse } = await import("../lib/openai");
+              aiResponse = await generateAIResponse(
+                message.content,
+                conversationHistory,
+                systemPrompt,
+                aiConfig?.responseStyle || 50,
+                aiConfig?.responseLength || 50
+              );
+            }
             
             // Save AI response
             await storage.createMessage({
