@@ -36,7 +36,7 @@ const StatsCard = ({
           </div>
         </div>
         
-        {changeValue !== null ? (
+        {changeValue !== null && (
           <div className="flex items-center mt-4">
             <span className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
               {isPositive ? (
@@ -47,10 +47,6 @@ const StatsCard = ({
               {Math.abs(changeValue)}%
             </span>
             <span className="text-muted-foreground text-sm ml-2">{changeText}</span>
-          </div>
-        ) : (
-          <div className="flex items-center mt-4">
-            <span className="text-muted-foreground text-sm">No historical data available</span>
           </div>
         )}
       </CardContent>
