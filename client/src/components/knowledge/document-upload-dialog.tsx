@@ -168,10 +168,11 @@ export function DocumentUploadDialog({
     
     try {
       const response = await apiRequest("POST", "/api/extract-url-content", { url });
+      const data = await response.json();
       
       // Set the extracted data
-      setUrlTitle(response.title || `Content from ${new URL(url).hostname}`);
-      setUrlContent(response.content || "");
+      setUrlTitle(data.title || `Content from ${new URL(url).hostname}`);
+      setUrlContent(data.content || "");
       setIsScrapingUrl(false);
       
       toast({
