@@ -61,6 +61,11 @@ export async function initializeBot(platformId: number, token: string): Promise<
         // Create default chat configuration if it doesn't exist
         if (!chatConfig) {
           console.log(`Creating new chat configuration for ${chatType}: ${chatName}`);
+          
+          // Get platform settings to use as defaults
+          const platform = await storage.getPlatform(platformId);
+          const platformConfig = (platform?.config as any) || {};
+          
           chatConfig = await storage.createChatConfiguration({
             platformId,
             externalId: chatId,
@@ -69,12 +74,12 @@ export async function initializeBot(platformId: number, token: string): Promise<
             aiConfigurationId: null, // Will use default
             knowledgeBaseId: null, // Will use default
             settings: {
-              groupMode: true,
-              privateChatMode: true,
-              mentionOnly: chatType === 'group',
-              contentFilteringEnabled: true,
-              spamProtectionEnabled: true,
-              welcomeMessage: null
+              groupMode: platformConfig.groupMode !== undefined ? platformConfig.groupMode : true,
+              privateChatMode: platformConfig.privateChatMode !== undefined ? platformConfig.privateChatMode : true,
+              mentionOnly: platformConfig.mentionOnly !== undefined ? platformConfig.mentionOnly : (chatType === 'group'),
+              contentFilteringEnabled: platformConfig.contentFilteringEnabled !== undefined ? platformConfig.contentFilteringEnabled : true,
+              spamProtectionEnabled: platformConfig.spamProtectionEnabled !== undefined ? platformConfig.spamProtectionEnabled : true,
+              welcomeMessage: platformConfig.welcomeMessage || null
             },
             isActive: true
           });
