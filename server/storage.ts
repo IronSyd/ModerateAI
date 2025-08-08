@@ -1065,9 +1065,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined> {
+    // Only update specific fields to avoid conflicts
+    const updateData: any = {
+      updatedAt: new Date()
+    };
+    
+    if (document.title !== undefined) updateData.title = document.title;
+    if (document.content !== undefined) updateData.content = document.content;
+    if (document.metadata !== undefined) updateData.metadata = document.metadata;
+    
     const [updated] = await db
       .update(knowledgeDocuments)
-      .set({ ...document, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(knowledgeDocuments.id, id))
       .returning();
     return updated;
