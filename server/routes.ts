@@ -2050,7 +2050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove script and style tags
       root.querySelectorAll('script, style, nav, footer, header').forEach(el => el.remove());
       
-      // Extract main content
+      // Extract main content with better formatting
       let content = '';
       
       // Try to find main content areas first
@@ -2062,28 +2062,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (mainContent) break;
       }
       
-      if (mainContent) {
-        content = mainContent.text;
-      } else {
-        // Fallback to body content
+      // If no main content area found, use body but exclude common non-content areas
+      if (!mainContent) {
         const bodyContent = root.querySelector('body');
-        content = bodyContent ? bodyContent.text : root.text;
+        if (bodyContent) {
+          // Remove additional noise elements
+          bodyContent.querySelectorAll('header, nav, aside, footer, .nav, .navbar, .menu, .sidebar, .advertisement, .ads').forEach(el => el.remove());
+          mainContent = bodyContent;
+        } else {
+          mainContent = root;
+        }
+      }
+      
+      // Extract content with better structure preservation
+      if (mainContent) {
+        // Get all text-containing elements
+        const contentElements = mainContent.querySelectorAll('h1, h2, h3, h4, h5, h6, p, div, li, td, th, blockquote, article, section');
+        
+        const textParts: string[] = [];
+        const processedTexts = new Set<string>();
+        
+        contentElements.forEach(el => {
+          let text = el.text.trim();
+          if (text && text.length > 10 && !processedTexts.has(text)) {
+            // Check if this text is not already included in a parent element's text
+            const isSubtext = textParts.some(existingText => existingText.includes(text));
+            if (!isSubtext) {
+              processedTexts.add(text);
+              textParts.push(text);
+            }
+          }
+        });
+        
+        // Join with double line breaks for better readability
+        content = textParts.join('\n\n');
+        
+        // Fallback if no structured content found
+        if (!content || content.length < 50) {
+          content = mainContent.text;
+        }
       }
       
       // Clean up the content
       content = content
         .replace(/\s+/g, ' ')  // Replace multiple whitespace with single space
-        .replace(/\n\s*\n/g, '\n\n')  // Clean up multiple newlines
+        .replace(/\n\s+/g, '\n')  // Clean up line breaks
+        .replace(/\n{3,}/g, '\n\n')  // Limit multiple line breaks to double
+        .replace(/([.!?])\s*([A-Z])/g, '$1\n\n$2')  // Add line breaks after sentences that start new topics
         .trim();
       
-      // Limit content length to avoid overly large documents
-      if (content.length > 10000) {
-        content = content.substring(0, 10000) + '\n\n[Content truncated due to length]';
+      // Increase content length limit for more comprehensive extraction
+      if (content.length > 20000) {
+        content = content.substring(0, 20000) + '\n\n[Content truncated due to length - extracted first 20,000 characters]';
       }
       
-      if (!content || content.length < 50) {
+      if (!content || content.length < 20) {
         return res.status(400).json({ 
-          message: "Could not extract meaningful content from the webpage" 
+          message: "Could not extract meaningful content from the webpage. The page might be heavily JavaScript-dependent or have restricted access." 
         });
       }
       

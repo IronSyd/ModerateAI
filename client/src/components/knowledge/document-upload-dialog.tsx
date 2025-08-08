@@ -408,7 +408,7 @@ export function DocumentUploadDialog({
               
               <div>
                 <Label>Preview Content</Label>
-                <div className="min-h-[120px] max-h-[200px] mt-1 border rounded-md p-3 text-sm bg-muted/50 overflow-y-auto">
+                <div className="min-h-[120px] max-h-[300px] mt-1 border rounded-md p-4 text-sm bg-muted/50 overflow-y-auto">
                   {isScrapingUrl ? (
                     <div className="flex flex-col items-center justify-center h-full">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -416,8 +416,23 @@ export function DocumentUploadDialog({
                     </div>
                   ) : urlContent ? (
                     <div>
-                      <p className="font-medium text-sm mb-2 text-primary">Extracted Content:</p>
-                      <p className="whitespace-pre-wrap text-xs leading-relaxed">{urlContent.substring(0, 500)}{urlContent.length > 500 ? '...' : ''}</p>
+                      <p className="font-semibold text-sm mb-3 text-primary flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Extracted Content ({urlContent.length.toLocaleString()} characters)
+                      </p>
+                      <div className="prose prose-sm max-w-none">
+                        <div className="whitespace-pre-line text-xs leading-relaxed text-foreground/90 space-y-2">
+                          {urlContent.substring(0, 1000)}
+                          {urlContent.length > 1000 && (
+                            <div className="mt-3 pt-2 border-t border-border">
+                              <p className="text-xs text-muted-foreground italic">
+                                Preview showing first 1,000 characters of {urlContent.length.toLocaleString()} total characters.
+                                Full content will be saved to knowledge base.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ) : url ? (
                     <p className="text-muted-foreground">Click the extract button to fetch content from {url}</p>
