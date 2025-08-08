@@ -58,6 +58,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // TEMPORARY: Fix existing chat configurations to match platform settings
+  app.post("/api/fix-chat-configs", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Get user's platforms
+      const platforms = await storage.getPlatformsByUserId(userId);
+      
+      let updatedCount = 0;
+      
+      for (const platform of platforms) {
+        const platformConfig = (platform.config as any) || {};
+        
+        // Get all chat configurations for this platform
+        const chatConfigs = await storage.getChatConfigurationsByPlatformId(platform.id);
+        
+        for (const chatConfig of chatConfigs) {
+          const currentSettings = (chatConfig.settings as any) || {};
+          
+          // Update settings to match platform configuration
+          const updatedSettings = {
+            ...currentSettings,
+            groupMode: platformConfig.groupMode !== undefined ? platformConfig.groupMode : currentSettings.groupMode,
+            privateChatMode: platformConfig.privateChatMode !== undefined ? platformConfig.privateChatMode : currentSettings.privateChatMode,
+            mentionOnly: platformConfig.mentionOnly !== undefined ? platformConfig.mentionOnly : currentSettings.mentionOnly,
+            contentFilteringEnabled: platformConfig.contentFilteringEnabled !== undefined ? platformConfig.contentFilteringEnabled : currentSettings.contentFilteringEnabled,
+            spamProtectionEnabled: platformConfig.spamProtectionEnabled !== undefined ? platformConfig.spamProtectionEnabled : currentSettings.spamProtectionEnabled
+          };
+          
+          // Update the chat configuration
+          await storage.updateChatConfiguration(chatConfig.id, {
+            settings: updatedSettings
+          });
+          
+          updatedCount++;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Updated ${updatedCount} chat configurations to match platform settings`,
+        updatedCount 
+      });
+    } catch (error: any) {
+      console.error("Error fixing chat configurations:", error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+  
   // Team members API endpoint
   app.get("/api/team/members", authMiddleware, async (req, res) => {
     try {
