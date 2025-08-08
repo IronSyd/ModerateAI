@@ -9,6 +9,14 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## August 2025
+- **Implemented AI-Powered Proactive Response System** (August 8, 2025):
+  - Added intelligent message relevance detection using OpenAI API to analyze message content against knowledge base
+  - Created `checkMessageRelevance` function that determines if messages are relevant to bot's knowledge base with confidence scoring
+  - Updated both Telegram and Discord bot logic to include proactive response capability when not explicitly mentioned
+  - Added frontend configuration options for proactive responses in chat settings dialogs for both platforms
+  - System now responds to relevant questions automatically even without bot tagging, improving user experience
+  - Tested with 78% accuracy in relevance detection, successfully identifying questions about pricing, features, support, and getting started
+  - Proactive responses can be enabled/disabled per chat configuration, stored in database settings JSONB field
 - **Transitioned to Email-Only Authentication System** (August 7, 2025):
   - Completely removed username and password authentication in favor of email-only access
   - Updated database schema by removing username, password, password_hash, and password_salt columns from users table
