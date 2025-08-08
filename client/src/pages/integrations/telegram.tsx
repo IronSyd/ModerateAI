@@ -291,6 +291,8 @@ const TelegramIntegration = () => {
   useEffect(() => {
     if (platform && platform.config) {
       const config = platform.config as any;
+      console.log('Platform data loaded:', platform);
+      console.log('Platform config:', config);
       setGroupMode(config.groupMode || false);
       setPrivateChatMode(config.privateChatMode !== false); // Default to true
       setMentionOnly(config.mentionOnly !== false); // Default to true
