@@ -322,7 +322,12 @@ export async function initializeBot(platformId: number, token: string): Promise<
     
     return { 
       success: true, 
-      message: `Bot @${botInfo.username} connected successfully!` 
+      message: `Bot @${botInfo.username} connected successfully!`,
+      botInfo: {
+        botName: botInfo.first_name,
+        botUsername: botInfo.username,
+        botId: botInfo.id
+      }
     };
   } catch (error: any) {
     console.error('Error initializing Telegram bot:', error);

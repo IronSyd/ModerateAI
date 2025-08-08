@@ -871,11 +871,11 @@ const TelegramIntegration = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Bot Name:</span>
-                          <span className="text-sm font-medium">ModAI Test Bot</span>
+                          <span className="text-sm font-medium">{platform?.config?.botName || 'Loading...'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Username:</span>
-                          <span className="text-sm font-medium">@ModAI_test_bot</span>
+                          <span className="text-sm font-medium">@{platform?.config?.botUsername || 'Loading...'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Status:</span>
@@ -895,16 +895,19 @@ const TelegramIntegration = () => {
                       </p>
                       <div className="flex space-x-2">
                         <Input 
-                          value="https://t.me/ModAI_test_bot" 
+                          value={platform?.config?.botUsername ? `https://t.me/${platform.config.botUsername}` : 'Loading...'} 
                           readOnly 
                           className="bg-card"
                         />
                         <Button variant="outline" onClick={() => {
-                          navigator.clipboard.writeText("https://t.me/ModAI_test_bot");
-                          toast({
-                            title: "Link copied",
-                            description: "Bot link copied to clipboard",
-                          });
+                          const botLink = platform?.config?.botUsername ? `https://t.me/${platform.config.botUsername}` : '';
+                          if (botLink) {
+                            navigator.clipboard.writeText(botLink);
+                            toast({
+                              title: "Link copied",
+                              description: "Bot link copied to clipboard",
+                            });
+                          }
                         }}>
                           Copy
                         </Button>
@@ -921,7 +924,7 @@ const TelegramIntegration = () => {
                         </div>
                         <div>
                           <p className="text-sm text-foreground">
-                            <span className="font-medium">Add your bot to groups</span> - Invite @ModAI_test_bot to your Telegram groups
+                            <span className="font-medium">Add your bot to groups</span> - Invite @{platform?.config?.botUsername || 'your_bot'} to your Telegram groups
                           </p>
                         </div>
                       </div>

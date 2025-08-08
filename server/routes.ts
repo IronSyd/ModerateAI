@@ -865,6 +865,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
           
+          // Store bot information in platform config
+          if (result.botInfo) {
+            const currentConfig = platform.config || {};
+            await storage.updatePlatform(platformId, {
+              config: {
+                ...currentConfig,
+                botName: result.botInfo.botName,
+                botUsername: result.botInfo.botUsername,
+                botId: result.botInfo.botId
+              }
+            });
+          }
+          
           console.log(`Telegram bot connected successfully for platform ${platformId}`);
         } 
         // Check if we're disconnecting
