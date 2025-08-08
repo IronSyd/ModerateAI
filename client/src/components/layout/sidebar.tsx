@@ -9,7 +9,8 @@ import {
   MessageSquareMore,
   Users,
   Settings as SettingsCog,
-  Activity
+  Activity,
+  Database
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useMobile } from "@/hooks/use-mobile";
@@ -30,6 +31,11 @@ const mainItems: SidebarItem[] = [
     icon: <MessagesSquare className="h-5 w-5 mr-3" />,
     label: "Conversations",
     path: "/conversations"
+  },
+  {
+    icon: <Database className="h-5 w-5 mr-3" />,
+    label: "Knowledge Base",
+    path: "/knowledge-base"
   },
 
 

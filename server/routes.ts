@@ -1262,6 +1262,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create knowledge base
+  app.post("/api/knowledge-bases", authMiddleware, async (req, res) => {
+    try {
+      const { name, description, isActive } = req.body;
+      
+      if (!name || name.trim() === "") {
+        return res.status(400).json({ message: "Knowledge base name is required" });
+      }
+      
+      const knowledgeBase = await storage.createKnowledgeBase({
+        userId: req.user.id,
+        name: name.trim(),
+        description: description?.trim() || null,
+        isActive: isActive !== undefined ? isActive : true,
+        documentCount: 0
+      });
+      
+      res.status(201).json(knowledgeBase);
+    } catch (error) {
+      console.error("Error creating knowledge base:", error);
+      res.status(500).json({ message: "Failed to create knowledge base" });
+    }
+  });
+
   app.get("/api/knowledge-bases/active", authMiddleware, async (req, res) => {
     try {
       const activeKnowledgeBase = await storage.getActiveKnowledgeBase(req.user.id);

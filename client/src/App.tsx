@@ -21,6 +21,7 @@ import PreferencesPage from "@/pages/preferences";
 import BillingPage from "@/pages/billing";
 import LandingPage from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
+import KnowledgeBasePage from "@/pages/knowledge-base";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -102,7 +103,7 @@ function Router() {
       <Switch>
         <ProtectedRoute path="/dashboard" component={Dashboard} />
         <ProtectedRoute path="/conversations" component={Conversations} />
-
+        <ProtectedRoute path="/knowledge-base" component={KnowledgeBasePage} />
 
         <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
         <ProtectedRoute path="/integrations/website-demo" component={WebsiteDemoPage} />

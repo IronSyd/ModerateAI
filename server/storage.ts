@@ -15,7 +15,7 @@ import {
   users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations, emailWhitelist
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, ne, asc, desc, count, sql } from "drizzle-orm";
+import { eq, and, or, ne, asc, desc, count, sql, ilike } from "drizzle-orm";
 import type { QueryResult } from 'pg';
 
 export interface IStorage {
@@ -969,6 +969,65 @@ export class DatabaseStorage implements IStorage {
   async getKnowledgeDocument(id: number): Promise<KnowledgeDocument | undefined> {
     const [doc] = await db.select().from(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
     return doc;
+  }
+
+  async getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId: number): Promise<KnowledgeDocument[]> {
+    return await db
+      .select()
+      .from(knowledgeDocuments)
+      .where(eq(knowledgeDocuments.knowledgeBaseId, knowledgeBaseId))
+      .orderBy(desc(knowledgeDocuments.createdAt));
+  }
+
+  async searchKnowledgeDocuments(query: string): Promise<KnowledgeDocument[]> {
+    return await db
+      .select()
+      .from(knowledgeDocuments)
+      .where(or(
+        ilike(knowledgeDocuments.title, `%${query}%`),
+        ilike(knowledgeDocuments.content, `%${query}%`)
+      ))
+      .orderBy(desc(knowledgeDocuments.createdAt));
+  }
+
+  async createKnowledgeDocument(document: InsertKnowledgeDocument): Promise<KnowledgeDocument> {
+    const [created] = await db.insert(knowledgeDocuments).values(document).returning();
+    
+    // Update document count in knowledge base
+    await db
+      .update(knowledgeBases)
+      .set({ 
+        documentCount: sql`${knowledgeBases.documentCount} + 1`
+      })
+      .where(eq(knowledgeBases.id, document.knowledgeBaseId));
+    
+    return created;
+  }
+
+  async updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined> {
+    const [updated] = await db
+      .update(knowledgeDocuments)
+      .set({ ...document, updatedAt: new Date() })
+      .where(eq(knowledgeDocuments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteKnowledgeDocument(id: number): Promise<boolean> {
+    const doc = await this.getKnowledgeDocument(id);
+    if (!doc) return false;
+    
+    await db.delete(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
+    
+    // Update document count in knowledge base
+    await db
+      .update(knowledgeBases)
+      .set({ 
+        documentCount: sql`${knowledgeBases.documentCount} - 1`
+      })
+      .where(eq(knowledgeBases.id, doc.knowledgeBaseId));
+    
+    return true;
   }
 
   // Implement remaining methods as stubs
