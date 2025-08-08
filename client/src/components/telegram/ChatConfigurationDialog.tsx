@@ -63,6 +63,7 @@ export function ChatConfigurationDialog({
     contentFilteringEnabled: chatConfig?.settings?.contentFilteringEnabled ?? true,
     spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled ?? true,
     mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode ?? false,
+    proactiveResponses: chatConfig?.settings?.proactiveResponses ?? true,
     welcomeMessage: chatConfig?.settings?.welcomeMessage || '',
     // AI Configuration settings embedded directly
     aiName: chatConfig?.aiConfiguration?.name || `${chatConfig?.chatName} AI`,
@@ -88,6 +89,7 @@ export function ChatConfigurationDialog({
             contentFilteringEnabled: data.contentFilteringEnabled,
             spamProtectionEnabled: data.spamProtectionEnabled,
             mentionOnlyMode: data.mentionOnlyMode,
+            proactiveResponses: data.proactiveResponses,
             welcomeMessage: data.welcomeMessage
           }
         })
@@ -253,6 +255,18 @@ export function ChatConfigurationDialog({
                 />
               </div>
             ) : null}
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="proactiveResponses">Proactive Responses</Label>
+                <p className="text-sm text-muted-foreground">Bot responds to relevant questions even without being mentioned</p>
+              </div>
+              <Switch
+                id="proactiveResponses"
+                checked={formData.proactiveResponses !== false}
+                onCheckedChange={(checked) => handleInputChange('proactiveResponses', checked)}
+              />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="welcomeMessage">Welcome Message</Label>

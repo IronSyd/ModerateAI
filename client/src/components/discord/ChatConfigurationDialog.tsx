@@ -44,6 +44,7 @@ interface ChatConfiguration {
     contentFilteringEnabled?: boolean;
     spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
+    proactiveResponses?: boolean;
     welcomeMessage?: string;
   };
 }
@@ -83,6 +84,7 @@ export function ChatConfigurationDialog({
       contentFilteringEnabled: chatConfig?.settings?.contentFilteringEnabled !== false,
       spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled !== false,
       mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode !== false,
+      proactiveResponses: chatConfig?.settings?.proactiveResponses !== false,
       welcomeMessage: chatConfig?.settings?.welcomeMessage || ''
     }
   });
@@ -104,6 +106,7 @@ export function ChatConfigurationDialog({
             contentFilteringEnabled: data.contentFilteringEnabled,
             spamProtectionEnabled: data.spamProtectionEnabled,
             mentionOnlyMode: data.mentionOnlyMode,
+            proactiveResponses: data.proactiveResponses,
             welcomeMessage: data.welcomeMessage
           }
         })
@@ -140,6 +143,7 @@ export function ChatConfigurationDialog({
         contentFilteringEnabled: chatConfig.settings?.contentFilteringEnabled !== false,
         spamProtectionEnabled: chatConfig.settings?.spamProtectionEnabled !== false,
         mentionOnlyMode: chatConfig.settings?.mentionOnlyMode !== false,
+        proactiveResponses: chatConfig.settings?.proactiveResponses !== false,
         welcomeMessage: chatConfig.settings?.welcomeMessage || ''
       });
     }
@@ -300,6 +304,27 @@ export function ChatConfigurationDialog({
                       <FormControl>
                         <Switch
                           checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="proactiveResponses"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Proactive Responses</FormLabel>
+                        <FormDescription className="text-xs">
+                          Bot responds to relevant questions even without being mentioned
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value !== false}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
