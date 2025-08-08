@@ -481,7 +481,10 @@ export class MemStorage implements IStorage {
   }
 
   async getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId: number): Promise<KnowledgeDocument[]> {
-    return [];
+    const documents = Array.from(this.knowledgeDocuments.values())
+      .filter(doc => doc.knowledgeBaseId === knowledgeBaseId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return documents;
   }
 
   async searchKnowledgeDocuments(query: string): Promise<KnowledgeDocument[]> {
@@ -489,7 +492,26 @@ export class MemStorage implements IStorage {
   }
 
   async createKnowledgeDocument(document: InsertKnowledgeDocument): Promise<KnowledgeDocument> {
-    return { id: 1, createdAt: new Date(), updatedAt: new Date(), title: "", content: "", knowledgeBaseId: 1, metadata: {} } as KnowledgeDocument;
+    const newId = Math.max(0, ...Array.from(this.knowledgeDocuments.keys())) + 1;
+    const newDoc: KnowledgeDocument = {
+      id: newId,
+      knowledgeBaseId: document.knowledgeBaseId,
+      title: document.title,
+      content: document.content,
+      metadata: document.metadata || {},
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.knowledgeDocuments.set(newId, newDoc);
+    
+    // Update document count in knowledge base
+    const kbIndex = this.knowledgeBases.findIndex(kb => kb.id === document.knowledgeBaseId);
+    if (kbIndex !== -1) {
+      this.knowledgeBases[kbIndex].documentCount++;
+    }
+    
+    return newDoc;
   }
 
   async updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined> {
