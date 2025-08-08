@@ -145,7 +145,6 @@ export default function KnowledgeBasePage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Knowledge Base</h1>
             <p className="text-muted-foreground">Manage your AI's knowledge and information</p>
           </div>
         </div>
@@ -171,7 +170,6 @@ export default function KnowledgeBasePage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Knowledge Base</h1>
           <p className="text-muted-foreground">Manage your AI's knowledge and information</p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
