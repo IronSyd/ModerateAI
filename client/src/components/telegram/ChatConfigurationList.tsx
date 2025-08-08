@@ -3,8 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Users, MessageCircle, Shield, Bot } from 'lucide-react';
+import { Settings, Users, MessageCircle, Shield, Bot, Trash2 } from 'lucide-react';
 import { ChatConfigurationDialog } from './ChatConfigurationDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +71,8 @@ export function ChatConfigurationList({
   const queryClient = useQueryClient();
   const [selectedChat, setSelectedChat] = useState<ChatConfiguration | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState<ChatConfiguration | null>(null);
 
   const quickToggleMutation = useMutation({
     mutationFn: async ({ chatId, isActive }: { chatId: number; isActive: boolean }) => {
@@ -85,6 +97,39 @@ export function ChatConfigurationList({
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (chatId: number) => {
+      const response = await fetch(`/api/chat-configurations/${chatId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete chat configuration');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Chat configuration deleted successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${platformId}/chat-configurations`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+      setDeleteDialogOpen(false);
+      setChatToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete chat configuration',
+        variant: 'destructive'
+      });
+    }
+  });
+
   const handleConfigure = (chat: ChatConfiguration) => {
     setSelectedChat(chat);
     setDialogOpen(true);
@@ -92,6 +137,17 @@ export function ChatConfigurationList({
 
   const handleQuickToggle = (chat: ChatConfiguration, isActive: boolean) => {
     quickToggleMutation.mutate({ chatId: chat.id, isActive });
+  };
+
+  const handleDelete = (chat: ChatConfiguration) => {
+    setChatToDelete(chat);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (chatToDelete) {
+      deleteMutation.mutate(chatToDelete.id);
+    }
   };
 
   const getChatTypeIcon = (type: string) => {
@@ -218,14 +274,26 @@ export function ChatConfigurationList({
                       />
                     </div>
                     
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleConfigure(chat)}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleConfigure(chat)}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configure
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(chat)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -240,6 +308,36 @@ export function ChatConfigurationList({
         chatConfig={selectedChat}
         knowledgeBases={knowledgeBases}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Chat Configuration</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the configuration for "{chatToDelete?.chatName || chatToDelete?.chatId}"?
+              <br /><br />
+              This action cannot be undone. The bot will stop responding to this chat and all settings will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? (
+                <>Deleting...</>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Configuration
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
