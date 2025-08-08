@@ -54,7 +54,7 @@ export default function KnowledgeBasePage() {
 
   // Fetch documents for selected knowledge base
   const { data: documents = [], isLoading: isLoadingDocs } = useQuery<KnowledgeDocument[]>({
-    queryKey: ["/api/knowledge-bases", selectedKnowledgeBase, "documents"],
+    queryKey: [`/api/knowledge-bases/${selectedKnowledgeBase}/documents`],
     enabled: !!selectedKnowledgeBase,
   });
 
