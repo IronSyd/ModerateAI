@@ -160,14 +160,14 @@ export function ChatConfigurationDialog({
             <div className="space-y-2">
               <Label htmlFor="knowledgeBase">Knowledge Base</Label>
               <Select
-                value={formData.knowledgeBaseId?.toString() || ''}
-                onValueChange={(value) => handleInputChange('knowledgeBaseId', value ? parseInt(value) : null)}
+                value={formData.knowledgeBaseId?.toString() || 'none'}
+                onValueChange={(value) => handleInputChange('knowledgeBaseId', value === 'none' ? null : parseInt(value))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select knowledge base" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No knowledge base</SelectItem>
+                  <SelectItem value="none">No knowledge base</SelectItem>
                   {knowledgeBases.map((kb) => (
                     <SelectItem key={kb.id} value={kb.id.toString()}>
                       {kb.name}
