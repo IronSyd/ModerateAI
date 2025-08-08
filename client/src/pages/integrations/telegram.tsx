@@ -289,13 +289,6 @@ const TelegramIntegration = () => {
 
   // Sync local state with platform data when it loads
   useEffect(() => {
-    console.log('=== PLATFORM DEBUG ===');
-    console.log('Platform object:', platform);
-    console.log('Platform config:', platform?.config);
-    console.log('Bot name from config:', platform?.config?.botName);
-    console.log('Bot username from config:', platform?.config?.botUsername);
-    console.log('=== END DEBUG ===');
-    
     if (platform && platform.config) {
       const config = platform.config as any;
       setGroupMode(config.groupMode || false);
