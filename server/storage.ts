@@ -433,11 +433,15 @@ export class MemStorage implements IStorage {
   }
 
   async getAiConfigurationsByUserId(userId: number): Promise<AiConfiguration[]> {
-    return [];
+    return Array.from(this.aiConfigurations.values())
+      .filter(config => config.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getActiveAiConfiguration(userId: number): Promise<AiConfiguration | undefined> {
-    return undefined;
+    return Array.from(this.aiConfigurations.values())
+      .filter(config => config.userId === userId && config.isActive)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   }
 
   async createAiConfiguration(aiConfiguration: InsertAiConfiguration): Promise<AiConfiguration> {
@@ -449,19 +453,28 @@ export class MemStorage implements IStorage {
   }
 
   async updateAiConfiguration(id: number, aiConfiguration: Partial<AiConfiguration>): Promise<AiConfiguration | undefined> {
-    return undefined;
+    const existing = this.aiConfigurations.get(id);
+    if (!existing) return undefined;
+    
+    const updated = { ...existing, ...aiConfiguration, updatedAt: new Date() };
+    this.aiConfigurations.set(id, updated);
+    return updated;
   }
 
   async getKnowledgeBase(id: number): Promise<KnowledgeBase | undefined> {
-    return undefined;
+    return this.knowledgeBases.get(id);
   }
 
   async getKnowledgeBasesByUserId(userId: number): Promise<KnowledgeBase[]> {
-    return [];
+    return Array.from(this.knowledgeBases.values())
+      .filter(kb => kb.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getActiveKnowledgeBase(userId: number): Promise<KnowledgeBase | undefined> {
-    return undefined;
+    return Array.from(this.knowledgeBases.values())
+      .filter(kb => kb.userId === userId && kb.isActive)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   }
 
   async createKnowledgeBase(knowledgeBase: InsertKnowledgeBase): Promise<KnowledgeBase> {
@@ -473,11 +486,16 @@ export class MemStorage implements IStorage {
   }
 
   async updateKnowledgeBase(id: number, knowledgeBase: Partial<KnowledgeBase>): Promise<KnowledgeBase | undefined> {
-    return undefined;
+    const existing = this.knowledgeBases.get(id);
+    if (!existing) return undefined;
+    
+    const updated = { ...existing, ...knowledgeBase };
+    this.knowledgeBases.set(id, updated);
+    return updated;
   }
 
   async getKnowledgeDocument(id: number): Promise<KnowledgeDocument | undefined> {
-    return undefined;
+    return this.knowledgeDocuments.get(id);
   }
 
   async getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBaseId: number): Promise<KnowledgeDocument[]> {
@@ -506,20 +524,40 @@ export class MemStorage implements IStorage {
     this.knowledgeDocuments.set(newId, newDoc);
     
     // Update document count in knowledge base
-    const kbIndex = this.knowledgeBases.findIndex(kb => kb.id === document.knowledgeBaseId);
-    if (kbIndex !== -1) {
-      this.knowledgeBases[kbIndex].documentCount++;
+    const kb = this.knowledgeBases.get(document.knowledgeBaseId);
+    if (kb) {
+      kb.documentCount++;
+      this.knowledgeBases.set(document.knowledgeBaseId, kb);
     }
     
     return newDoc;
   }
 
   async updateKnowledgeDocument(id: number, document: Partial<KnowledgeDocument>): Promise<KnowledgeDocument | undefined> {
-    return undefined;
+    const existing = this.knowledgeDocuments.get(id);
+    if (!existing) return undefined;
+    
+    const updated = { ...existing, ...document, updatedAt: new Date() };
+    this.knowledgeDocuments.set(id, updated);
+    return updated;
   }
 
   async deleteKnowledgeDocument(id: number): Promise<boolean> {
-    return false;
+    const deleted = this.knowledgeDocuments.delete(id);
+    
+    if (deleted) {
+      // Update document count in knowledge base
+      const doc = this.knowledgeDocuments.get(id);
+      if (doc) {
+        const kb = this.knowledgeBases.get(doc.knowledgeBaseId);
+        if (kb && kb.documentCount > 0) {
+          kb.documentCount--;
+          this.knowledgeBases.set(kb.id, kb);
+        }
+      }
+    }
+    
+    return deleted;
   }
 
 
