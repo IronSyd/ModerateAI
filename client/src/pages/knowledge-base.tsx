@@ -337,8 +337,8 @@ export default function KnowledgeBasePage() {
           </DialogHeader>
           
           <ScrollArea className="flex-1 mt-4">
-            <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground bg-background/50 rounded-md p-4 border">
                 {viewingDocument?.content}
               </div>
             </div>
@@ -348,7 +348,13 @@ export default function KnowledgeBasePage() {
             <Button variant="outline" onClick={() => setViewingDocument(null)}>
               Close
             </Button>
-            <Button>
+            <Button onClick={() => {
+              if (viewingDocument) {
+                setViewingDocument(null);
+                // TODO: Implement document editing functionality
+                alert('Document editing functionality will be implemented soon!');
+              }
+            }}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Document
             </Button>
