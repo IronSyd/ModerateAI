@@ -45,12 +45,14 @@ const ActivityPage = () => {
     retry: false,
   });
   
-  // For demo placeholder images - in a real app, these would come from the backend
-  const placeholderAvatars = [
-    "https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    "https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-  ];
+  // Get appropriate avatar based on user type
+  const getAvatarForUser = (userName: string) => {
+    if (userName === 'ai') {
+      return undefined; // Will use fallback with "AI" initials
+    }
+    // For actual users, could use their profile image here
+    return undefined; // Will use fallback with user initials
+  };
   
   // Get platform badge color
   const getPlatformBadgeClass = (platform: string) => {
@@ -82,7 +84,7 @@ const ActivityPage = () => {
   
   // Process and filter activity data
   const processedActivities = () => {
-    if (!activityData) return [];
+    if (!activityData || !Array.isArray(activityData)) return [];
     
     let activities: ActivityItem[] = activityData.map((activity: any, index: number) => ({
       id: `activity-${activity.id || index}`,
@@ -187,10 +189,12 @@ const ActivityPage = () => {
                   <div className="flex-shrink-0">
                     <Avatar>
                       <AvatarImage
-                        src={activity.user.avatar || placeholderAvatars[index % placeholderAvatars.length]}
+                        src={activity.user.avatar || getAvatarForUser(activity.user.name)}
                         alt={activity.user.name}
                       />
-                      <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className={activity.user.name === 'ai' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'}>
+                        {activity.user.name === 'ai' ? 'AI' : activity.user.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="ml-3 min-w-0 flex-1">
