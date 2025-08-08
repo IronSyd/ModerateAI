@@ -58,6 +58,7 @@ export function DocumentUploadDialog({
   // URL scraping state
   const [url, setUrl] = useState("");
   const [urlTitle, setUrlTitle] = useState("");
+  const [urlContent, setUrlContent] = useState("");
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
   
   // FAQ state
@@ -107,6 +108,7 @@ export function DocumentUploadDialog({
     // Reset URL form
     setUrl("");
     setUrlTitle("");
+    setUrlContent("");
     
     // Reset FAQ form
     setFaqTitle("Frequently Asked Questions");
@@ -165,26 +167,23 @@ export function DocumentUploadDialog({
     setIsScrapingUrl(true);
     
     try {
-      // In a real implementation, this would call your backend to scrape the URL
-      // For now we'll simulate it with a timeout
-      setTimeout(() => {
-        // Extract domain as the title if not provided
-        const urlObj = new URL(url);
-        const domain = urlObj.hostname.replace('www.', '');
-        
-        setUrlTitle(urlTitle || `Content from ${domain}`);
-        setIsScrapingUrl(false);
-        
-        toast({
-          title: "URL processed",
-          description: "URL content has been retrieved successfully",
-        });
-      }, 1500);
-    } catch (error) {
+      const response = await apiRequest("POST", "/api/extract-url-content", { url });
+      
+      // Set the extracted data
+      setUrlTitle(response.title || `Content from ${new URL(url).hostname}`);
+      setUrlContent(response.content || "");
       setIsScrapingUrl(false);
+      
+      toast({
+        title: "URL processed",
+        description: "URL content has been extracted successfully",
+      });
+    } catch (error: any) {
+      setIsScrapingUrl(false);
+      setUrlContent("");
       toast({
         title: "URL processing failed",
-        description: "Failed to process the URL. Please check the URL and try again.",
+        description: error.message || "Failed to process the URL. Please check the URL and try again.",
         variant: "destructive",
       });
     }
@@ -245,11 +244,11 @@ export function DocumentUploadDialog({
         
       case "url":
         submissionTitle = urlTitle;
-        submissionContent = `Source URL: ${url}\n\n${content}`;
-        if (!url.trim() || !urlTitle.trim()) {
+        submissionContent = `Source URL: ${url}\n\n${urlContent}`;
+        if (!url.trim() || !urlTitle.trim() || !urlContent.trim()) {
           toast({
             title: "Missing information",
-            description: "Please provide both a URL and title",
+            description: "Please extract content from the URL first",
             variant: "destructive",
           });
           return;
@@ -289,7 +288,7 @@ export function DocumentUploadDialog({
 
   const isUploading = uploadMutation.isPending;
   const isFileDisabled = isUploading || isFileReading || !title.trim() || !content.trim();
-  const isUrlDisabled = isUploading || isScrapingUrl || !url.trim() || !urlTitle.trim();
+  const isUrlDisabled = isUploading || isScrapingUrl || !url.trim() || !urlTitle.trim() || !urlContent.trim();
   const isFaqDisabled = isUploading || faqItems.filter(item => item.question.trim() && item.answer.trim()).length === 0;
   const isQaDisabled = isUploading || !qaQuestion.trim() || !qaAnswer.trim();
 
@@ -408,16 +407,21 @@ export function DocumentUploadDialog({
               
               <div>
                 <Label>Preview Content</Label>
-                <div className="min-h-[100px] mt-1 border rounded-md p-3 text-sm bg-muted/50">
+                <div className="min-h-[120px] max-h-[200px] mt-1 border rounded-md p-3 text-sm bg-muted/50 overflow-y-auto">
                   {isScrapingUrl ? (
                     <div className="flex flex-col items-center justify-center h-full">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="mt-2 text-sm text-muted-foreground">Processing URL...</p>
+                      <p className="mt-2 text-sm text-muted-foreground">Extracting content from URL...</p>
+                    </div>
+                  ) : urlContent ? (
+                    <div>
+                      <p className="font-medium text-sm mb-2 text-primary">Extracted Content:</p>
+                      <p className="whitespace-pre-wrap text-xs leading-relaxed">{urlContent.substring(0, 500)}{urlContent.length > 500 ? '...' : ''}</p>
                     </div>
                   ) : url ? (
-                    <p>Content will be extracted from {url}</p>
+                    <p className="text-muted-foreground">Click the extract button to fetch content from {url}</p>
                   ) : (
-                    <p className="text-muted-foreground">URL content will appear here</p>
+                    <p className="text-muted-foreground">Enter a URL and click extract to preview content</p>
                   )}
                 </div>
               </div>

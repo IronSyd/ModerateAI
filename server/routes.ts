@@ -1997,6 +1997,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // URL Content Extraction API endpoint
+  app.post("/api/extract-url-content", authMiddleware, async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url) {
+        return res.status(400).json({ message: "URL is required" });
+      }
+
+      // Validate URL format
+      let validUrl;
+      try {
+        validUrl = new URL(url);
+        if (!['http:', 'https:'].includes(validUrl.protocol)) {
+          return res.status(400).json({ message: "Only HTTP and HTTPS URLs are supported" });
+        }
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid URL format" });
+      }
+
+      console.log(`Extracting content from URL: ${url}`);
+      
+      // Fetch the webpage content
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'ModerateAI-Bot/1.0 (+https://moderateai.com)'
+        },
+        redirect: 'follow',
+        timeout: 10000
+      });
+
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: `Failed to fetch content: ${response.status} ${response.statusText}` 
+        });
+      }
+
+      const html = await response.text();
+      
+      // Use node-html-parser to extract content
+      const { parse } = await import('node-html-parser');
+      const root = parse(html);
+      
+      // Extract title
+      let title = root.querySelector('title')?.text?.trim() || '';
+      if (!title) {
+        const h1 = root.querySelector('h1')?.text?.trim();
+        title = h1 || `Content from ${validUrl.hostname}`;
+      }
+      
+      // Remove script and style tags
+      root.querySelectorAll('script, style, nav, footer, header').forEach(el => el.remove());
+      
+      // Extract main content
+      let content = '';
+      
+      // Try to find main content areas first
+      const mainSelectors = ['main', 'article', '[role="main"]', '.content', '#content', '.post', '.article'];
+      let mainContent = null;
+      
+      for (const selector of mainSelectors) {
+        mainContent = root.querySelector(selector);
+        if (mainContent) break;
+      }
+      
+      if (mainContent) {
+        content = mainContent.text;
+      } else {
+        // Fallback to body content
+        const bodyContent = root.querySelector('body');
+        content = bodyContent ? bodyContent.text : root.text;
+      }
+      
+      // Clean up the content
+      content = content
+        .replace(/\s+/g, ' ')  // Replace multiple whitespace with single space
+        .replace(/\n\s*\n/g, '\n\n')  // Clean up multiple newlines
+        .trim();
+      
+      // Limit content length to avoid overly large documents
+      if (content.length > 10000) {
+        content = content.substring(0, 10000) + '\n\n[Content truncated due to length]';
+      }
+      
+      if (!content || content.length < 50) {
+        return res.status(400).json({ 
+          message: "Could not extract meaningful content from the webpage" 
+        });
+      }
+      
+      console.log(`Successfully extracted ${content.length} characters from ${url}`);
+      
+      res.json({ 
+        title: title,
+        content: content,
+        sourceUrl: url,
+        extractedAt: new Date().toISOString()
+      });
+      
+    } catch (error: any) {
+      console.error("Error extracting URL content:", error);
+      
+      if (error.name === 'AbortError' || error.code === 'ENOTFOUND') {
+        return res.status(400).json({ 
+          message: "Could not connect to the website. Please check the URL and try again." 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to extract content from URL",
+        error: error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
