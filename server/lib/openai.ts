@@ -409,6 +409,111 @@ Return only the improved prompt text, without quotes or additional commentary.`
 }
 
 /**
+ * Check if a message is relevant to the knowledge base and should trigger a bot response
+ */
+export async function checkMessageRelevance(
+  message: string,
+  userId: number,
+  knowledgeBaseId?: number | null
+): Promise<{ isRelevant: boolean; relevanceScore: number; reason?: string }> {
+  try {
+    // Get knowledge bases for the user
+    let knowledgeBase;
+    if (knowledgeBaseId) {
+      knowledgeBase = await storage.getKnowledgeBase(knowledgeBaseId);
+    } else {
+      const knowledgeBases = await storage.getKnowledgeBasesByUserId(userId);
+      knowledgeBase = knowledgeBases.find((kb: any) => kb.isActive) || knowledgeBases[0];
+    }
+
+    if (!knowledgeBase) {
+      return { isRelevant: false, relevanceScore: 0, reason: "No knowledge base available" };
+    }
+
+    // Get documents from the knowledge base
+    const documents = await storage.getKnowledgeDocumentsByKnowledgeBaseId(knowledgeBase.id);
+    
+    if (documents.length === 0) {
+      return { isRelevant: false, relevanceScore: 0, reason: "Knowledge base is empty" };
+    }
+
+    // Extract keywords from the message
+    const keywords = extractKeywords(message);
+    
+    if (keywords.length === 0) {
+      return { isRelevant: false, relevanceScore: 0, reason: "No meaningful keywords found" };
+    }
+
+    // Calculate relevance score based on keyword matches in documents
+    let totalScore = 0;
+    let maxDocumentScore = 0;
+    let bestMatchDocument = "";
+
+    for (const doc of documents) {
+      const titleMatches = keywords.filter(kw => 
+        doc.title.toLowerCase().includes(kw.toLowerCase())
+      ).length;
+      const contentMatches = keywords.filter(kw => 
+        doc.content.toLowerCase().includes(kw.toLowerCase())
+      ).length;
+      
+      // Weight title matches more heavily
+      const documentScore = (titleMatches * 3) + contentMatches;
+      totalScore += documentScore;
+      
+      if (documentScore > maxDocumentScore) {
+        maxDocumentScore = documentScore;
+        bestMatchDocument = doc.title;
+      }
+    }
+
+    // Normalize score by number of keywords and documents
+    const averageScore = totalScore / (keywords.length * documents.length);
+    const relevanceScore = Math.min(1, averageScore);
+
+    // Use AI to make a more sophisticated relevance determination
+    const aiRelevanceCheck = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a relevance checker for a knowledge base chatbot. Your job is to determine if a user message is asking about topics that might be covered in the knowledge base.
+
+The knowledge base contains these documents:
+${documents.map(doc => `- ${doc.title}: ${doc.content.substring(0, 200)}...`).join('\n')}
+
+Respond with a JSON object: {"relevant": boolean, "confidence": number (0-1), "reason": "brief explanation"}`
+        },
+        {
+          role: "user",
+          content: `Is this message relevant to the knowledge base? Message: "${message}"`
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 150
+    });
+
+    const aiResult = JSON.parse(aiRelevanceCheck.choices[0].message.content || '{"relevant": false, "confidence": 0}');
+    
+    // Combine keyword-based score with AI assessment
+    const finalScore = (relevanceScore * 0.4) + (aiResult.confidence * 0.6);
+    const isRelevant = finalScore > 0.3 || (aiResult.relevant && aiResult.confidence > 0.5);
+
+    return {
+      isRelevant,
+      relevanceScore: finalScore,
+      reason: isRelevant ? 
+        `Relevant to knowledge base (${Math.round(finalScore * 100)}% confidence). ${aiResult.reason || ''}` :
+        `Not relevant enough (${Math.round(finalScore * 100)}% confidence). ${aiResult.reason || ''}`
+    };
+  } catch (error) {
+    console.error("Error checking message relevance:", error);
+    // Default to not relevant on error to avoid unwanted responses
+    return { isRelevant: false, relevanceScore: 0, reason: "Error during relevance check" };
+  }
+}
+
+/**
  * Helper function to extract keywords from a message
  */
 function extractKeywords(text: string): string[] {

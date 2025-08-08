@@ -147,8 +147,38 @@ export async function initializeBot(platformId: number, token: string): Promise<
         const isDM = message.channel.type === ChannelType.DM;
         const isCommand = message.content.startsWith('!') || message.content.startsWith('/');
         
-        // Handle AI chat responses (for mentions, DMs, or commands)
-        if ((respondToMentions && isBotMentioned) || isDM || (respondToCommands && isCommand)) {
+        // Check for proactive responses if not explicitly triggered
+        let shouldRespond = (respondToMentions && isBotMentioned) || isDM || (respondToCommands && isCommand);
+        
+        // If not explicitly triggered, check if message is relevant to knowledge base for proactive response
+        if (!shouldRespond && !isDM) {
+          const proactiveEnabled = config?.proactiveResponses !== false; // Default to enabled if not set
+          
+          if (proactiveEnabled) {
+            console.log('Checking message relevance for proactive Discord response...');
+            const platform = await storage.getPlatform(platformId);
+            const userId = platform?.userId;
+            
+            if (userId) {
+              const { checkMessageRelevance } = await import("../lib/openai");
+              const relevanceCheck = await checkMessageRelevance(
+                message.content,
+                userId,
+                null // Use user's active knowledge base
+              );
+              
+              console.log(`Discord relevance check result: ${relevanceCheck.isRelevant} (score: ${relevanceCheck.relevanceScore}, reason: ${relevanceCheck.reason})`);
+              
+              if (relevanceCheck.isRelevant) {
+                shouldRespond = true;
+                console.log('Proceeding with proactive Discord response - message is relevant to knowledge base');
+              }
+            }
+          }
+        }
+
+        // Handle AI chat responses (for mentions, DMs, commands, or relevant messages)
+        if (shouldRespond) {
           const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
           console.log(`Bot interaction in ${isDM ? 'DM' : 'channel ' + channelName}`);
           

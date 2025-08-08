@@ -79,6 +79,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
               mentionOnly: platformConfig.mentionOnly !== undefined ? platformConfig.mentionOnly : (chatType === 'group'),
               contentFilteringEnabled: platformConfig.contentFilteringEnabled !== undefined ? platformConfig.contentFilteringEnabled : true,
               spamProtectionEnabled: platformConfig.spamProtectionEnabled !== undefined ? platformConfig.spamProtectionEnabled : true,
+              proactiveResponses: platformConfig.proactiveResponses !== undefined ? platformConfig.proactiveResponses : true,
               welcomeMessage: platformConfig.welcomeMessage || null
             },
             isActive: true
@@ -104,9 +105,37 @@ export async function initializeBot(platformId: number, token: string): Promise<
           return;
         }
         
+        // Check if we should skip based on mention requirements
         if (isGroupChat && config.mentionOnly && !isBotMentioned) {
-          console.log('Skipping group message - Mention Only mode enabled but bot not mentioned');
-          return;
+          // If mention-only mode is enabled but bot is not mentioned,
+          // check if the message is relevant to the knowledge base for proactive response
+          const platform = await storage.getPlatform(platformId);
+          const userId = platform?.userId || 1;
+          
+          // Check if proactive responses are enabled and if message is relevant
+          const proactiveEnabled = config.proactiveResponses !== false; // Default to enabled if not set
+          
+          if (proactiveEnabled) {
+            console.log('Checking message relevance for proactive response...');
+            const { checkMessageRelevance } = await import("../lib/openai");
+            const relevanceCheck = await checkMessageRelevance(
+              msg.text,
+              userId,
+              chatConfig.knowledgeBaseId
+            );
+            
+            console.log(`Relevance check result: ${relevanceCheck.isRelevant} (score: ${relevanceCheck.relevanceScore}, reason: ${relevanceCheck.reason})`);
+            
+            if (!relevanceCheck.isRelevant) {
+              console.log('Skipping group message - Not mentioned and not relevant to knowledge base');
+              return;
+            }
+            
+            console.log('Proceeding with proactive response - message is relevant to knowledge base');
+          } else {
+            console.log('Skipping group message - Mention Only mode enabled, bot not mentioned, and proactive responses disabled');
+            return;
+          }
         }
         
         // Find or create conversation first before any processing

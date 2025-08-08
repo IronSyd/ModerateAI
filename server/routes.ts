@@ -2176,6 +2176,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint for relevance detection system
+  app.post("/api/test-relevance", authMiddleware, async (req, res) => {
+    try {
+      const { message, knowledgeBaseId } = req.body;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      if (!message) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const { checkMessageRelevance } = await import("./lib/openai");
+      const relevanceResult = await checkMessageRelevance(message, userId, knowledgeBaseId);
+      
+      res.json({
+        message,
+        userId,
+        knowledgeBaseId,
+        ...relevanceResult
+      });
+    } catch (error) {
+      console.error("Error testing relevance detection:", error);
+      res.status(500).json({ message: "Error testing relevance detection" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
