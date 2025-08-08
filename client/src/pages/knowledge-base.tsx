@@ -11,7 +11,9 @@ import {
   Search,
   MoreVertical,
   Trash2,
-  Edit
+  Edit,
+  Eye,
+  X
 } from "lucide-react";
 import { CreateKnowledgeBaseDialog } from "@/components/knowledge/create-knowledge-base-dialog";
 import { DocumentUploadDialog } from "@/components/knowledge/document-upload-dialog";
@@ -21,8 +23,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface KnowledgeBase {
   id: number;
@@ -46,6 +56,7 @@ export default function KnowledgeBasePage() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewingDocument, setViewingDocument] = useState<KnowledgeDocument | null>(null);
 
   // Fetch knowledge bases
   const { data: knowledgeBases = [], isLoading: isLoadingBases } = useQuery<KnowledgeBase[]>({
@@ -232,16 +243,46 @@ export default function KnowledgeBasePage() {
           <CardContent>
             <div className="space-y-3">
               {documents.slice(0, 5).map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <h4 className="font-medium">{doc.title}</h4>
+                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => setViewingDocument(doc)}
+                  >
+                    <h4 className="font-medium hover:text-primary transition-colors">{doc.title}</h4>
                     <p className="text-sm text-muted-foreground">
                       Updated {new Date(doc.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setViewingDocument(doc)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setViewingDocument(doc)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               ))}
               {documents.length > 5 && (
@@ -267,6 +308,53 @@ export default function KnowledgeBasePage() {
           knowledgeBaseId={selectedKnowledgeBase}
         />
       )}
+      
+      {/* Document Viewer Dialog */}
+      <Dialog open={!!viewingDocument} onOpenChange={() => setViewingDocument(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {viewingDocument?.title}
+                </DialogTitle>
+                <DialogDescription>
+                  Updated {viewingDocument && new Date(viewingDocument.updatedAt).toLocaleDateString()}
+                  {viewingDocument && viewingDocument.createdAt !== viewingDocument.updatedAt && (
+                    <span> • Created {new Date(viewingDocument.createdAt).toLocaleDateString()}</span>
+                  )}
+                </DialogDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewingDocument(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          
+          <ScrollArea className="flex-1 mt-4">
+            <div className="prose prose-sm max-w-none">
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                {viewingDocument?.content}
+              </div>
+            </div>
+          </ScrollArea>
+          
+          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+            <Button variant="outline" onClick={() => setViewingDocument(null)}>
+              Close
+            </Button>
+            <Button>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Document
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
