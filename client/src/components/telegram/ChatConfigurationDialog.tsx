@@ -73,12 +73,7 @@ export function ChatConfigurationDialog({
     proactiveResponses: chatConfig?.settings?.proactiveResponses ?? true,
     enableHistoryLearning: chatConfig?.settings?.enableHistoryLearning ?? false,
     adminLearningMode: chatConfig?.settings?.adminLearningMode ?? false,
-    welcomeMessage: chatConfig?.settings?.welcomeMessage || '',
-    // AI Configuration settings embedded directly
-    aiName: chatConfig?.aiConfiguration?.name || `${chatConfig?.chatName} AI`,
-    systemPrompt: chatConfig?.aiConfiguration?.systemPrompt || '',
-    responseStyle: chatConfig?.aiConfiguration?.responseStyle || 'friendly',
-    maxResponseLength: chatConfig?.aiConfiguration?.maxResponseLength || 300
+    welcomeMessage: chatConfig?.settings?.welcomeMessage || ''
   });
 
   const updateMutation = useMutation({
@@ -191,63 +186,7 @@ export function ChatConfigurationDialog({
             </div>
           </div>
 
-          {/* AI Configuration */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">AI Configuration</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="aiName">AI Assistant Name</Label>
-              <Input
-                id="aiName"
-                value={formData.aiName}
-                onChange={(e) => handleInputChange('aiName', e.target.value)}
-                placeholder="Enter AI assistant name..."
-              />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="systemPrompt">System Prompt</Label>
-              <Textarea
-                id="systemPrompt"
-                value={formData.systemPrompt}
-                onChange={(e) => handleInputChange('systemPrompt', e.target.value)}
-                placeholder="Enter system prompt to define AI behavior..."
-                rows={4}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="responseStyle">Response Style</Label>
-                <Select
-                  value={formData.responseStyle}
-                  onValueChange={(value) => handleInputChange('responseStyle', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="formal">Formal</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="friendly">Friendly</SelectItem>
-                    <SelectItem value="casual">Casual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="maxResponseLength">Max Response Length</Label>
-                <Input
-                  id="maxResponseLength"
-                  type="number"
-                  value={formData.maxResponseLength}
-                  onChange={(e) => handleInputChange('maxResponseLength', parseInt(e.target.value))}
-                  min="50"
-                  max="1000"
-                />
-              </div>
-            </div>
-          </div>
 
           {/* Chat Behavior */}
           <div className="space-y-4">
@@ -349,22 +288,7 @@ export function ChatConfigurationDialog({
             </div>
           </div>
 
-          {/* Status */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Status</h3>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="spamProtection">Spam Protection</Label>
-                <p className="text-sm text-muted-foreground">Detect and remove spam messages</p>
-              </div>
-              <Switch
-                id="spamProtection"
-                checked={formData.spamProtectionEnabled}
-                onCheckedChange={(checked) => handleInputChange('spamProtectionEnabled', checked)}
-              />
-            </div>
-          </div>
+
 
 
 
