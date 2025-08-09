@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
+import type { ChatHistory } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 console.log("OPENAI_API_KEY exists:", !!process.env.OPENAI_API_KEY);
@@ -345,6 +346,82 @@ export async function trainOnConversations(
     processedCount,
     results
   };
+}
+
+/**
+ * Analyze admin conversations to extract training insights
+ */
+export async function analyzeAdminConversations(
+  adminHistory: ChatHistory[],
+  conversationThreads: ChatHistory[][]
+): Promise<{
+  patterns: Array<{
+    type: string;
+    description: string;
+    context: any;
+    confidence: number;
+  }>;
+}> {
+  try {
+    // Create analysis prompt
+    const adminMessages = adminHistory.map(msg => 
+      `[${msg.sentAt}] ${msg.externalUsername || 'Admin'}: ${msg.content}`
+    ).join('\n');
+
+    const threadSummaries = conversationThreads.slice(0, 10).map((thread, idx) => {
+      const threadMessages = thread.map(msg => 
+        `${msg.isAdmin ? 'Admin' : 'User'}: ${msg.content}`
+      ).join('\n');
+      return `Thread ${idx + 1}:\n${threadMessages}`;
+    }).join('\n\n');
+
+    const prompt = `Analyze the following admin chat history and conversation threads to identify patterns that can improve AI responses:
+
+ADMIN MESSAGE HISTORY:
+${adminMessages}
+
+CONVERSATION THREADS:
+${threadSummaries}
+
+Please identify:
+1. Common response patterns admins use for specific types of questions
+2. Tone and communication style preferences
+3. Frequent topics and how admins handle them
+4. Effective problem-solving approaches
+5. Key phrases or terminology that resonate well
+
+Return a JSON object with this structure:
+{
+  "patterns": [
+    {
+      "type": "response_pattern" | "tone_preference" | "topic_handling" | "terminology",
+      "description": "Clear description of the pattern",
+      "context": {"triggers": ["when this happens"], "examples": ["example responses"]},
+      "confidence": 0-100
+    }
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert conversation analyst. Analyze admin chat patterns to extract insights for training AI assistants. Focus on actionable patterns that can improve AI responses."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const analysisText = response.choices[0].message.content || '{"patterns": []}';
+    const analysis = JSON.parse(analysisText);
+
+    return analysis;
+  } catch (error) {
+    console.error("Error analyzing admin conversations:", error);
+    return { patterns: [] };
+  }
 }
 
 export async function generateImprovedSystemPrompt(

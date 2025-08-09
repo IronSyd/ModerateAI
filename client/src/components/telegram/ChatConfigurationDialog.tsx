@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { TrainingManagementDialog } from '../TrainingManagementDialog';
+import { Brain } from 'lucide-react';
 
 interface ChatConfiguration {
   id: number;
@@ -24,6 +26,9 @@ interface ChatConfiguration {
     spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
     welcomeMessage?: string;
+    enableHistoryLearning?: boolean;
+    adminLearningMode?: boolean;
+    proactiveResponses?: boolean;
   };
 }
 
@@ -57,6 +62,8 @@ export function ChatConfigurationDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  const [showTrainingDialog, setShowTrainingDialog] = useState(false);
+  
   const [formData, setFormData] = useState({
     knowledgeBaseId: chatConfig?.knowledgeBaseId || null,
     isActive: chatConfig?.isActive ?? true,
@@ -64,6 +71,8 @@ export function ChatConfigurationDialog({
     spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled ?? true,
     mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode ?? false,
     proactiveResponses: chatConfig?.settings?.proactiveResponses ?? true,
+    enableHistoryLearning: chatConfig?.settings?.enableHistoryLearning ?? false,
+    adminLearningMode: chatConfig?.settings?.adminLearningMode ?? false,
     welcomeMessage: chatConfig?.settings?.welcomeMessage || '',
     // AI Configuration settings embedded directly
     aiName: chatConfig?.aiConfiguration?.name || `${chatConfig?.chatName} AI`,
@@ -90,6 +99,8 @@ export function ChatConfigurationDialog({
             spamProtectionEnabled: data.spamProtectionEnabled,
             mentionOnlyMode: data.mentionOnlyMode,
             proactiveResponses: data.proactiveResponses,
+            enableHistoryLearning: data.enableHistoryLearning,
+            adminLearningMode: data.adminLearningMode,
             welcomeMessage: data.welcomeMessage
           }
         })
@@ -309,6 +320,52 @@ export function ChatConfigurationDialog({
             </div>
           </div>
 
+          {/* Training and Learning */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">AI Training & Learning</h3>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="enableHistoryLearning">History Learning</Label>
+                <p className="text-sm text-muted-foreground">Store chat messages for continuous AI improvement</p>
+              </div>
+              <Switch
+                id="enableHistoryLearning"
+                checked={formData.enableHistoryLearning}
+                onCheckedChange={(checked) => handleInputChange('enableHistoryLearning', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="adminLearningMode">Admin Learning Mode</Label>
+                <p className="text-sm text-muted-foreground">Learn from admin responses to improve AI behavior</p>
+              </div>
+              <Switch
+                id="adminLearningMode"
+                checked={formData.adminLearningMode}
+                onCheckedChange={(checked) => handleInputChange('adminLearningMode', checked)}
+              />
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Status</h3>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="spamProtection">Spam Protection</Label>
+                <p className="text-sm text-muted-foreground">Detect and remove spam messages</p>
+              </div>
+              <Switch
+                id="spamProtection"
+                checked={formData.spamProtectionEnabled}
+                onCheckedChange={(checked) => handleInputChange('spamProtectionEnabled', checked)}
+              />
+            </div>
+          </div>
+
           {/* Chat Info */}
           <div className="bg-muted p-4 rounded-lg space-y-2">
             <h4 className="font-medium">Chat Information</h4>
@@ -325,15 +382,37 @@ export function ChatConfigurationDialog({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+          <div className="flex justify-between">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setShowTrainingDialog(true)}
+              disabled={!formData.enableHistoryLearning && !formData.adminLearningMode}
+              className="flex items-center gap-2"
+            >
+              <Brain className="h-4 w-4" />
+              Manage Training
             </Button>
-            <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </div>
         </form>
+
+        {/* Training Management Dialog */}
+        {showTrainingDialog && chatConfig && (
+          <TrainingManagementDialog
+            isOpen={showTrainingDialog}
+            onClose={() => setShowTrainingDialog(false)}
+            chatConfigId={chatConfig.id}
+            chatName={chatConfig.chatName || chatConfig.chatId}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

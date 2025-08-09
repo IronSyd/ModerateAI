@@ -307,9 +307,47 @@ export const chatConfigurations = pgTable("chat_configurations", {
     mentionOnly: false,
     contentFilteringEnabled: true,
     spamProtectionEnabled: true,
-    welcomeMessage: null
+    welcomeMessage: null,
+    enableHistoryLearning: false,
+    adminLearningMode: false
   }),
   isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Chat History table - for storing admin messages for training
+export const chatHistory = pgTable("chat_history", {
+  id: serial("id").primaryKey(),
+  chatConfigurationId: integer("chat_configuration_id").notNull().references(() => chatConfigurations.id, { onDelete: "cascade" }),
+  platformId: integer("platform_id").notNull().references(() => platforms.id, { onDelete: "cascade" }),
+  externalUserId: text("external_user_id").notNull(), // User ID from platform
+  externalUsername: text("external_username"), // Username from platform
+  messageId: text("message_id"), // External message ID
+  content: text("content").notNull(),
+  messageType: text("message_type").notNull().default("user"), // "user", "admin", "bot", "system"
+  isAdmin: boolean("is_admin").notNull().default(false),
+  replyToMessageId: text("reply_to_message_id"), // If this is a reply
+  threadContext: jsonb("thread_context"), // Store conversation thread for context
+  metadata: jsonb("metadata"), // Additional platform-specific data
+  sentAt: timestamp("sent_at").notNull(), // When message was sent on platform
+  isUsedForTraining: boolean("is_used_for_training").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Training Insights table - for storing learned patterns
+export const trainingInsights = pgTable("training_insights", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  chatConfigurationId: integer("chat_configuration_id").references(() => chatConfigurations.id, { onDelete: "cascade" }),
+  insightType: text("insight_type").notNull(), // "response_pattern", "topic_preference", "conversation_style", "admin_behavior"
+  pattern: text("pattern").notNull(), // The learned pattern or behavior
+  context: jsonb("context"), // Contextual information about when this pattern applies
+  confidence: integer("confidence").notNull().default(50), // 0-100 confidence score
+  usageCount: integer("usage_count").notNull().default(0), // How many times this pattern has been applied
+  successRate: integer("success_rate").notNull().default(0), // 0-100 success rate when applied
+  isActive: boolean("is_active").notNull().default(true),
+  learnedFrom: text("learned_from"), // "admin_history", "user_feedback", "conversation_analysis"
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -325,6 +363,35 @@ export const insertChatConfigurationSchema = createInsertSchema(chatConfiguratio
   knowledgeBaseId: true,
   settings: true,
   isActive: true,
+});
+
+export const insertChatHistorySchema = createInsertSchema(chatHistory).pick({
+  chatConfigurationId: true,
+  platformId: true,
+  externalUserId: true,
+  externalUsername: true,
+  messageId: true,
+  content: true,
+  messageType: true,
+  isAdmin: true,
+  replyToMessageId: true,
+  threadContext: true,
+  metadata: true,
+  sentAt: true,
+  isUsedForTraining: true,
+});
+
+export const insertTrainingInsightsSchema = createInsertSchema(trainingInsights).pick({
+  userId: true,
+  chatConfigurationId: true,
+  insightType: true,
+  pattern: true,
+  context: true,
+  confidence: true,
+  usageCount: true,
+  successRate: true,
+  isActive: true,
+  learnedFrom: true,
 });
 
 // Website Configurations table - for managing multiple website instances
@@ -387,7 +454,7 @@ export const insertTeamSettingsSchema = createInsertSchema(teamSettings).pick({
   notificationSettings: true,
 });
 
-export const chatConfigurationsRelations = relations(chatConfigurations, ({ one }) => ({
+export const chatConfigurationsRelations = relations(chatConfigurations, ({ one, many }) => ({
   platform: one(platforms, {
     fields: [chatConfigurations.platformId],
     references: [platforms.id]
@@ -399,6 +466,30 @@ export const chatConfigurationsRelations = relations(chatConfigurations, ({ one 
   knowledgeBase: one(knowledgeBases, {
     fields: [chatConfigurations.knowledgeBaseId],
     references: [knowledgeBases.id]
+  }),
+  chatHistory: many(chatHistory),
+  trainingInsights: many(trainingInsights)
+}));
+
+export const chatHistoryRelations = relations(chatHistory, ({ one }) => ({
+  chatConfiguration: one(chatConfigurations, {
+    fields: [chatHistory.chatConfigurationId],
+    references: [chatConfigurations.id]
+  }),
+  platform: one(platforms, {
+    fields: [chatHistory.platformId],
+    references: [platforms.id]
+  })
+}));
+
+export const trainingInsightsRelations = relations(trainingInsights, ({ one }) => ({
+  user: one(users, {
+    fields: [trainingInsights.userId],
+    references: [users.id]
+  }),
+  chatConfiguration: one(chatConfigurations, {
+    fields: [trainingInsights.chatConfigurationId],
+    references: [chatConfigurations.id]
   })
 }));
 
@@ -465,3 +556,9 @@ export type InsertWebsiteConfiguration = z.infer<typeof insertWebsiteConfigurati
 
 export type EmailWhitelist = typeof emailWhitelist.$inferSelect;
 export type InsertEmailWhitelist = z.infer<typeof insertEmailWhitelistSchema>;
+
+export type ChatHistory = typeof chatHistory.$inferSelect;
+export type InsertChatHistory = z.infer<typeof insertChatHistorySchema>;
+
+export type TrainingInsights = typeof trainingInsights.$inferSelect;
+export type InsertTrainingInsights = z.infer<typeof insertTrainingInsightsSchema>;

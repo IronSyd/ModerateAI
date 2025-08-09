@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { storage } from '../storage';
-import { generateAIResponse } from './openai';
+import { generateAIResponse, generateKnowledgeBasedResponse, checkMessageRelevance } from './openai';
+import { chatHistoryManager } from './chatHistoryManager';
 
 // Helper functions for content moderation
 async function checkForInappropriateContent(text: string): Promise<boolean> {
@@ -17,6 +18,27 @@ async function checkForSpam(text: string): Promise<boolean> {
   const isAllCaps = text.length > 10 && text === text.toUpperCase();
   
   return hasExcessiveCaps || hasRepeatedChars || isAllCaps;
+}
+
+async function checkIfUserIsAdmin(userId: string, chatId: string, platformId: number): Promise<boolean> {
+  // In a real implementation, this would check if the user has admin privileges
+  // For now, we'll check based on stored admin settings or platform configuration
+  try {
+    const platform = await storage.getPlatform(platformId);
+    const platformConfig = (platform?.config as any) || {};
+    
+    // Check if user is in admin list (could be stored in platform config)
+    if (platformConfig.admins && Array.isArray(platformConfig.admins)) {
+      return platformConfig.admins.includes(userId);
+    }
+    
+    // For groups, we could also check Telegram's admin status, but for now return false
+    // In a production environment, this would use Telegram API to check admin status
+    return false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
 }
 
 // Global map to store all active bot instances
@@ -141,6 +163,31 @@ export async function initializeBot(platformId: number, token: string): Promise<
         // Find or create conversation first before any processing
         const externalUserId = msg.from?.id.toString() || 'unknown';
         const externalUsername = msg.from?.username || msg.from?.first_name || 'unknown';
+        
+        // Store chat history if history learning is enabled
+        const historyLearningEnabled = await chatHistoryManager.isHistoryLearningEnabled(chatConfig.id);
+        if (historyLearningEnabled && msg.text) {
+          const isAdmin = await checkIfUserIsAdmin(externalUserId, msg.chat.id.toString(), platformId);
+          
+          await chatHistoryManager.storeChatMessage(
+            chatConfig.id,
+            platformId,
+            externalUserId,
+            msg.text,
+            "user",
+            isAdmin,
+            {
+              username: externalUsername,
+              messageId: msg.message_id?.toString(),
+              chatType: chatType,
+              threadContext: {
+                chatId: chatId,
+                chatName: chatName,
+                timestamp: new Date(msg.date * 1000)
+              }
+            }
+          );
+        }
         
         // Get existing or create new conversation for this chat
         let conversation = (await storage.getConversationsByPlatformId(platformId))
@@ -277,8 +324,22 @@ export async function initializeBot(platformId: number, token: string): Promise<
             content: msg.content
           }));
           
-          // Default system prompt if none is configured
-          const systemPrompt = activeConfig?.systemPrompt || 'You are a helpful assistant.';
+          // Get training insights to enhance the response
+          const contextualInsights = await chatHistoryManager.getContextualInsights(
+            chatConfig.id,
+            msg.text,
+            { conversationHistory, chatType }
+          );
+          
+          // Enhance system prompt with training insights if available
+          let enhancedSystemPrompt = activeConfig?.systemPrompt || 'You are a helpful assistant.';
+          if (contextualInsights.length > 0) {
+            const insightsText = contextualInsights.map(insight => 
+              `- ${insight.pattern} (confidence: ${insight.confidence}%)`
+            ).join('\n');
+            
+            enhancedSystemPrompt += `\n\nBased on previous admin interactions in this chat, please consider these learned patterns:\n${insightsText}`;
+          }
           
           // Generate AI response with proper parameters - use knowledge-based response if knowledge base is available
           let aiResponse;
@@ -290,7 +351,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
             aiResponse = await generateKnowledgeBasedResponse(
               msg.text,
               conversationHistory,
-              systemPrompt,
+              enhancedSystemPrompt,
               activeConfig?.responseStyle || 50,
               activeConfig?.responseLength || 50,
               userId
@@ -300,10 +361,15 @@ export async function initializeBot(platformId: number, token: string): Promise<
             aiResponse = await generateAIResponse(
               msg.text,
               conversationHistory,
-              systemPrompt,
+              enhancedSystemPrompt,
               activeConfig?.responseStyle || 50,
               activeConfig?.responseLength || 50
             );
+          }
+          
+          // Update insight metrics based on response success (simplified - in production you'd track user feedback)
+          for (const insight of contextualInsights) {
+            await chatHistoryManager.updateInsightMetrics(insight.id, true);
           }
           
           // Send response

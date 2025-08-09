@@ -11,6 +11,7 @@ import { initializeBot as initializeTelegramBot, disconnectBot as disconnectTele
 import { initializeBot as initializeDiscordBot, disconnectBot as disconnectDiscordBot, initializeAllBots as initializeAllDiscordBots, refreshChannels as refreshDiscordChannels } from "./lib/discord";
 import { setupAuth } from "./auth";
 import testEmailRoutes from "./test-email";
+import trainingRoutes from "./routes/training";
 import { 
   insertPlatformSchema, 
   insertConversationSchema, 
@@ -37,6 +38,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register test email routes
   app.use("/api/email", testEmailRoutes);
+  
+  // Register training routes
+  app.use("/api/training", trainingRoutes);
   
   // TEMPORARY: Fix demo user password for testing
   app.get("/api/fix-demo-password", async (req, res) => {

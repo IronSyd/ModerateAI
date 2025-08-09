@@ -30,7 +30,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Brain } from 'lucide-react';
+import { TrainingManagementDialog } from '../TrainingManagementDialog';
+import { useState } from 'react';
 
 interface ChatConfiguration {
   id: number;
@@ -45,6 +47,8 @@ interface ChatConfiguration {
     spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
     proactiveResponses?: boolean;
+    enableHistoryLearning?: boolean;
+    adminLearningMode?: boolean;
     welcomeMessage?: string;
   };
 }
@@ -75,6 +79,7 @@ export function ChatConfigurationDialog({
   knowledgeBases,
 }: ChatConfigurationDialogProps) {
   const { toast } = useToast();
+  const [showTrainingDialog, setShowTrainingDialog] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -85,6 +90,8 @@ export function ChatConfigurationDialog({
       spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled !== false,
       mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode !== false,
       proactiveResponses: chatConfig?.settings?.proactiveResponses !== false,
+      enableHistoryLearning: chatConfig?.settings?.enableHistoryLearning || false,
+      adminLearningMode: chatConfig?.settings?.adminLearningMode || false,
       welcomeMessage: chatConfig?.settings?.welcomeMessage || ''
     }
   });
@@ -107,6 +114,8 @@ export function ChatConfigurationDialog({
             spamProtectionEnabled: data.spamProtectionEnabled,
             mentionOnlyMode: data.mentionOnlyMode,
             proactiveResponses: data.proactiveResponses,
+            enableHistoryLearning: data.enableHistoryLearning,
+            adminLearningMode: data.adminLearningMode,
             welcomeMessage: data.welcomeMessage
           }
         })
@@ -144,6 +153,8 @@ export function ChatConfigurationDialog({
         spamProtectionEnabled: chatConfig.settings?.spamProtectionEnabled !== false,
         mentionOnlyMode: chatConfig.settings?.mentionOnlyMode !== false,
         proactiveResponses: chatConfig.settings?.proactiveResponses !== false,
+        enableHistoryLearning: chatConfig.settings?.enableHistoryLearning || false,
+        adminLearningMode: chatConfig.settings?.adminLearningMode || false,
         welcomeMessage: chatConfig.settings?.welcomeMessage || ''
       });
     }
@@ -331,6 +342,48 @@ export function ChatConfigurationDialog({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="enableHistoryLearning"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">History Learning</FormLabel>
+                        <FormDescription className="text-xs">
+                          Store chat messages for continuous AI improvement
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="adminLearningMode"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Admin Learning Mode</FormLabel>
+                        <FormDescription className="text-xs">
+                          Learn from admin responses to improve AI behavior
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
@@ -355,13 +408,24 @@ export function ChatConfigurationDialog({
               />
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+            <DialogFooter className="flex justify-between">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowTrainingDialog(true)}
+                disabled={!form.watch('enableHistoryLearning') && !form.watch('adminLearningMode')}
+                className="flex items-center gap-2"
+              >
+                <Brain className="h-4 w-4" />
+                Manage Training
               </Button>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? (
-                  <>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? (
+                    <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
@@ -369,10 +433,21 @@ export function ChatConfigurationDialog({
                   'Save Changes'
                 )}
               </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
+
+      {/* Training Management Dialog */}
+      {showTrainingDialog && chatConfig && (
+        <TrainingManagementDialog
+          isOpen={showTrainingDialog}
+          onClose={() => setShowTrainingDialog(false)}
+          chatConfigId={chatConfig.id}
+          chatName={chatConfig.chatTitle || chatConfig.chatId}
+        />
+      )}
     </Dialog>
   );
 }

@@ -12,7 +12,9 @@ import {
   ChatConfiguration, InsertChatConfiguration,
   WebsiteConfiguration, InsertWebsiteConfiguration,
   EmailWhitelist, InsertEmailWhitelist,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations, emailWhitelist
+  ChatHistory, InsertChatHistory,
+  TrainingInsights, InsertTrainingInsights,
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations, emailWhitelist, chatHistory, trainingInsights
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, ne, asc, desc, count, sql, ilike } from "drizzle-orm";
@@ -123,6 +125,25 @@ export interface IStorage {
   addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist>;
   removeEmailFromWhitelist(email: string): Promise<boolean>;
   getWhitelistedEmails(): Promise<EmailWhitelist[]>;
+
+  // Chat History operations
+  getChatHistory(id: number): Promise<ChatHistory | undefined>;
+  getChatHistoryByChatConfiguration(chatConfigId: number, limit?: number): Promise<ChatHistory[]>;
+  getChatHistoryByPlatform(platformId: number, limit?: number): Promise<ChatHistory[]>;
+  getAdminChatHistory(chatConfigId: number, limit?: number): Promise<ChatHistory[]>;
+  createChatHistory(chatHistory: InsertChatHistory): Promise<ChatHistory>;
+  updateChatHistory(id: number, chatHistory: Partial<ChatHistory>): Promise<ChatHistory | undefined>;
+  deleteChatHistory(id: number): Promise<boolean>;
+  markChatHistoryForTraining(ids: number[]): Promise<boolean>;
+
+  // Training Insights operations
+  getTrainingInsight(id: number): Promise<TrainingInsights | undefined>;
+  getTrainingInsightsByUser(userId: number): Promise<TrainingInsights[]>;
+  getTrainingInsightsByChatConfiguration(chatConfigId: number): Promise<TrainingInsights[]>;
+  getActiveTrainingInsights(userId: number, insightType?: string): Promise<TrainingInsights[]>;
+  createTrainingInsight(insight: InsertTrainingInsights): Promise<TrainingInsights>;
+  updateTrainingInsight(id: number, insight: Partial<TrainingInsights>): Promise<TrainingInsights | undefined>;
+  deleteTrainingInsight(id: number): Promise<boolean>;
   getEmailsWhitelistedBy(userId: number): Promise<EmailWhitelist[]>;
 }
 
