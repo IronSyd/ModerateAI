@@ -366,20 +366,7 @@ export function ChatConfigurationDialog({
             </div>
           </div>
 
-          {/* Chat Info */}
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <h4 className="font-medium">Chat Information</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Chat ID:</span>
-                <span className="ml-2 font-mono">{chatConfig.chatId}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Type:</span>
-                <span className="ml-2 capitalize">{chatConfig.chatType}</span>
-              </div>
-            </div>
-          </div>
+
 
           {/* Actions */}
           <div className="flex justify-between">
