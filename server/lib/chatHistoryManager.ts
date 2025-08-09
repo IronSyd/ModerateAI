@@ -142,6 +142,18 @@ export class ChatHistoryManager {
   }
 
   /**
+   * Get all chat history for a specific chat configuration
+   */
+  async getChatHistoryByChatConfiguration(chatConfigId: number, limit: number = 100): Promise<ChatHistory[]> {
+    return await db
+      .select()
+      .from(chatHistory)
+      .where(eq(chatHistory.chatConfigurationId, chatConfigId))
+      .orderBy(desc(chatHistory.sentAt))
+      .limit(limit);
+  }
+
+  /**
    * Get active training insights for a chat configuration
    */
   async getActiveInsights(chatConfigId: number): Promise<TrainingInsights[]> {
