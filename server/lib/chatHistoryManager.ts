@@ -241,6 +241,32 @@ export class ChatHistoryManager {
     const settings = config.settings as any;
     return settings?.adminLearningMode === true;
   }
+
+  /**
+   * Get a specific training insight by ID
+   */
+  async getTrainingInsight(insightId: number): Promise<TrainingInsights | null> {
+    const [insight] = await db
+      .select()
+      .from(trainingInsights)
+      .where(eq(trainingInsights.id, insightId))
+      .limit(1);
+    
+    return insight || null;
+  }
+
+  /**
+   * Update a training insight
+   */
+  async updateTrainingInsight(insightId: number, updates: Partial<TrainingInsights>): Promise<TrainingInsights> {
+    const [updatedInsight] = await db
+      .update(trainingInsights)
+      .set(updates)
+      .where(eq(trainingInsights.id, insightId))
+      .returning();
+    
+    return updatedInsight;
+  }
 }
 
 export const chatHistoryManager = new ChatHistoryManager();
