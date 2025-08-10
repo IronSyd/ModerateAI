@@ -18,20 +18,30 @@ import { ChatConfigurationDialog } from './ChatConfigurationDialog';
 
 interface ChatConfiguration {
   id: number;
-  chatId: string;
-  chatTitle: string;
+  platformId: number;
+  externalId: string;
+  chatName: string;
   chatType: string;
-  isActive: boolean;
   aiConfigurationId?: number;
   knowledgeBaseId?: number;
   settings?: {
     contentFilteringEnabled?: boolean;
     spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
+    proactiveResponses?: boolean;
+    enableHistoryLearning?: boolean;
+    adminLearningMode?: boolean;
     welcomeMessage?: string;
   };
-  lastActivity?: string;
-  memberCount?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  aiConfiguration?: {
+    name: string;
+  };
+  knowledgeBase?: {
+    name: string;
+  };
 }
 
 interface AiConfiguration {
@@ -157,9 +167,9 @@ export function ChatConfigurationList({
                   <div className="flex items-center space-x-2">
                     {getChatIcon(chat.chatType)}
                     <div>
-                      <div className="font-medium">{chat.chatTitle}</div>
+                      <div className="font-medium">{chat.chatName}</div>
                       <div className="text-sm text-muted-foreground">
-                        {chat.memberCount ? `${chat.memberCount} members` : 'Unknown size'}
+                        ID: {chat.externalId}
                       </div>
                     </div>
                   </div>

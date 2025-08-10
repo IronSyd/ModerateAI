@@ -734,9 +734,9 @@ const DiscordIntegration = () => {
             </CardHeader>
             <CardContent>
               <ChatConfigurationList
-                chatConfigurations={chatConfigurations}
-                aiConfigurations={aiConfigurations}
-                knowledgeBases={knowledgeBases}
+                chatConfigurations={chatConfigurations as any[]}
+                aiConfigurations={aiConfigurations as any[]}
+                knowledgeBases={knowledgeBases as any[]}
                 platformId={discordPlatformId}
               />
             </CardContent>

@@ -36,10 +36,10 @@ import { useState } from 'react';
 
 interface ChatConfiguration {
   id: number;
-  chatId: string;
-  chatTitle: string;
+  platformId: number;
+  externalId: string;
+  chatName: string;
   chatType: string;
-  isActive: boolean;
   aiConfigurationId?: number;
   knowledgeBaseId?: number;
   settings?: {
@@ -50,6 +50,15 @@ interface ChatConfiguration {
     enableHistoryLearning?: boolean;
     adminLearningMode?: boolean;
     welcomeMessage?: string;
+  };
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  aiConfiguration?: {
+    name: string;
+  };
+  knowledgeBase?: {
+    name: string;
   };
 }
 
@@ -168,7 +177,7 @@ export function ChatConfigurationDialog({
         <DialogHeader>
           <DialogTitle>Configure Discord {chatConfig.chatType}</DialogTitle>
           <DialogDescription>
-            Customize AI behavior and moderation settings for "{chatConfig.chatTitle}"
+            Customize AI behavior and moderation settings for "{chatConfig.chatName}"
           </DialogDescription>
         </DialogHeader>
 
@@ -445,7 +454,7 @@ export function ChatConfigurationDialog({
           isOpen={showTrainingDialog}
           onClose={() => setShowTrainingDialog(false)}
           chatConfigId={chatConfig.id}
-          chatName={chatConfig.chatTitle || chatConfig.chatId}
+          chatName={chatConfig.chatName || chatConfig.externalId}
         />
       )}
     </Dialog>
