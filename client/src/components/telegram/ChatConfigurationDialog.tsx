@@ -150,16 +150,6 @@ export function ChatConfigurationDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="welcomeMessage">Welcome Message</Label>
-              <Textarea
-                id="welcomeMessage"
-                value={formData.welcomeMessage}
-                onChange={(e) => handleInputChange('welcomeMessage', e.target.value)}
-                placeholder="Enter a welcome message for new users..."
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="knowledgeBase">Knowledge Base</Label>
               <Select
                 value={formData.knowledgeBaseId?.toString() || 'none'}
