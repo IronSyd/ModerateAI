@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +72,26 @@ export function ChatConfigurationDialog({
     welcomeMessage: chatConfig?.settings?.welcomeMessage || ''
   });
 
+  // Sync form data when chatConfig changes
+  useEffect(() => {
+    if (chatConfig) {
+      console.log('Syncing form data with chatConfig:', {
+        chatConfigId: chatConfig.id,
+        knowledgeBaseId: chatConfig.knowledgeBaseId,
+        chatName: chatConfig.chatName
+      });
+      setFormData({
+        knowledgeBaseId: chatConfig.knowledgeBaseId || null,
+        isActive: chatConfig.isActive ?? true,
+        mentionOnlyMode: chatConfig.settings?.mentionOnlyMode ?? false,
+        proactiveResponses: chatConfig.settings?.proactiveResponses ?? true,
+        enableHistoryLearning: chatConfig.settings?.enableHistoryLearning ?? false,
+        adminLearningMode: chatConfig.settings?.adminLearningMode ?? false,
+        welcomeMessage: chatConfig.settings?.welcomeMessage || ''
+      });
+    }
+  }, [chatConfig]);
+
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       if (!chatConfig) return;
@@ -101,6 +121,7 @@ export function ChatConfigurationDialog({
         description: 'Chat configuration updated successfully'
       });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms', chatConfig.platformId, 'chat-configurations'] });
       onClose();
     },
     onError: (error: any) => {
