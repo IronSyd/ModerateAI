@@ -1336,11 +1336,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChatConfigurationsByPlatformId(platformId: number): Promise<ChatConfiguration[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: chatConfigurations.id,
+        platformId: chatConfigurations.platformId,
+        externalId: chatConfigurations.externalId,
+        chatName: chatConfigurations.chatName,
+        chatType: chatConfigurations.chatType,
+        aiConfigurationId: chatConfigurations.aiConfigurationId,
+        knowledgeBaseId: chatConfigurations.knowledgeBaseId,
+        settings: chatConfigurations.settings,
+        isActive: chatConfigurations.isActive,
+        createdAt: chatConfigurations.createdAt,
+        updatedAt: chatConfigurations.updatedAt,
+        aiConfiguration: {
+          name: aiConfigurations.name
+        },
+        knowledgeBase: {
+          name: knowledgeBases.name
+        }
+      })
       .from(chatConfigurations)
+      .leftJoin(aiConfigurations, eq(chatConfigurations.aiConfigurationId, aiConfigurations.id))
+      .leftJoin(knowledgeBases, eq(chatConfigurations.knowledgeBaseId, knowledgeBases.id))
       .where(eq(chatConfigurations.platformId, platformId))
       .orderBy(asc(chatConfigurations.chatName));
+
+    return results.map(result => ({
+      ...result,
+      aiConfiguration: result.aiConfiguration.name ? result.aiConfiguration : undefined,
+      knowledgeBase: result.knowledgeBase.name ? result.knowledgeBase : undefined
+    }));
   }
 
   async createChatConfiguration(chatConfig: InsertChatConfiguration): Promise<ChatConfiguration> {
