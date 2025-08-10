@@ -15,7 +15,7 @@ import { Brain } from 'lucide-react';
 interface ChatConfiguration {
   id: number;
   platformId: number;
-  chatId: string;
+  externalId: string;
   chatName: string;
   chatType: 'private' | 'group' | 'supergroup';
   aiConfigurationId: number | null;
@@ -75,11 +75,6 @@ export function ChatConfigurationDialog({
   // Sync form data when chatConfig changes
   useEffect(() => {
     if (chatConfig) {
-      console.log('Syncing form data with chatConfig:', {
-        chatConfigId: chatConfig.id,
-        knowledgeBaseId: chatConfig.knowledgeBaseId,
-        chatName: chatConfig.chatName
-      });
       setFormData({
         knowledgeBaseId: chatConfig.knowledgeBaseId || null,
         isActive: chatConfig.isActive ?? true,
@@ -152,7 +147,7 @@ export function ChatConfigurationDialog({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Configure {chatConfig.chatName || chatConfig.chatId}
+            Configure {chatConfig.chatName || chatConfig.externalId}
           </DialogTitle>
         </DialogHeader>
 

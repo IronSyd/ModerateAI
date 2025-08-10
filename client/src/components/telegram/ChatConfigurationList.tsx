@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ChatConfiguration {
   id: number;
   platformId: number;
-  chatId: string;
+  externalId: string;
   chatName: string;
   chatType: 'private' | 'group' | 'supergroup';
   aiConfigurationId: number | null;
@@ -216,13 +216,13 @@ export function ChatConfigurationList({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold truncate">
-                          {chat.chatName || `Chat ${chat.chatId}`}
+                          {chat.chatName || `Chat ${chat.externalId}`}
                         </h4>
                         {getChatTypeBadge(chat.chatType)}
                       </div>
                       
                       <p className="text-sm text-muted-foreground font-mono mb-3">
-                        ID: {chat.chatId}
+                        ID: {chat.externalId}
                       </p>
 
                       <div className="flex flex-wrap items-center gap-4 text-sm">
