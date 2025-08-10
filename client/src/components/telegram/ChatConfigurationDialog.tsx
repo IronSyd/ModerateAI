@@ -22,8 +22,6 @@ interface ChatConfiguration {
   knowledgeBaseId: number | null;
   isActive: boolean;
   settings: {
-    contentFilteringEnabled?: boolean;
-    spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
     welcomeMessage?: string;
     enableHistoryLearning?: boolean;
@@ -67,8 +65,6 @@ export function ChatConfigurationDialog({
   const [formData, setFormData] = useState({
     knowledgeBaseId: chatConfig?.knowledgeBaseId || null,
     isActive: chatConfig?.isActive ?? true,
-    contentFilteringEnabled: chatConfig?.settings?.contentFilteringEnabled ?? true,
-    spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled ?? true,
     mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode ?? false,
     proactiveResponses: chatConfig?.settings?.proactiveResponses ?? true,
     enableHistoryLearning: chatConfig?.settings?.enableHistoryLearning ?? false,
@@ -90,8 +86,6 @@ export function ChatConfigurationDialog({
           knowledgeBaseId: data.knowledgeBaseId,
           isActive: data.isActive,
           settings: {
-            contentFilteringEnabled: data.contentFilteringEnabled,
-            spamProtectionEnabled: data.spamProtectionEnabled,
             mentionOnlyMode: data.mentionOnlyMode,
             proactiveResponses: data.proactiveResponses,
             enableHistoryLearning: data.enableHistoryLearning,
@@ -230,34 +224,7 @@ export function ChatConfigurationDialog({
             </div>
           </div>
 
-          {/* Moderation Settings */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Moderation Settings</h3>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="contentFiltering">Content Filtering</Label>
-                <p className="text-sm text-muted-foreground">Remove inappropriate content</p>
-              </div>
-              <Switch
-                id="contentFiltering"
-                checked={formData.contentFilteringEnabled}
-                onCheckedChange={(checked) => handleInputChange('contentFilteringEnabled', checked)}
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="spamProtection">Spam Protection</Label>
-                <p className="text-sm text-muted-foreground">Detect and remove spam messages</p>
-              </div>
-              <Switch
-                id="spamProtection"
-                checked={formData.spamProtectionEnabled}
-                onCheckedChange={(checked) => handleInputChange('spamProtectionEnabled', checked)}
-              />
-            </div>
-          </div>
 
           {/* Training and Learning */}
           <div className="space-y-4">
