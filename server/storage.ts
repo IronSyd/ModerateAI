@@ -1364,8 +1364,8 @@ export class DatabaseStorage implements IStorage {
 
     return results.map(result => ({
       ...result,
-      aiConfiguration: result.aiConfiguration.name ? result.aiConfiguration : undefined,
-      knowledgeBase: result.knowledgeBase.name ? result.knowledgeBase : undefined
+      aiConfiguration: result.aiConfiguration?.name ? result.aiConfiguration : undefined,
+      knowledgeBase: result.knowledgeBase?.name ? result.knowledgeBase : undefined
     }));
   }
 
