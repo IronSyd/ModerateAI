@@ -9,6 +9,13 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## August 2025
+- **Fixed Chat Configuration Display Issues** (August 10, 2025):
+  - Resolved duplicate welcome message field appearing in Telegram chat configuration dialog
+  - Fixed chat ID display issue by updating interface mapping from chatId to externalId in database schema
+  - Enhanced storage method with proper database joins to include AI configuration and knowledge base names in API responses
+  - Fixed null reference errors in chat configuration API using optional chaining operators
+  - Chat configurations now properly display chat IDs and AI configuration names instead of "Not configured"
+  - Knowledge base selection persistence works correctly with form data synchronization
 - **Implemented Complete AI Training and Learning System** (August 9, 2025):
   - Built comprehensive chat history storage and analysis system for continuous AI improvement
   - Added new database tables: `chatHistory`, `adminMembers`, `chatHistoryTraining` for tracking and analyzing conversations
