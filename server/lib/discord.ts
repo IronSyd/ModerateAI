@@ -266,9 +266,12 @@ export async function initializeBot(platformId: number, token: string): Promise<
             
             // Send the response (either as a reply or DM based on settings)
             if (privateResponses && !isDM) {
-              await message.author.send(aiResponse);
+              // For private responses, include the original question for context
+              const quotedMessage = `> ${message.content.split('\n').join('\n> ')}\n\n${aiResponse}`;
+              await message.author.send(quotedMessage);
               await message.react('✅');
             } else {
+              // Discord's reply method automatically quotes the original message
               await message.reply(aiResponse);
             }
             

@@ -373,7 +373,10 @@ export async function initializeBot(platformId: number, token: string): Promise<
           }
           
           // Send response
-          await activatedBot.sendMessage(msg.chat.id, aiResponse);
+          // Send AI response as a reply to the original message for better context
+          await activatedBot.sendMessage(msg.chat.id, aiResponse, {
+            reply_to_message_id: msg.message_id
+          });
           
           // Store AI response in database
           await storage.createMessage({
@@ -394,13 +397,17 @@ export async function initializeBot(platformId: number, token: string): Promise<
           }
           
           // Send a fallback response with more details in development
-          await activatedBot.sendMessage(msg.chat.id, errorMessage);
+          await activatedBot.sendMessage(msg.chat.id, errorMessage, {
+            reply_to_message_id: msg.message_id
+          });
           return;
         }
         
       } catch (error) {
         console.error('Error handling Telegram message:', error);
-        activatedBot.sendMessage(msg.chat.id, 'Sorry, I encountered an error processing your message. Please try again later.');
+        activatedBot.sendMessage(msg.chat.id, 'Sorry, I encountered an error processing your message. Please try again later.', {
+          reply_to_message_id: msg.message_id
+        });
       }
     });
     
@@ -410,14 +417,16 @@ export async function initializeBot(platformId: number, token: string): Promise<
         'I am an AI assistant powered by ModerateAI. I can help answer questions and provide information.\n\n' +
         'Available commands:\n' +
         '/help - Show this help message\n' +
-        '/about - Information about this bot'
+        '/about - Information about this bot',
+        { reply_to_message_id: msg.message_id }
       );
     });
     
     activatedBot.onText(/\/about/, (msg: any) => {
       activatedBot.sendMessage(msg.chat.id, 
         'I am an AI assistant powered by ModerateAI - an AI-powered customer support and community moderation platform.\n\n' +
-        'I can answer questions, provide information, and help moderate conversations.'
+        'I can answer questions, provide information, and help moderate conversations.',
+        { reply_to_message_id: msg.message_id }
       );
     });
     
