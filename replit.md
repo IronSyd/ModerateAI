@@ -9,6 +9,14 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## August 2025
+- **Implemented Quote/Reply Functionality and Fixed Bot Response Configuration** (August 11, 2025):
+  - Enhanced Telegram bot to always quote/reply to original messages using reply_to_message_id for better conversation context
+  - Improved Discord bot private responses to include quoted original message formatting
+  - Updated all Telegram error messages and command responses to use reply functionality
+  - Fixed group chat configuration missing groupMode setting that prevented bot responses
+  - Configured bot for optimal behavior: responds when tagged OR when message is relevant to knowledge base
+  - AI relevance detection working at 71% confidence for X8C service-related questions
+  - Bot now provides contextual responses while avoiding spam by staying quiet for off-topic messages
 - **Fixed Chat Configuration Display Issues** (August 10, 2025):
   - Resolved duplicate welcome message field appearing in Telegram chat configuration dialog
   - Fixed chat ID display issue by updating interface mapping from chatId to externalId in database schema
