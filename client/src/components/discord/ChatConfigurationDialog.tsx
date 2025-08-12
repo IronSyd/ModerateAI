@@ -99,8 +99,8 @@ export function ChatConfigurationDialog({
 
   const form = useForm({
     defaultValues: {
-      aiConfigurationId: chatConfiguration?.aiConfigurationId || '',
-      knowledgeBaseId: chatConfiguration?.knowledgeBaseId || '',
+      aiConfigurationId: chatConfiguration?.aiConfigurationId || null,
+      knowledgeBaseId: chatConfiguration?.knowledgeBaseId || null,
       isActive: chatConfiguration?.isActive || false,
       contentFilteringEnabled: chatConfiguration?.settings?.contentFilteringEnabled !== false,
       proactiveResponses: chatConfiguration?.settings?.proactiveResponses !== false,
@@ -161,8 +161,8 @@ export function ChatConfigurationDialog({
   React.useEffect(() => {
     if (chatConfiguration) {
       form.reset({
-        aiConfigurationId: chatConfiguration.aiConfigurationId || '',
-        knowledgeBaseId: chatConfiguration.knowledgeBaseId || '',
+        aiConfigurationId: chatConfiguration.aiConfigurationId || null,
+        knowledgeBaseId: chatConfiguration.knowledgeBaseId || null,
         isActive: chatConfiguration.isActive,
         contentFilteringEnabled: chatConfiguration.settings?.contentFilteringEnabled !== false,
         proactiveResponses: chatConfiguration.settings?.proactiveResponses !== false,
@@ -220,8 +220,8 @@ export function ChatConfigurationDialog({
                   <FormItem>
                     <FormLabel>AI Configuration</FormLabel>
                     <Select
-                      value={field.value ? String(field.value) : ''}
-                      onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                      value={field.value ? String(field.value) : "none"}
+                      onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -229,7 +229,7 @@ export function ChatConfigurationDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No AI configuration</SelectItem>
+                        <SelectItem value="none">No AI configuration</SelectItem>
                         {aiConfigurations.map((config) => (
                           <SelectItem key={config.id} value={String(config.id)}>
                             {config.name}
@@ -249,8 +249,8 @@ export function ChatConfigurationDialog({
                   <FormItem>
                     <FormLabel>Knowledge Base</FormLabel>
                     <Select
-                      value={field.value ? String(field.value) : ''}
-                      onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                      value={field.value ? String(field.value) : "none"}
+                      onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -258,7 +258,7 @@ export function ChatConfigurationDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No knowledge base</SelectItem>
+                        <SelectItem value="none">No knowledge base</SelectItem>
                         {knowledgeBases.map((kb) => (
                           <SelectItem key={kb.id} value={String(kb.id)}>
                             {kb.name}
