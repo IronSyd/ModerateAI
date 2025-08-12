@@ -111,7 +111,24 @@ export interface IStorage {
   // Analytics operations
   getConversationCount(): Promise<number>;
   getMessageCount(): Promise<number>;
-
+  getTelegramAnalytics(platformId: number): Promise<{
+    totalMessages: number;
+    aiResponses: number;
+    conversations: number;
+    responseRate: number;
+    messagesByDay: { date: string; messages: number }[];
+    chatTypes: { private: number; group: number };
+    moderationActions: { contentFiltered: number; spamBlocked: number };
+  }>;
+  getDiscordAnalytics(platformId: number): Promise<{
+    totalMessages: number;
+    aiResponses: number;
+    activeServers: number;
+    totalChannels: number;
+    responseRate: number;
+    messagesByDay: { date: string; messages: number }[];
+    moderationActions: { contentFiltered: number; warningsIssued: number };
+  }>;
   getResponseRate(): Promise<number>;
   getRecentActivity(limit: number): Promise<{
     user: string;
@@ -1125,6 +1142,98 @@ export class DatabaseStorage implements IStorage {
       messagesByDay,
       chatTypes: { private: privateChats, group: groupChats },
       moderationActions: { contentFiltered, spamBlocked }
+    };
+  }
+
+  async getDiscordAnalytics(platformId: number): Promise<{
+    totalMessages: number;
+    aiResponses: number;
+    activeServers: number;
+    totalChannels: number;
+    responseRate: number;
+    messagesByDay: { date: string; messages: number }[];
+    moderationActions: { contentFiltered: number; warningsIssued: number };
+  }> {
+    // Get all conversations for this Discord platform
+    const discordConversations = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.platformId, platformId));
+
+    const conversationIds = discordConversations.map(c => c.id);
+
+    // Get all messages for this platform
+    const allMessages = conversationIds.length > 0 ? await db
+      .select()
+      .from(messages)
+      .where(inArray(messages.conversationId, conversationIds)) : [];
+
+    const userMessages = allMessages.filter(m => m.sender === 'user');
+    const aiMessages = allMessages.filter(m => m.sender === 'ai');
+
+    // Calculate response rate
+    const responseRate = userMessages.length > 0 ? (aiMessages.length / userMessages.length) * 100 : 0;
+
+    // Messages by day (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentMessages = allMessages.filter(m => m.createdAt >= sevenDaysAgo);
+    const messagesByDay = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      
+      const dayMessages = recentMessages.filter(m => {
+        const msgDate = m.createdAt.toISOString().split('T')[0];
+        return msgDate === dateString;
+      }).length;
+      
+      messagesByDay.push({ date: dateString, messages: dayMessages });
+    }
+
+    // Get platform data to count servers and channels
+    const platform = await db
+      .select()
+      .from(platforms)
+      .where(eq(platforms.id, platformId))
+      .limit(1);
+
+    let activeServers = 0;
+    let totalChannels = 0;
+
+    if (platform.length > 0 && platform[0].config) {
+      const config = platform[0].config as any;
+      if (config.servers) {
+        activeServers = config.servers.length;
+      }
+      if (config.channels) {
+        totalChannels = config.channels.length;
+      }
+    }
+
+    // Moderation actions (check message metadata for blocked content)
+    let contentFiltered = 0;
+    let warningsIssued = 0;
+    
+    allMessages.forEach(msg => {
+      if (msg.metadata && typeof msg.metadata === 'object' && msg.metadata !== null) {
+        const metadata = msg.metadata as any;
+        if (metadata.blocked === 'content') contentFiltered++;
+        if (metadata.action === 'warning') warningsIssued++;
+      }
+    });
+
+    return {
+      totalMessages: allMessages.length,
+      aiResponses: aiMessages.length,
+      activeServers,
+      totalChannels,
+      responseRate: Math.round(responseRate),
+      messagesByDay,
+      moderationActions: { contentFiltered, warningsIssued }
     };
   }
 

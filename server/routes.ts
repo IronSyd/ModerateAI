@@ -718,15 +718,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Platform not found" });
       }
       
-      // Check if it's a Telegram platform
-      if (platform.type !== 'telegram') {
-        return res.status(400).json({ message: "Analytics only available for Telegram platforms" });
+      let analytics;
+      if (platform.type === 'telegram') {
+        analytics = await storage.getTelegramAnalytics(platformId);
+      } else if (platform.type === 'discord') {
+        analytics = await storage.getDiscordAnalytics(platformId);
+      } else {
+        return res.status(400).json({ message: "Analytics not available for this platform type" });
       }
       
-      const analytics = await storage.getTelegramAnalytics(platformId);
       res.status(200).json(analytics);
     } catch (error) {
-      console.error("Error fetching Telegram analytics:", error);
+      console.error("Error fetching platform analytics:", error);
       res.status(500).json({ message: "Error fetching analytics data" });
     }
   });

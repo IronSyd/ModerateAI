@@ -123,8 +123,169 @@ import {
   Settings,
   Wrench,
   RefreshCw,
+  Bot,
+  MessageSquare,
+  TrendingUp,
+  Users2,
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
+
+// Analytics component for Discord platform
+const DiscordAnalytics = ({ platformId }: { platformId: number }) => {
+  const { data: analytics, isLoading } = useQuery({
+    queryKey: [`/api/platforms/${platformId}/analytics`],
+    enabled: !!platformId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <BarChart3 className="mx-auto h-8 w-8 text-muted-foreground animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <BarChart3 className="mx-auto h-12 w-12 text-gray-300" />
+          <h3 className="mt-4 text-lg font-medium">No Data Available</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Start conversations to see analytics data.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border">
+          <div className="flex items-center">
+            <MessageSquare className="h-5 w-5 text-blue-600" />
+            <span className="ml-2 text-sm font-medium text-blue-800">Total Messages</span>
+          </div>
+          <p className="text-2xl font-bold text-blue-900 mt-2">{analytics.totalMessages || 0}</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border">
+          <div className="flex items-center">
+            <Bot className="h-5 w-5 text-green-600" />
+            <span className="ml-2 text-sm font-medium text-green-800">AI Responses</span>
+          </div>
+          <p className="text-2xl font-bold text-green-900 mt-2">{analytics.aiResponses || 0}</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border">
+          <div className="flex items-center">
+            <Users2 className="h-5 w-5 text-purple-600" />
+            <span className="ml-2 text-sm font-medium text-purple-800">Active Servers</span>
+          </div>
+          <p className="text-2xl font-bold text-purple-900 mt-2">{analytics.activeServers || 0}</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border">
+          <div className="flex items-center">
+            <TrendingUp className="h-5 w-5 text-orange-600" />
+            <span className="ml-2 text-sm font-medium text-orange-800">Response Rate</span>
+          </div>
+          <p className="text-2xl font-bold text-orange-900 mt-2">{analytics.responseRate || 0}%</p>
+        </div>
+      </div>
+
+      {/* Server Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Server Activity</CardTitle>
+            <CardDescription>Distribution across Discord servers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                  <span className="text-sm">Active Servers</span>
+                </div>
+                <span className="font-semibold">{analytics.activeServers || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm">Total Channels</span>
+                </div>
+                <span className="font-semibold">{analytics.totalChannels || 0}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Moderation Activity</CardTitle>
+            <CardDescription>Content filtering and moderation stats</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Shield className="h-4 w-4 text-red-500 mr-2" />
+                  <span className="text-sm">Content Filtered</span>
+                </div>
+                <span className="font-semibold">{analytics.moderationActions?.contentFiltered || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Shield className="h-4 w-4 text-orange-500 mr-2" />
+                  <span className="text-sm">Warnings Issued</span>
+                </div>
+                <span className="font-semibold">{analytics.moderationActions?.warningsIssued || 0}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Activity Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Message Activity (Last 7 Days)</CardTitle>
+          <CardDescription>Daily message volume across all servers</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-32 flex items-end justify-between space-x-2">
+            {(analytics.messagesByDay || []).map((day: any, index: number) => {
+              const maxMessages = Math.max(...(analytics.messagesByDay || []).map((d: any) => d.messages));
+              const height = maxMessages > 0 ? (day.messages / maxMessages) * 100 : 0;
+              const date = new Date(day.date);
+              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+              
+              return (
+                <div key={index} className="flex-1 flex flex-col items-center">
+                  <div className="w-full flex flex-col items-center mb-2">
+                    <div 
+                      className="w-full bg-indigo-500 rounded-t-sm transition-all duration-300 hover:bg-indigo-600" 
+                      style={{ height: `${Math.max(height, 4)}px` }}
+                      title={`${day.messages} messages on ${dayName}`}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{dayName}</span>
+                  <span className="text-xs font-medium">{day.messages}</span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 const DiscordIntegration = () => {
   const { toast } = useToast();
@@ -479,6 +640,10 @@ const DiscordIntegration = () => {
           <TabsTrigger value="settings" disabled={platform?.status !== "active"}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
+          </TabsTrigger>
+          <TabsTrigger value="analytics" disabled={platform?.status !== "active"}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
           </TabsTrigger>
         </TabsList>
 
@@ -919,6 +1084,19 @@ const DiscordIntegration = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="analytics" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics & Insights</CardTitle>
+              <CardDescription>
+                View performance metrics for your Discord bot
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <DiscordAnalytics platformId={discordPlatformId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
       </Tabs>
 
