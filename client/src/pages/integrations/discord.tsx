@@ -291,7 +291,6 @@ const DiscordIntegration = () => {
   // Add state for settings
   const [automaticWarnings, setAutomaticWarnings] = useState(true);
   const [logModerationActions, setLogModerationActions] = useState(true);
-  const [moderationLogChannel, setModerationLogChannel] = useState("mod-logs");
   
   // Check if user is authenticated
   useEffect(() => {
@@ -901,19 +900,50 @@ const DiscordIntegration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <Separator />
-
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Moderation Settings</h3>
+                <h3 className="text-lg font-medium">Response Settings</h3>
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Automatic Warnings</Label>
+                    <Label>Server Mode</Label>
                     <p className="text-sm text-muted-foreground">
-                      Warn users who violate rules
+                      Respond to messages in Discord servers
                     </p>
                   </div>
                   <Switch 
+                    checked={true} 
+                    disabled={true}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Direct Messages</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Respond to direct messages
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={false} 
+                    disabled={true}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Moderation</h3>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="content-filtering">Content Filtering</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Moderate inappropriate content
+                    </p>
+                  </div>
+                  <Switch 
+                    id="content-filtering"
                     checked={automaticWarnings} 
                     onCheckedChange={setAutomaticWarnings}
                   />
@@ -921,35 +951,16 @@ const DiscordIntegration = () => {
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Log Moderation Actions</Label>
+                    <Label htmlFor="action-logging">Action Logging</Label>
                     <p className="text-sm text-muted-foreground">
-                      Keep a record of all moderation
+                      Log moderation actions
                     </p>
                   </div>
                   <Switch 
+                    id="action-logging"
                     checked={logModerationActions} 
                     onCheckedChange={setLogModerationActions}
                   />
-                </div>
-                
-                <div className="mt-4">
-                  <Label htmlFor="logChannel">Moderation Log Channel</Label>
-                  <Select 
-                    value={moderationLogChannel}
-                    onValueChange={setModerationLogChannel}
-                  >
-                    <SelectTrigger className="w-full mt-1">
-                      <SelectValue placeholder="Select channel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mod-logs">mod-logs</SelectItem>
-                      <SelectItem value="bot-commands">bot-commands</SelectItem>
-                      <SelectItem value="admin">admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Channel where moderation actions are logged
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -959,10 +970,9 @@ const DiscordIntegration = () => {
                 onClick={() => {
                   // Save all settings to the database
                   updateBotConfigMutation.mutate({
-                    // Moderation settings
+                    // Response and moderation settings
                     automaticWarnings,
-                    logModerationActions,
-                    moderationLogChannel
+                    logModerationActions
                   });
                 }}
               >
