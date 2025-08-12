@@ -726,7 +726,7 @@ const DiscordIntegration = () => {
                 aiConfigurations={aiConfigurations as any[]}
                 knowledgeBases={knowledgeBases as any[]}
                 platformId={discordPlatformId}
-                channels={discordPlatform?.config?.channels || []}
+                channels={platform?.config?.channels || []}
               />
             </CardContent>
             <CardFooter className="flex justify-end">
