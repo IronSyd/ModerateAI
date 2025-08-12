@@ -288,7 +288,8 @@ const DiscordIntegration = () => {
   const [authCode, setAuthCode] = useState("");
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [updatedChannels, setUpdatedChannels] = useState<DiscordChannel[]>([]);
-  // Add state for settings (currently none needed)
+  // Add state for settings
+  const [directMessagesEnabled, setDirectMessagesEnabled] = useState(false);
   
   // Check if user is authenticated
   useEffect(() => {
@@ -568,7 +569,9 @@ const DiscordIntegration = () => {
     }
     
     // Initialize settings from platform config when it loads
-    // Currently no settings to initialize
+    if (platform?.config) {
+      setDirectMessagesEnabled(platform.config.directMessagesEnabled ?? false);
+    }
   }, [platform]);
 
   // Use channels from the updatedChannels state or fallback to demo channels
@@ -917,8 +920,8 @@ const DiscordIntegration = () => {
                     </p>
                   </div>
                   <Switch 
-                    checked={false} 
-                    disabled={true}
+                    checked={directMessagesEnabled} 
+                    onCheckedChange={setDirectMessagesEnabled}
                   />
                 </div>
               </div>
@@ -927,10 +930,9 @@ const DiscordIntegration = () => {
               <Button 
                 className="ml-auto" 
                 onClick={() => {
-                  // No settings to save currently
-                  toast({
-                    title: "Settings Saved",
-                    description: "Discord bot settings have been saved successfully.",
+                  // Save Discord bot settings
+                  updateBotConfigMutation.mutate({
+                    directMessagesEnabled: directMessagesEnabled
                   });
                 }}
               >
