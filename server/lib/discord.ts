@@ -310,12 +310,17 @@ export async function initializeBot(platformId: number, token: string): Promise<
         const isDM = message.channel.type === ChannelType.DM;
         const isBotMentioned = message.mentions.has(client.user?.id || '');
         
+        // Skip direct messages entirely - bot should not respond to private messages
+        if (isDM) {
+          return;
+        }
+        
         // Determine if bot should respond based on settings
         const mentionOnlyMode = settings.mentionOnlyMode !== false; // Default to true
-        let shouldRespond = isDM || (mentionOnlyMode && isBotMentioned);
+        let shouldRespond = (mentionOnlyMode && isBotMentioned);
         
         // If not explicitly triggered, check if message is relevant to knowledge base for proactive response
-        if (!shouldRespond && !isDM) {
+        if (!shouldRespond) {
           const proactiveEnabled = settings.proactiveResponses !== false; // Default to enabled if not set
           
           if (proactiveEnabled) {
@@ -341,10 +346,10 @@ export async function initializeBot(platformId: number, token: string): Promise<
           }
         }
 
-        // Handle AI chat responses (for mentions, DMs, commands, or relevant messages)
+        // Handle AI chat responses (for mentions or relevant messages)
         if (shouldRespond) {
-          const channelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
-          console.log(`Bot interaction in ${isDM ? 'DM' : 'channel ' + channelName}`);
+          const channelName = 'name' in message.channel ? message.channel.name : 'unknown channel';
+          console.log(`Bot interaction in channel ${channelName}`);
           
           try {
             // Get active AI configuration for this platform's user
