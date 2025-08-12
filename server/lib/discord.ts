@@ -306,18 +306,17 @@ export async function initializeBot(platformId: number, token: string): Promise<
           (c: any) => c.id === message.channel.id
         );
         
-        // Get platform settings safely
-        const config = updatedPlatform.config as any;
-        
         // Check if this is a direct message
         const isDM = message.channel.type === ChannelType.DM;
+        const isBotMentioned = message.mentions.has(client.user?.id || '');
         
-        // Only respond to direct messages, not mentions or commands
-        let shouldRespond = isDM;
+        // Determine if bot should respond based on settings
+        const mentionOnlyMode = settings.mentionOnlyMode !== false; // Default to true
+        let shouldRespond = isDM || (mentionOnlyMode && isBotMentioned);
         
         // If not explicitly triggered, check if message is relevant to knowledge base for proactive response
         if (!shouldRespond && !isDM) {
-          const proactiveEnabled = config?.proactiveResponses !== false; // Default to enabled if not set
+          const proactiveEnabled = settings.proactiveResponses !== false; // Default to enabled if not set
           
           if (proactiveEnabled) {
             console.log('Checking message relevance for proactive Discord response...');
@@ -329,7 +328,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
               const relevanceCheck = await checkMessageRelevance(
                 message.content,
                 userId,
-                null // Use user's active knowledge base
+                chatConfig?.knowledgeBaseId || null // Use chat-specific knowledge base
               );
               
               console.log(`Discord relevance check result: ${relevanceCheck.isRelevant} (score: ${relevanceCheck.relevanceScore}, reason: ${relevanceCheck.reason})`);

@@ -90,6 +90,7 @@ export function ChatConfigurationDialog({
     defaultValues: {
       knowledgeBaseId: chatConfiguration?.knowledgeBaseId || null,
       isActive: chatConfiguration?.isActive || false,
+      mentionOnlyMode: chatConfiguration?.settings?.mentionOnlyMode !== false,
       proactiveResponses: chatConfiguration?.settings?.proactiveResponses !== false,
       enableHistoryLearning: chatConfiguration?.settings?.enableHistoryLearning || false,
       adminLearningMode: chatConfiguration?.settings?.adminLearningMode || false,
@@ -109,6 +110,7 @@ export function ChatConfigurationDialog({
           isActive: data.isActive,
           settings: {
             ...chatConfiguration?.settings, // Preserve existing settings like enabledChannels
+            mentionOnlyMode: data.mentionOnlyMode,
             proactiveResponses: data.proactiveResponses,
             enableHistoryLearning: data.enableHistoryLearning,
             adminLearningMode: data.adminLearningMode,
@@ -142,6 +144,7 @@ export function ChatConfigurationDialog({
       form.reset({
         knowledgeBaseId: chatConfiguration.knowledgeBaseId || null,
         isActive: chatConfiguration.isActive,
+        mentionOnlyMode: chatConfiguration.settings?.mentionOnlyMode !== false,
         proactiveResponses: chatConfiguration.settings?.proactiveResponses !== false,
         enableHistoryLearning: chatConfiguration.settings?.enableHistoryLearning || false,
         adminLearningMode: chatConfiguration.settings?.adminLearningMode || false,
@@ -221,9 +224,26 @@ export function ChatConfigurationDialog({
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Response Settings</h4>
                 
-
-
-
+                <FormField
+                  control={form.control}
+                  name="mentionOnlyMode"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Mention Only Mode</FormLabel>
+                        <FormDescription className="text-xs">
+                          Bot only responds when mentioned with @ModerateAI
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

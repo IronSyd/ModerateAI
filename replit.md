@@ -34,8 +34,8 @@ Preferred communication style: Simple, everyday language.
 - **Training**: Conversation-based training system for improving AI responses, including admin learning mode and proactive response system.
 
 ## Platform Integrations
-- **Discord**: Bot integration using Discord.js with real-time message monitoring, moderation, and per-server/channel configuration.
-- **Telegram**: Bot integration using node-telegram-bot-api for automated responses and per-group/chat configuration.
+- **Discord**: Bot integration using Discord.js with real-time message monitoring, moderation, per-server/channel configuration, mention-only mode, and proactive responses.
+- **Telegram**: Bot integration using node-telegram-bot-api for automated responses, per-group/chat configuration, mention-only mode, and proactive responses.
 - **Website**: Embeddable chat widget for web-based customer support.
 - **Token Management**: Secure storage of platform tokens with validation and connection status tracking.
 
