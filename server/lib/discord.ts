@@ -32,11 +32,10 @@ export async function exchangeDiscordAuthCode(authCode: string): Promise<{ succe
     const redirectUri = process.env.DISCORD_REDIRECT_URI || 'http://localhost:5000/auth/discord/callback';
     
     if (!clientId || !clientSecret) {
-      console.log('Discord OAuth credentials not configured, falling back to demo mode');
-      // For demo purposes, return a mock success with demo token
-      return {
-        success: true,
-        botToken: 'demo-discord-token'
+      console.log('Discord OAuth credentials not configured');
+      return { 
+        success: false, 
+        error: 'Discord OAuth credentials not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET environment variables.' 
       };
     }
     
@@ -64,14 +63,30 @@ export async function exchangeDiscordAuthCode(authCode: string): Promise<{ succe
     
     const tokenData = await tokenResponse.json();
     
-    // For bot applications, we need to use the bot token from the application
-    // The OAuth flow for bots is different - typically the bot token is provided separately
-    // For now, we'll use demo mode since proper bot OAuth requires additional setup
-    console.log('Discord OAuth successful, using demo mode for bot connection');
+    // Get bot information from the API using the access token
+    const botInfoResponse = await fetch('https://discord.com/api/applications/@me', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    });
+    
+    if (!botInfoResponse.ok) {
+      console.error('Failed to get bot information');
+      return { success: false, error: 'Failed to get bot information' };
+    }
+    
+    const botInfo = await botInfoResponse.json();
+    
+    // For Discord bots, we need the actual bot token which is separate from OAuth
+    // The authorization code allows us to install the bot, but we still need the bot token
+    // This should be provided separately or retrieved from your Discord application
+    
+    console.log('Discord OAuth successful, but bot token needed');
+    console.log('Bot application info:', { id: botInfo.id, name: botInfo.name });
     
     return {
-      success: true,
-      botToken: 'demo-discord-token'
+      success: false,
+      error: 'OAuth successful, but bot token required. Please provide your Discord bot token directly.'
     };
   } catch (error) {
     console.error('Error exchanging Discord auth code:', error);

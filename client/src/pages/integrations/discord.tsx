@@ -926,21 +926,25 @@ const DiscordIntegration = () => {
           <DialogHeader>
             <DialogTitle>Complete Discord Setup</DialogTitle>
             <DialogDescription>
-              You can now complete your Discord bot setup. Authorization code is optional.
+              To complete setup, provide your Discord bot token from the Discord Developer Portal.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="authCode">Discord Authorization Code (Optional)</Label>
+              <Label htmlFor="authCode">Discord Bot Token</Label>
               <Input
                 id="authCode"
-                placeholder="Enter authorization code if you have one"
+                placeholder="Enter your Discord bot token (starts with 'MTC4...' or similar)"
                 value={authCode}
                 onChange={(e) => setAuthCode(e.target.value)}
+                type="password"
               />
               <p className="text-sm text-muted-foreground flex items-center">
                 <Lock className="h-3 w-3 mr-1" />
-                Your code is securely stored and encrypted if provided
+                Find this in your Discord Developer Portal under Bot settings
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Your bot token is securely stored and encrypted. This is different from the authorization code.
               </p>
             </div>
           </div>

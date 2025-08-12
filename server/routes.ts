@@ -957,35 +957,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const isAuthCode = req.body.authToken.length < 50 && !req.body.authToken.includes('.');
           
           if (isAuthCode) {
-            // This is an authorization code, we need to exchange it for bot access
-            console.log(`Received authorization code, exchanging for bot access...`);
+            // This is an authorization code - we need the actual bot token to proceed
+            console.log(`Received authorization code. Bot token required for Discord connection.`);
             
-            try {
-              // Exchange authorization code for access token
-              const tokenResponse = await exchangeDiscordAuthCode(req.body.authToken);
-              
-              if (!tokenResponse.success) {
-                return res.status(400).json({ 
-                  message: "Failed to complete Discord setup. Please check your server ID and try again." 
-                });
-              }
-              
-              // Now initialize bot with the obtained bot token
-              const result = await initializeDiscordBot(platformId, tokenResponse.botToken);
-              
-              if (!result.success) {
-                return res.status(400).json({ 
-                  message: "Failed to complete Discord setup. Please check your server ID and try again." 
-                });
-              }
-              
-              console.log(`Discord bot connected successfully for platform ${platformId}`);
-            } catch (error) {
-              console.error('Discord setup error:', error);
-              return res.status(400).json({ 
-                message: "Failed to complete Discord setup. Please check your server ID and try again." 
-              });
-            }
+            return res.status(400).json({ 
+              message: "Authorization successful! However, to complete the Discord setup, you need to provide your Discord bot token. You can find this in your Discord Developer Portal under Bot settings." 
+            });
           } else {
             // This is a direct bot token
             const result = await initializeDiscordBot(platformId, req.body.authToken);
