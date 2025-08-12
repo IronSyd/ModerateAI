@@ -542,7 +542,7 @@ const DiscordIntegration = () => {
                           <span className="text-sm font-medium">{platform?.config?.botName || 'Loading...'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">{platform?.config?.totalServers > 1 ? 'Servers:' : 'Server:'}</span>
+                          <span className="text-sm text-muted-foreground">Server:</span>
                           <span className="text-sm font-medium">{platform?.config?.serverName || 'Loading...'}</span>
                         </div>
                         <div className="flex justify-between">

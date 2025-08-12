@@ -245,7 +245,7 @@ export function DiscordServerList({
                 <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">AI Config:</span>
-                    <span className="ml-2 font-medium">{getAiConfigName(server.aiConfigurationId)}</span>
+                    <span className="ml-2 font-medium">Not configured</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Knowledge Base:</span>
