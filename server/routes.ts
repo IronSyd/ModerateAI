@@ -833,6 +833,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate chat configurations for Discord platform
+  app.post("/api/platforms/:id/generate-chat-configurations", authMiddleware, async (req, res) => {
+    try {
+      const platformId = parseInt(req.params.id);
+      
+      // Verify platform belongs to user
+      const platform = await storage.getPlatform(platformId);
+      if (!platform || platform.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Platform not found" });
+      }
+      
+      // Only support Discord platforms
+      if (platform.type !== "discord") {
+        return res.status(400).json({ message: "This endpoint only supports Discord platforms" });
+      }
+      
+      const config = platform.config as any;
+      if (!config?.servers || !config?.channels) {
+        return res.status(400).json({ message: "Discord platform not properly configured with servers and channels" });
+      }
+      
+      // Create chat configurations for all text channels
+      let createdCount = 0;
+      for (const guild of config.servers) {
+        const guildChannels = config.channels.filter((channel: any) => 
+          channel.guildId === guild.id && channel.type === 'text'
+        );
+        
+        for (const channel of guildChannels) {
+          const serverChannelId = `${guild.id}_${channel.id}`;
+          
+          // Check if configuration already exists
+          const existingConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, serverChannelId);
+          
+          if (!existingConfig) {
+            await storage.createChatConfiguration({
+              platformId,
+              externalId: serverChannelId,
+              chatType: 'server',
+              chatName: `${guild.name}/${channel.name}`,
+              aiConfigurationId: null, // Will use default
+              knowledgeBaseId: null, // Will use default
+              settings: {
+                respondToMentions: true,
+                respondToCommands: true,
+                privateResponses: false,
+                contentFilteringEnabled: true,
+                proactiveResponses: true
+              },
+              isActive: true
+            });
+            createdCount++;
+            console.log(`Created Discord chat config: ${guild.name}/${channel.name}`);
+          }
+        }
+      }
+      
+      res.json({ message: `Generated ${createdCount} new server configurations`, count: createdCount });
+    } catch (error: any) {
+      console.error("Error generating chat configurations:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Platforms
   app.get("/api/platforms", authMiddleware, async (req, res) => {
     try {

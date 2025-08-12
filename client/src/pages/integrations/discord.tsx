@@ -730,12 +730,30 @@ const DiscordIntegration = () => {
             <CardFooter className="flex justify-end">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  toast({
-                    title: "Refreshing configurations",
-                    description: "Checking for new Discord servers and channels."
-                  });
-                  queryClient.invalidateQueries({ queryKey: [`/api/platforms/${discordPlatformId}/chat-configurations`] });
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/platforms/${discordPlatformId}/generate-chat-configurations`, {
+                      method: 'POST',
+                      credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                      const result = await response.json();
+                      toast({
+                        title: "Success",
+                        description: `${result.message || 'Generated chat configurations successfully'}`
+                      });
+                      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${discordPlatformId}/chat-configurations`] });
+                    } else {
+                      throw new Error('Failed to generate configurations');
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "Error",
+                      description: "Failed to generate server configurations. Please try again.",
+                      variant: "destructive"
+                    });
+                  }
                 }}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
