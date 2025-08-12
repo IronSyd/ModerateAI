@@ -17,7 +17,7 @@ import {
   users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations, emailWhitelist, chatHistory, trainingInsights
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, ne, asc, desc, count, sql, ilike } from "drizzle-orm";
+import { eq, and, or, ne, asc, desc, count, sql, ilike, inArray } from "drizzle-orm";
 import type { QueryResult } from 'pg';
 
 export interface IStorage {
@@ -330,6 +330,19 @@ export class MemStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
+  }
+
+  async updateUser(id: number, user: Partial<User>): Promise<User | undefined> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) return undefined;
+    
+    const updatedUser = { ...existingUser, ...user };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
   }
 
   // Platform operations
@@ -684,6 +697,162 @@ export class MemStorage implements IStorage {
   async deleteWebsiteConfiguration(id: number): Promise<boolean> {
     return false;
   }
+
+  // Email Whitelist operations
+  async isEmailWhitelisted(email: string): Promise<boolean> {
+    return email === "demo@example.com"; // For demo purposes
+  }
+
+  async addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist> {
+    return { 
+      id: 1, 
+      email, 
+      addedBy: addedBy || null, 
+      isActive: true, 
+      createdAt: new Date() 
+    } as EmailWhitelist;
+  }
+
+  async removeEmailFromWhitelist(email: string): Promise<boolean> {
+    return true;
+  }
+
+  async getWhitelistedEmails(): Promise<EmailWhitelist[]> {
+    return [];
+  }
+
+  async getEmailsWhitelistedBy(userId: number): Promise<EmailWhitelist[]> {
+    return [];
+  }
+
+  // Chat Configuration operations
+  async getChatConfiguration(id: number): Promise<ChatConfiguration | undefined> {
+    return undefined;
+  }
+
+  async getChatConfigurationByPlatformAndExternalId(platformId: number, externalId: string): Promise<ChatConfiguration | undefined> {
+    return undefined;
+  }
+
+  async getChatConfigurationsByPlatformId(platformId: number): Promise<ChatConfiguration[]> {
+    return [];
+  }
+
+  async createChatConfiguration(chatConfig: InsertChatConfiguration): Promise<ChatConfiguration> {
+    return {
+      id: 1,
+      platformId: chatConfig.platformId,
+      externalId: chatConfig.externalId,
+      chatType: chatConfig.chatType,
+      chatName: chatConfig.chatName || null,
+      aiConfigurationId: chatConfig.aiConfigurationId || null,
+      knowledgeBaseId: chatConfig.knowledgeBaseId || null,
+      settings: chatConfig.settings || {},
+      isActive: chatConfig.isActive || true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as ChatConfiguration;
+  }
+
+  async updateChatConfiguration(id: number, chatConfig: Partial<ChatConfiguration>): Promise<ChatConfiguration | undefined> {
+    return undefined;
+  }
+
+  async deleteChatConfiguration(id: number): Promise<boolean> {
+    return false;
+  }
+
+  // Chat History operations
+  async getChatHistory(id: number): Promise<ChatHistory | undefined> {
+    return undefined;
+  }
+
+  async getChatHistoryByChatConfiguration(chatConfigId: number, limit?: number): Promise<ChatHistory[]> {
+    return [];
+  }
+
+  async getChatHistoryByPlatform(platformId: number, limit?: number): Promise<ChatHistory[]> {
+    return [];
+  }
+
+  async getAdminChatHistory(chatConfigId: number, limit?: number): Promise<ChatHistory[]> {
+    return [];
+  }
+
+  async createChatHistory(chatHistory: InsertChatHistory): Promise<ChatHistory> {
+    return {
+      id: 1,
+      chatConfigurationId: chatHistory.chatConfigurationId,
+      platformId: chatHistory.platformId,
+      externalUserId: chatHistory.externalUserId,
+      externalUsername: chatHistory.externalUsername || null,
+      messageId: chatHistory.messageId || null,
+      content: chatHistory.content,
+      messageType: chatHistory.messageType,
+      isAdmin: chatHistory.isAdmin || false,
+      replyToMessageId: chatHistory.replyToMessageId || null,
+      threadContext: chatHistory.threadContext || null,
+      metadata: chatHistory.metadata || null,
+      sentAt: chatHistory.sentAt,
+      isUsedForTraining: chatHistory.isUsedForTraining || false,
+      createdAt: new Date()
+    } as ChatHistory;
+  }
+
+  async updateChatHistory(id: number, chatHistory: Partial<ChatHistory>): Promise<ChatHistory | undefined> {
+    return undefined;
+  }
+
+  async deleteChatHistory(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async markChatHistoryForTraining(ids: number[]): Promise<boolean> {
+    return true;
+  }
+
+  // Training Insights operations
+  async getTrainingInsight(id: number): Promise<TrainingInsights | undefined> {
+    return undefined;
+  }
+
+  async getTrainingInsightsByUser(userId: number): Promise<TrainingInsights[]> {
+    return [];
+  }
+
+  async getTrainingInsightsByChatConfiguration(chatConfigId: number): Promise<TrainingInsights[]> {
+    return [];
+  }
+
+  async getActiveTrainingInsights(userId: number, insightType?: string): Promise<TrainingInsights[]> {
+    return [];
+  }
+
+  async createTrainingInsight(insight: InsertTrainingInsights): Promise<TrainingInsights> {
+    return {
+      id: 1,
+      userId: insight.userId,
+      chatConfigurationId: insight.chatConfigurationId || null,
+      insightType: insight.insightType,
+      pattern: insight.pattern,
+      context: insight.context || null,
+      confidence: insight.confidence || 50,
+      usageCount: insight.usageCount || 0,
+      successRate: insight.successRate || 0,
+      isActive: insight.isActive || true,
+      learnedFrom: insight.learnedFrom || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as TrainingInsights;
+  }
+
+  async updateTrainingInsight(id: number, insight: Partial<TrainingInsights>): Promise<TrainingInsights | undefined> {
+    return undefined;
+  }
+
+  async deleteTrainingInsight(id: number): Promise<boolean> {
+    return false;
+  }
 }
 
 /**
@@ -709,6 +878,20 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async updateUser(id: number, user: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(user)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return true;
   }
 
   async getPlatform(id: number): Promise<Platform | undefined> {

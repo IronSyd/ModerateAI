@@ -50,11 +50,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { eq } = await import("drizzle-orm");
       const { db } = await import("./db");
       
-      const hashedPassword = await hashPassword("demo123");
-      
-      await db.update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.username, "demo"));
+      // Email-only auth now, password not needed
+      console.log("Demo user setup complete (email-only auth)");
       
       res.json({ success: true, message: "Demo password fixed" });
     } catch (error: any) {
