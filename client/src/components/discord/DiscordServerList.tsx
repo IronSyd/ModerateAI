@@ -182,6 +182,16 @@ export function DiscordServerList({
     return kb?.name || 'Unknown';
   };
 
+  const getAiConfigurationName = (server: ChatConfiguration) => {
+    if (server.aiConfiguration?.name) {
+      return server.aiConfiguration.name;
+    }
+    if (server.aiConfigurationId) {
+      return `Config #${server.aiConfigurationId}`;
+    }
+    return 'Not configured';
+  };
+
   if (!chatConfigurations || chatConfigurations.length === 0) {
     return (
       <div className="text-center py-8">
@@ -245,7 +255,7 @@ export function DiscordServerList({
                 <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">AI Config:</span>
-                    <span className="ml-2 font-medium">Not configured</span>
+                    <span className="ml-2 font-medium">{getAiConfigurationName(server)}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Knowledge Base:</span>
