@@ -9,6 +9,14 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## August 2025
+- **Successfully Implemented Real Discord Bot Integration** (August 12, 2025):
+  - Fixed OAuth flow confusion between authorization codes and bot tokens for Discord setup
+  - Updated Discord setup process to properly request Discord bot tokens instead of authorization codes
+  - Modified frontend interface to clearly explain Discord bot token requirements with password input field
+  - Successfully connected real Discord bot to user's "Michael Test" server with 10 members
+  - Bot is actively responding to messages in multiple channels including "general" and "💬┃general"
+  - Real-time message moderation and AI responses working correctly on live Discord server
+  - Updated setup dialog messaging to guide users to Discord Developer Portal for bot token retrieval
 - **Implemented Quote/Reply Functionality and Fixed Bot Response Configuration** (August 11, 2025):
   - Enhanced Telegram bot to always quote/reply to original messages using reply_to_message_id for better conversation context
   - Improved Discord bot private responses to include quoted original message formatting
