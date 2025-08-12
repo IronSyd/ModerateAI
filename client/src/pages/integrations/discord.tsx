@@ -288,9 +288,7 @@ const DiscordIntegration = () => {
   const [authCode, setAuthCode] = useState("");
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [updatedChannels, setUpdatedChannels] = useState<DiscordChannel[]>([]);
-  // Add state for settings
-  const [automaticWarnings, setAutomaticWarnings] = useState(true);
-  const [logModerationActions, setLogModerationActions] = useState(true);
+  // Add state for settings (currently none needed)
   
   // Check if user is authenticated
   useEffect(() => {
@@ -570,11 +568,7 @@ const DiscordIntegration = () => {
     }
     
     // Initialize settings from platform config when it loads
-    if (platform?.config) {
-      // Moderation settings
-      setAutomaticWarnings(platform.config.automaticWarnings ?? true);
-      setLogModerationActions(platform.config.logModerationActions ?? true);
-    }
+    // Currently no settings to initialize
   }, [platform]);
 
   // Use channels from the updatedChannels state or fallback to demo channels
@@ -928,50 +922,15 @@ const DiscordIntegration = () => {
                   />
                 </div>
               </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Moderation</h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="content-filtering">Content Filtering</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Moderate inappropriate content
-                    </p>
-                  </div>
-                  <Switch 
-                    id="content-filtering"
-                    checked={automaticWarnings} 
-                    onCheckedChange={setAutomaticWarnings}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="action-logging">Action Logging</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Log moderation actions
-                    </p>
-                  </div>
-                  <Switch 
-                    id="action-logging"
-                    checked={logModerationActions} 
-                    onCheckedChange={setLogModerationActions}
-                  />
-                </div>
-              </div>
             </CardContent>
             <CardFooter>
               <Button 
                 className="ml-auto" 
                 onClick={() => {
-                  // Save all settings to the database
-                  updateBotConfigMutation.mutate({
-                    // Response and moderation settings
-                    automaticWarnings,
-                    logModerationActions
+                  // No settings to save currently
+                  toast({
+                    title: "Settings Saved",
+                    description: "Discord bot settings have been saved successfully.",
                   });
                 }}
               >
