@@ -27,7 +27,6 @@ interface DiscordConfig {
   // Response settings
   respondToCommands?: boolean;
   respondToMentions?: boolean;
-  privateResponses?: boolean;
   
   // Moderation settings
   contentFiltering?: boolean;
@@ -297,7 +296,6 @@ const DiscordIntegration = () => {
   // Add state for settings
   const [respondToCommands, setRespondToCommands] = useState(true);
   const [respondToMentions, setRespondToMentions] = useState(true);
-  const [privateResponses, setPrivateResponses] = useState(true);
   const [contentFiltering, setContentFiltering] = useState(true);
   const [automaticWarnings, setAutomaticWarnings] = useState(true);
   const [logModerationActions, setLogModerationActions] = useState(true);
@@ -585,7 +583,6 @@ const DiscordIntegration = () => {
       // Response settings
       setRespondToCommands(platform.config.respondToCommands ?? true);
       setRespondToMentions(platform.config.respondToMentions ?? true);
-      setPrivateResponses(platform.config.privateResponses ?? true);
       
       // Moderation settings
       setContentFiltering(platform.config.contentFiltering ?? true);
@@ -945,19 +942,6 @@ const DiscordIntegration = () => {
                   <Switch 
                     checked={respondToMentions} 
                     onCheckedChange={setRespondToMentions}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Private Responses</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Send sensitive responses as DMs
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={privateResponses} 
-                    onCheckedChange={setPrivateResponses}
                   />
                 </div>
               </div>
