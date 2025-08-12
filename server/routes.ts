@@ -8,7 +8,7 @@ import {
   generateImprovedSystemPrompt
 } from "./lib/openai";
 import { initializeBot as initializeTelegramBot, disconnectBot as disconnectTelegramBot, initializeAllBots as initializeAllTelegramBots } from "./lib/telegram";
-import { initializeBot as initializeDiscordBot, disconnectBot as disconnectDiscordBot, initializeAllBots as initializeAllDiscordBots, refreshChannels as refreshDiscordChannels } from "./lib/discord";
+import { initializeBot as initializeDiscordBot, disconnectBot as disconnectDiscordBot, initializeAllBots as initializeAllDiscordBots, refreshChannels as refreshDiscordChannels, exchangeDiscordAuthCode } from "./lib/discord";
 import { setupAuth } from "./auth";
 import testEmailRoutes from "./test-email";
 import trainingRoutes from "./routes/training";
@@ -949,21 +949,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Special handling for Discord platform
       if (platform.type === "discord") {
-        // Check if we're activating with a token
+        // Check if we're completing setup with an authorization code
         if (req.body.status === "active" && req.body.authToken) {
-          console.log(`Attempting to connect Discord bot for platform ${platformId}`);
+          console.log(`Attempting to complete Discord setup for platform ${platformId}`);
           
-          // Validate and initialize the bot
-          const result = await initializeDiscordBot(platformId, req.body.authToken);
+          // Check if this looks like an authorization code (not a bot token)
+          const isAuthCode = req.body.authToken.length < 50 && !req.body.authToken.includes('.');
           
-          // If failed, return error
-          if (!result.success) {
-            return res.status(400).json({ 
-              message: result.message || "Failed to connect Discord bot" 
-            });
+          if (isAuthCode) {
+            // This is an authorization code, we need to exchange it for bot access
+            console.log(`Received authorization code, exchanging for bot access...`);
+            
+            try {
+              // Exchange authorization code for access token
+              const tokenResponse = await exchangeDiscordAuthCode(req.body.authToken);
+              
+              if (!tokenResponse.success) {
+                return res.status(400).json({ 
+                  message: "Failed to complete Discord setup. Please check your server ID and try again." 
+                });
+              }
+              
+              // Now initialize bot with the obtained bot token
+              const result = await initializeDiscordBot(platformId, tokenResponse.botToken);
+              
+              if (!result.success) {
+                return res.status(400).json({ 
+                  message: "Failed to complete Discord setup. Please check your server ID and try again." 
+                });
+              }
+              
+              console.log(`Discord bot connected successfully for platform ${platformId}`);
+            } catch (error) {
+              console.error('Discord setup error:', error);
+              return res.status(400).json({ 
+                message: "Failed to complete Discord setup. Please check your server ID and try again." 
+              });
+            }
+          } else {
+            // This is a direct bot token
+            const result = await initializeDiscordBot(platformId, req.body.authToken);
+            
+            if (!result.success) {
+              return res.status(400).json({ 
+                message: result.message || "Failed to connect Discord bot" 
+              });
+            }
+            
+            console.log(`Discord bot connected successfully for platform ${platformId}`);
           }
-          
-          console.log(`Discord bot connected successfully for platform ${platformId}`);
         } 
         // Check if we're disconnecting
         else if (platform.status === "active" && req.body.status === "not_connected") {
