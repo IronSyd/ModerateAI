@@ -335,7 +335,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
           let enhancedSystemPrompt = activeConfig?.systemPrompt || 'You are a helpful assistant.';
           if (contextualInsights.length > 0) {
             const insightsText = contextualInsights.map(insight => 
-              `- ${insight.pattern} (confidence: ${insight.confidence}%)`
+              `- ${insight.pattern} (confidence: ${Math.round(insight.confidence * 100)}%)`
             ).join('\n');
             
             enhancedSystemPrompt += `\n\nBased on previous admin interactions in this chat, please consider these learned patterns:\n${insightsText}`;

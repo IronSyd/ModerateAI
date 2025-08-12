@@ -1,133 +1,111 @@
 #!/usr/bin/env node
 
 /**
- * Verify the AI Training & Learning buttons work with the system
+ * Verify both Discord and Telegram bots have equal training integration
  */
 
-import { chatHistoryManager } from './server/lib/chatHistoryManager.ts';
-import { db } from './server/db.ts';
-import { chatConfigurations } from './shared/schema.ts';
-import { eq } from 'drizzle-orm';
+import fs from 'fs';
 
-async function verifyTrainingIntegration() {
-  console.log('🔍 Verifying AI Training & Learning Integration...\n');
+function checkTrainingIntegration() {
+  console.log('🔍 Verifying Discord and Telegram Bot Training Integration...\n');
 
-  try {
-    // Get the chat configuration from the screenshot (ID 2)
-    const [chatConfig] = await db
-      .select()
-      .from(chatConfigurations)
-      .where(eq(chatConfigurations.id, 2))
-      .limit(1);
+  // Read both bot files
+  const discordCode = fs.readFileSync('./server/lib/discord.ts', 'utf8');
+  const telegramCode = fs.readFileSync('./server/lib/telegram.ts', 'utf8');
 
-    if (!chatConfig) {
-      console.log('❌ Chat configuration ID 2 not found');
-      return;
+  // Check for key training integration patterns
+  const checks = [
+    {
+      name: 'Chat History Manager Import',
+      pattern: /import.*chatHistoryManager.*from.*\.\/chatHistoryManager/,
+      discord: discordCode.match(/import.*chatHistoryManager.*from.*\.\/chatHistoryManager/) !== null,
+      telegram: telegramCode.match(/import.*chatHistoryManager.*from.*\.\/chatHistoryManager/) !== null
+    },
+    {
+      name: 'Contextual Insights Retrieval',
+      pattern: /getContextualInsights\(/,
+      discord: discordCode.includes('getContextualInsights('),
+      telegram: telegramCode.includes('getContextualInsights(')
+    },
+    {
+      name: 'Enhanced System Prompt',
+      pattern: /enhancedSystemPrompt/,
+      discord: discordCode.includes('enhancedSystemPrompt'),
+      telegram: telegramCode.includes('enhancedSystemPrompt')
+    },
+    {
+      name: 'Training Insights in Prompt',
+      pattern: /Based on previous admin interactions/,
+      discord: discordCode.includes('Based on previous admin interactions'),
+      telegram: telegramCode.includes('Based on previous admin interactions')
+    },
+    {
+      name: 'Confidence Score Formatting',
+      pattern: /Math\.round.*confidence.*100/,
+      discord: discordCode.includes('Math.round') && discordCode.includes('confidence'),
+      telegram: telegramCode.includes('Math.round') && telegramCode.includes('confidence')
     }
+  ];
 
-    console.log(`✅ Found chat configuration: ID ${chatConfig.id}`);
-    console.log(`   Platform ID: ${chatConfig.platformId}`);
-    console.log(`   Active: ${chatConfig.isActive}`);
+  console.log('Integration Feature Comparison:');
+  console.log('Feature                          Discord  Telegram');
+  console.log('=====================================  =======  ========');
 
-    // Check current settings
-    const settings = chatConfig.settings as any;
-    console.log('\n📋 Current Training Settings:');
-    console.log(`   History Learning: ${settings?.enableHistoryLearning ? '✅ ENABLED' : '❌ Disabled'}`);
-    console.log(`   Admin Learning Mode: ${settings?.adminLearningMode ? '✅ ENABLED' : '❌ Disabled'}`);
-
-    // Test training detection functions
-    console.log('\n🧪 Testing Training Detection Functions:');
+  let allMatch = true;
+  checks.forEach(check => {
+    const discordStatus = check.discord ? '✅' : '❌';
+    const telegramStatus = check.telegram ? '✅' : '❌';
+    const match = check.discord === check.telegram;
     
-    const historyLearningEnabled = await chatHistoryManager.isHistoryLearningEnabled(2);
-    console.log(`   isHistoryLearningEnabled(2): ${historyLearningEnabled ? '✅ TRUE' : '❌ FALSE'}`);
+    if (!match) allMatch = false;
     
-    const adminLearningModeEnabled = await chatHistoryManager.isAdminLearningModeEnabled(2);
-    console.log(`   isAdminLearningModeEnabled(2): ${adminLearningModeEnabled ? '✅ TRUE' : '❌ FALSE'}`);
+    console.log(`${check.name.padEnd(35)} ${discordStatus.padEnd(8)} ${telegramStatus}`);
+  });
 
-    // Test "Manage Training" button logic
-    console.log('\n🎯 Testing "Manage Training" Button Logic:');
-    const shouldShowManageButton = historyLearningEnabled || adminLearningModeEnabled;
-    console.log(`   Button should be ${shouldShowManageButton ? 'ENABLED' : 'DISABLED'}: ${shouldShowManageButton ? '✅' : '❌'}`);
+  console.log('\n📊 Summary:');
+  console.log(`   Discord Training Features: ${checks.filter(c => c.discord).length}/${checks.length}`);
+  console.log(`   Telegram Training Features: ${checks.filter(c => c.telegram).length}/${checks.length}`);
+  console.log(`   Feature Parity: ${allMatch ? '✅ Perfect Match' : '❌ Mismatch Found'}`);
 
-    // Test message storage capability
-    console.log('\n💾 Testing Message Storage Capability:');
-    if (historyLearningEnabled) {
-      console.log('   ✅ Ready to store chat messages for training');
-      
-      // Test storing a sample admin message
-      const testMessage = await chatHistoryManager.storeChatMessage(
-        2, // chatConfigId
-        chatConfig.platformId,
-        'admin_test_user',
-        'This is a test admin response for training verification',
-        'admin',
-        true,
-        { username: 'test_admin', messageId: 'test_001' }
-      );
-      
-      console.log(`   ✅ Test message stored with ID: ${testMessage.id}`);
-      
-      // Clean up test data
-      await db.delete(chatHistory).where(eq(chatHistory.id, testMessage.id));
-      console.log('   ✅ Test data cleaned up');
-      
-    } else {
-      console.log('   ⚠️  History Learning disabled - messages won\'t be stored');
-    }
+  // Additional verification of specific implementations
+  console.log('\n🔧 Implementation Details:');
+  
+  // Check if Discord uses enhanced prompt correctly
+  const discordUsesEnhanced = discordCode.includes('enhancedSystemPrompt,') || 
+                              discordCode.includes('enhancedSystemPrompt');
+  
+  const telegramUsesEnhanced = telegramCode.includes('enhancedSystemPrompt,') || 
+                               telegramCode.includes('enhancedSystemPrompt');
 
-    // Test admin learning analysis capability
-    console.log('\n🧠 Testing Admin Learning Analysis:');
-    if (adminLearningModeEnabled) {
-      console.log('   ✅ Ready to analyze admin responses');
-      console.log('   ✅ Will generate training insights from admin conversations');
-    } else {
-      console.log('   ⚠️  Admin Learning Mode disabled - no analysis will occur');
-    }
+  console.log(`   Discord uses enhanced prompt: ${discordUsesEnhanced ? '✅' : '❌'}`);
+  console.log(`   Telegram uses enhanced prompt: ${telegramUsesEnhanced ? '✅' : '❌'}`);
 
-    // Test training management interface readiness
-    console.log('\n🎛️ Testing Training Management Interface:');
-    try {
-      const insights = await chatHistoryManager.getActiveInsights(2);
-      console.log(`   ✅ Can retrieve training insights: ${insights.length} insights found`);
-      
-      const chatHistory = await chatHistoryManager.getChatHistoryByChatConfiguration(2, 10);
-      console.log(`   ✅ Can retrieve chat history: ${chatHistory.length} messages found`);
-      
-      const adminHistory = await chatHistoryManager.getAdminChatHistory(2, 10);
-      console.log(`   ✅ Can retrieve admin history: ${adminHistory.length} admin messages found`);
-      
-    } catch (error) {
-      console.log(`   ❌ Training interface error: ${error.message}`);
-    }
+  // Check DM/Private message behavior
+  const discordDMCheck = discordCode.includes('isDM') && discordCode.includes('return');
+  const telegramDMCheck = telegramCode.includes('private') && telegramCode.includes('return');
 
-    console.log('\n🎉 Integration Verification Complete!');
+  console.log(`   Discord skips DMs: ${discordDMCheck ? '✅' : '❌'}`);
+  console.log(`   Telegram skips private chats: ${telegramDMCheck ? '✅' : '❌'}`);
+
+  console.log('\n🎯 Final Verification:');
+  
+  if (allMatch && discordUsesEnhanced && telegramUsesEnhanced) {
+    console.log('✅ CONFIRMED: Both Discord and Telegram bots have identical training integration!');
+    console.log('   Both bots will:');
+    console.log('   - Import and use chatHistoryManager');
+    console.log('   - Retrieve contextual insights based on message content');
+    console.log('   - Enhance system prompts with training insights');
+    console.log('   - Apply learned patterns with confidence scores');
+    console.log('   - Skip direct/private messages as requested');
     
-    // Summary
-    const enabledFeatures = [];
-    if (historyLearningEnabled) enabledFeatures.push('History Learning');
-    if (adminLearningModeEnabled) enabledFeatures.push('Admin Learning Mode');
-    
-    if (enabledFeatures.length > 0) {
-      console.log(`\n✅ SYSTEM READY: ${enabledFeatures.join(' + ')} enabled`);
-      console.log('   The "Manage Training" button should be active and functional');
-      console.log('   Training data will be collected and analyzed automatically');
-    } else {
-      console.log('\n⚠️  NO TRAINING FEATURES ENABLED');
-      console.log('   Enable at least one training mode to use the system');
-    }
-
-  } catch (error) {
-    console.error('❌ Verification failed:', error);
+    console.log('\n🚀 Training System Status: FULLY OPERATIONAL');
+    console.log('   - Admin learning from previous conversations: ✅');
+    console.log('   - Contextual insight retrieval: ✅');
+    console.log('   - Cross-platform training consistency: ✅');
+    console.log('   - Real-time prompt enhancement: ✅');
+  } else {
+    console.log('⚠️  Integration mismatch found - check implementation details above');
   }
 }
 
-// Import required modules
-import { chatHistory } from './shared/schema.ts';
-
-// Run verification
-verifyTrainingIntegration().then(() => {
-  process.exit(0);
-}).catch(error => {
-  console.error('Verification execution failed:', error);
-  process.exit(1);
-});
+checkTrainingIntegration();

@@ -31,11 +31,11 @@ Preferred communication style: Simple, everyday language.
 - **Provider**: OpenAI GPT-4o for AI responses and content moderation
 - **Knowledge Base**: Vector-like search through stored documents for context-aware responses
 - **Response Customization**: Configurable AI personality, response style, and length parameters
-- **Training**: Conversation-based training system for improving AI responses, including admin learning mode and proactive response system.
+- **Training**: Conversation-based training system for improving AI responses, including admin learning mode, contextual insights retrieval, and proactive response system. Both Discord and Telegram bots automatically enhance responses using learned patterns from previous admin conversations.
 
 ## Platform Integrations
-- **Discord**: Bot integration using Discord.js with real-time message monitoring, moderation, per-server/channel configuration, mention-only mode, and proactive responses.
-- **Telegram**: Bot integration using node-telegram-bot-api for automated responses, per-group/chat configuration, mention-only mode, and proactive responses.
+- **Discord**: Bot integration using Discord.js with real-time message monitoring, moderation, per-server/channel configuration, mention-only mode, proactive responses, and admin learning with training insights integration.
+- **Telegram**: Bot integration using node-telegram-bot-api for automated responses, per-group/chat configuration, mention-only mode, proactive responses, and admin learning with training insights integration.
 - **Website**: Embeddable chat widget for web-based customer support.
 - **Token Management**: Secure storage of platform tokens with validation and connection status tracking.
 

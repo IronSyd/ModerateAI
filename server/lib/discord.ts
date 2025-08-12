@@ -11,6 +11,7 @@ import {
   DMChannel
 } from 'discord.js';
 import { storage } from '../storage';
+import { chatHistoryManager } from './chatHistoryManager';
 import { moderateContent, generateAIResponse } from './openai';
 
 // Map of platform IDs to Discord clients
@@ -399,8 +400,22 @@ export async function initializeBot(platformId: number, token: string): Promise<
               content: msg.content
             }));
             
-            // Default system prompt if none is configured
-            const systemPrompt = aiConfig?.systemPrompt || 'You are a helpful assistant for Discord. Provide concise and accurate responses.';
+            // Get contextual training insights for this message
+            const contextualInsights = await chatHistoryManager.getContextualInsights(
+              chatConfig.id,
+              message.content,
+              { conversationHistory, chatType: 'server' }
+            );
+            
+            // Enhance system prompt with training insights if available
+            let enhancedSystemPrompt = aiConfig?.systemPrompt || 'You are a helpful assistant for Discord. Provide concise and accurate responses.';
+            if (contextualInsights.length > 0) {
+              const insightsText = contextualInsights.map(insight => 
+                `- ${insight.pattern} (confidence: ${Math.round(insight.confidence * 100)}%)`
+              ).join('\n');
+              
+              enhancedSystemPrompt += `\n\nBased on previous admin interactions in this server, please consider these learned patterns:\n${insightsText}`;
+            }
             
             // Generate AI response with knowledge base if available
             let aiResponse;
@@ -409,7 +424,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
               aiResponse = await generateKnowledgeBasedResponse(
                 message.content,
                 conversationHistory,
-                systemPrompt,
+                enhancedSystemPrompt,
                 aiConfig?.responseStyle || 50,
                 aiConfig?.responseLength || 50,
                 userId
@@ -419,7 +434,7 @@ export async function initializeBot(platformId: number, token: string): Promise<
               aiResponse = await generateAIResponse(
                 message.content,
                 conversationHistory,
-                systemPrompt,
+                enhancedSystemPrompt,
                 aiConfig?.responseStyle || 50,
                 aiConfig?.responseLength || 50
               );
