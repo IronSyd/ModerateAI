@@ -586,13 +586,7 @@ const DiscordIntegration = () => {
                             {platform?.config?.channels?.filter((c: DiscordChannel) => c.type === "text").length}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <MessagesSquare className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">Today's Messages</span>
-                          </div>
-                          <span className="text-sm font-medium">{platform?.config?.dailyMessages || '0'}</span>
-                        </div>
+
                       </div>
                     </div>
                   </div>
