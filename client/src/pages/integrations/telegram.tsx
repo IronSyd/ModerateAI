@@ -679,24 +679,7 @@ const TelegramIntegration = () => {
     }
   }, [user]);
   
-  // Initialize moderation settings from platform config
-  useEffect(() => {
-    if ((platform as any)?.config) {
-      // Set content filtering
-      setContentFilteringEnabled(
-        (platform as any).config.contentFilteringEnabled !== undefined 
-          ? (platform as any).config.contentFilteringEnabled 
-          : true
-      );
-      
-      // Set spam protection
-      setSpamProtectionEnabled(
-        (platform as any).config.spamProtectionEnabled !== undefined 
-          ? (platform as any).config.spamProtectionEnabled 
-          : true
-      );
-    }
-  }, [platform]);
+  // Removed moderation settings initialization
   
   // Manual login function
   const loginManually = async () => {
