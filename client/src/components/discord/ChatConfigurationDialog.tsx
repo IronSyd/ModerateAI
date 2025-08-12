@@ -50,6 +50,11 @@ interface ChatConfiguration {
     enableHistoryLearning?: boolean;
     adminLearningMode?: boolean;
     welcomeMessage?: string;
+    respondToMentions?: boolean;
+    respondToCommands?: boolean;
+    privateResponses?: boolean;
+    enabledChannels?: { [channelId: string]: boolean };
+    totalChannels?: number;
   };
   isActive: boolean;
   createdAt: string;
@@ -75,57 +80,59 @@ interface KnowledgeBase {
 interface ChatConfigurationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  chatConfig: ChatConfiguration | null;
+  chatConfiguration: ChatConfiguration;
   aiConfigurations: AiConfiguration[];
   knowledgeBases: KnowledgeBase[];
+  platformId: number;
 }
 
 export function ChatConfigurationDialog({
   open,
   onOpenChange,
-  chatConfig,
+  chatConfiguration,
   aiConfigurations,
   knowledgeBases,
+  platformId,
 }: ChatConfigurationDialogProps) {
   const { toast } = useToast();
   const [showTrainingDialog, setShowTrainingDialog] = useState(false);
 
   const form = useForm({
     defaultValues: {
-      aiConfigurationId: chatConfig?.aiConfigurationId || '',
-      knowledgeBaseId: chatConfig?.knowledgeBaseId || '',
-      isActive: chatConfig?.isActive || false,
-      contentFilteringEnabled: chatConfig?.settings?.contentFilteringEnabled !== false,
-      spamProtectionEnabled: chatConfig?.settings?.spamProtectionEnabled !== false,
-      mentionOnlyMode: chatConfig?.settings?.mentionOnlyMode !== false,
-      proactiveResponses: chatConfig?.settings?.proactiveResponses !== false,
-      enableHistoryLearning: chatConfig?.settings?.enableHistoryLearning || false,
-      adminLearningMode: chatConfig?.settings?.adminLearningMode || false,
-      welcomeMessage: chatConfig?.settings?.welcomeMessage || ''
+      aiConfigurationId: chatConfiguration?.aiConfigurationId || '',
+      knowledgeBaseId: chatConfiguration?.knowledgeBaseId || '',
+      isActive: chatConfiguration?.isActive || false,
+      contentFilteringEnabled: chatConfiguration?.settings?.contentFilteringEnabled !== false,
+      proactiveResponses: chatConfiguration?.settings?.proactiveResponses !== false,
+      respondToMentions: chatConfiguration?.settings?.respondToMentions !== false,
+      respondToCommands: chatConfiguration?.settings?.respondToCommands !== false,
+      privateResponses: chatConfiguration?.settings?.privateResponses || false,
+      enableHistoryLearning: chatConfiguration?.settings?.enableHistoryLearning || false,
+      adminLearningMode: chatConfiguration?.settings?.adminLearningMode || false,
     }
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!chatConfig) return;
-      return fetch(`/api/chat-configurations/${chatConfig.id}`, {
+      return fetch(`/api/chat-configurations/${chatConfiguration.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          aiConfigurationId: data.aiConfigurationId,
-          knowledgeBaseId: data.knowledgeBaseId,
+          aiConfigurationId: data.aiConfigurationId ? parseInt(data.aiConfigurationId) : null,
+          knowledgeBaseId: data.knowledgeBaseId ? parseInt(data.knowledgeBaseId) : null,
           isActive: data.isActive,
           settings: {
+            ...chatConfiguration?.settings, // Preserve existing settings like enabledChannels
             contentFilteringEnabled: data.contentFilteringEnabled,
-            spamProtectionEnabled: data.spamProtectionEnabled,
-            mentionOnlyMode: data.mentionOnlyMode,
             proactiveResponses: data.proactiveResponses,
+            respondToMentions: data.respondToMentions,
+            respondToCommands: data.respondToCommands,
+            privateResponses: data.privateResponses,
             enableHistoryLearning: data.enableHistoryLearning,
             adminLearningMode: data.adminLearningMode,
-            welcomeMessage: data.welcomeMessage
           }
         })
       }).then(res => res.json());
@@ -133,10 +140,9 @@ export function ChatConfigurationDialog({
     onSuccess: () => {
       toast({
         title: "Configuration updated",
-        description: "Discord server/channel settings have been saved successfully.",
+        description: "Discord server settings have been saved successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${chatConfig?.id}/chat-configurations`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${platformId}/chat-configurations`] });
       onOpenChange(false);
     },
     onError: () => {
@@ -153,31 +159,31 @@ export function ChatConfigurationDialog({
   };
 
   React.useEffect(() => {
-    if (chatConfig) {
+    if (chatConfiguration) {
       form.reset({
-        aiConfigurationId: chatConfig.aiConfigurationId || '',
-        knowledgeBaseId: chatConfig.knowledgeBaseId || '',
-        isActive: chatConfig.isActive,
-        contentFilteringEnabled: chatConfig.settings?.contentFilteringEnabled !== false,
-        spamProtectionEnabled: chatConfig.settings?.spamProtectionEnabled !== false,
-        mentionOnlyMode: chatConfig.settings?.mentionOnlyMode !== false,
-        proactiveResponses: chatConfig.settings?.proactiveResponses !== false,
-        enableHistoryLearning: chatConfig.settings?.enableHistoryLearning || false,
-        adminLearningMode: chatConfig.settings?.adminLearningMode || false,
-        welcomeMessage: chatConfig.settings?.welcomeMessage || ''
+        aiConfigurationId: chatConfiguration.aiConfigurationId || '',
+        knowledgeBaseId: chatConfiguration.knowledgeBaseId || '',
+        isActive: chatConfiguration.isActive,
+        contentFilteringEnabled: chatConfiguration.settings?.contentFilteringEnabled !== false,
+        proactiveResponses: chatConfiguration.settings?.proactiveResponses !== false,
+        respondToMentions: chatConfiguration.settings?.respondToMentions !== false,
+        respondToCommands: chatConfiguration.settings?.respondToCommands !== false,
+        privateResponses: chatConfiguration.settings?.privateResponses || false,
+        enableHistoryLearning: chatConfiguration.settings?.enableHistoryLearning || false,
+        adminLearningMode: chatConfiguration.settings?.adminLearningMode || false,
       });
     }
-  }, [chatConfig, form]);
+  }, [chatConfiguration, form]);
 
-  if (!chatConfig) return null;
+  if (!chatConfiguration) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Configure Discord {chatConfig.chatType}</DialogTitle>
+          <DialogTitle>Configure Discord {chatConfiguration.chatType}</DialogTitle>
           <DialogDescription>
-            Customize AI behavior and moderation settings for "{chatConfig.chatName}"
+            Customize AI behavior and moderation settings for "{chatConfiguration.chatName}"
           </DialogDescription>
         </DialogHeader>
 
@@ -194,7 +200,7 @@ export function ChatConfigurationDialog({
                         Active
                       </FormLabel>
                       <FormDescription>
-                        Enable AI responses for this {chatConfig.chatType.toLowerCase()}
+                        Enable AI responses for this {chatConfiguration.chatType.toLowerCase()}
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -266,8 +272,71 @@ export function ChatConfigurationDialog({
               />
 
               <div className="space-y-4">
-                <h4 className="text-sm font-medium">Moderation Settings</h4>
+                <h4 className="text-sm font-medium">Response Settings</h4>
                 
+                <FormField
+                  control={form.control}
+                  name="respondToMentions"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Respond to Mentions</FormLabel>
+                        <FormDescription className="text-xs">
+                          Bot responds when mentioned with @ModerateAI
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="respondToCommands"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Respond to Commands</FormLabel>
+                        <FormDescription className="text-xs">
+                          Bot responds to slash commands and other bot interactions
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="privateResponses"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-sm">Private Responses</FormLabel>
+                        <FormDescription className="text-xs">
+                          Send responses as direct messages instead of in channels
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="contentFilteringEnabled"
@@ -277,48 +346,6 @@ export function ChatConfigurationDialog({
                         <FormLabel className="text-sm">Content Filtering</FormLabel>
                         <FormDescription className="text-xs">
                           Automatically detect and remove inappropriate content
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="spamProtectionEnabled"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm">Spam Protection</FormLabel>
-                        <FormDescription className="text-xs">
-                          Detect and prevent spam messages
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="mentionOnlyMode"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm">Mention Only Mode</FormLabel>
-                        <FormDescription className="text-xs">
-                          Only respond when the bot is mentioned in messages
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -395,26 +422,7 @@ export function ChatConfigurationDialog({
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="welcomeMessage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Welcome Message</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Optional welcome message for new members..."
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Message sent to new members when they join the server
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
             </div>
 
             <DialogFooter className="flex justify-between">
@@ -449,12 +457,12 @@ export function ChatConfigurationDialog({
       </DialogContent>
 
       {/* Training Management Dialog */}
-      {showTrainingDialog && chatConfig && (
+      {showTrainingDialog && chatConfiguration && (
         <TrainingManagementDialog
           isOpen={showTrainingDialog}
           onClose={() => setShowTrainingDialog(false)}
-          chatConfigId={chatConfig.id}
-          chatName={chatConfig.chatName || chatConfig.externalId}
+          chatConfigId={chatConfiguration.id}
+          chatName={chatConfiguration.chatName || chatConfiguration.externalId}
         />
       )}
     </Dialog>
