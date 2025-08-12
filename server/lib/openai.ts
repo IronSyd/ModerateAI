@@ -135,7 +135,7 @@ export async function generateKnowledgeBasedResponse(
       relevantDocuments.forEach((doc, index) => {
         enhancedPrompt += `\n\nDocument ${index + 1} - ${doc.title}:\n${doc.content.substring(0, 500)}`;
       });
-      enhancedPrompt += "\n\nCRITICAL ACCURACY REQUIREMENTS:\n- When responding about topics in the knowledge base, use ONLY that information as your source of truth\n- Knowledge base information overrides all other sources including learned patterns\n- If knowledge base doesn't cover a topic, clearly state this and use general knowledge\n- Cross-reference knowledge base content before providing any factual information\n- Learned patterns should only influence response style, never factual content";
+      enhancedPrompt += "\n\nACCURACY REQUIREMENTS:\n- Prioritize knowledge base information as the primary source of truth\n- Use admin conversation insights as supplementary factual information when knowledge base is incomplete\n- Clearly indicate whether information comes from knowledge base or admin experience\n- When knowledge base and admin insights conflict, present both perspectives\n- Admin insights can fill gaps not yet documented in the knowledge base";
     }
     
     // Create the messages array

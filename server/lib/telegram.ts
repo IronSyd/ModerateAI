@@ -334,19 +334,20 @@ export async function initializeBot(platformId: number, token: string): Promise<
           // Enhance system prompt with training insights if available
           let enhancedSystemPrompt = activeConfig?.systemPrompt || 'You are a helpful assistant.';
           
-          // Always prioritize knowledge base accuracy
-          enhancedSystemPrompt += `\n\nIMPORTANT ACCURACY GUIDELINES:
-1. ALWAYS prioritize official knowledge base information for factual accuracy
-2. Use learned patterns from admin conversations only for response style and approach
-3. If knowledge base information conflicts with learned patterns, follow the knowledge base
-4. Double-check all factual claims against available knowledge base content`;
+          // Combine knowledge base and admin insights for accuracy
+          enhancedSystemPrompt += `\n\nACCURACY GUIDELINES:
+1. Prioritize official knowledge base information when available
+2. Use validated admin conversation insights as supplementary factual information
+3. Admin insights can provide additional context not yet documented in knowledge base
+4. When knowledge base and admin insights conflict, note both perspectives
+5. Always indicate the source of information (knowledge base vs admin experience)`;
           
           if (contextualInsights.length > 0) {
             const insightsText = contextualInsights.map(insight => 
               `- ${insight.pattern} (confidence: ${Math.round(insight.confidence * 100)}%)`
             ).join('\n');
             
-            enhancedSystemPrompt += `\n\nLearned response patterns from admin interactions (use for style, not facts):\n${insightsText}`;
+            enhancedSystemPrompt += `\n\nValidated insights from admin interactions:\n${insightsText}`;
           }
           
           // Generate AI response with proper parameters - use knowledge-based response if knowledge base is available
