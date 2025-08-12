@@ -959,13 +959,7 @@ const DiscordIntegration = () => {
                 onClick={() => {
                   // Save all settings to the database
                   updateBotConfigMutation.mutate({
-                    // Response settings
-                    respondToCommands,
-                    respondToMentions,
-                    privateResponses,
-                    
                     // Moderation settings
-                    contentFiltering,
                     automaticWarnings,
                     logModerationActions,
                     moderationLogChannel

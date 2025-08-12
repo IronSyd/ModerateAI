@@ -43,16 +43,12 @@ interface ChatConfiguration {
   aiConfigurationId?: number;
   knowledgeBaseId?: number;
   settings?: {
-    contentFilteringEnabled?: boolean;
     spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
     proactiveResponses?: boolean;
     enableHistoryLearning?: boolean;
     adminLearningMode?: boolean;
     welcomeMessage?: string;
-    respondToMentions?: boolean;
-    respondToCommands?: boolean;
-    privateResponses?: boolean;
     enabledChannels?: { [channelId: string]: boolean };
     totalChannels?: number;
   };
@@ -94,11 +90,7 @@ export function ChatConfigurationDialog({
     defaultValues: {
       knowledgeBaseId: chatConfiguration?.knowledgeBaseId || null,
       isActive: chatConfiguration?.isActive || false,
-      contentFilteringEnabled: chatConfiguration?.settings?.contentFilteringEnabled !== false,
       proactiveResponses: chatConfiguration?.settings?.proactiveResponses !== false,
-      respondToMentions: chatConfiguration?.settings?.respondToMentions !== false,
-      respondToCommands: chatConfiguration?.settings?.respondToCommands !== false,
-      privateResponses: chatConfiguration?.settings?.privateResponses || false,
       enableHistoryLearning: chatConfiguration?.settings?.enableHistoryLearning || false,
       adminLearningMode: chatConfiguration?.settings?.adminLearningMode || false,
     }
@@ -117,11 +109,7 @@ export function ChatConfigurationDialog({
           isActive: data.isActive,
           settings: {
             ...chatConfiguration?.settings, // Preserve existing settings like enabledChannels
-            contentFilteringEnabled: data.contentFilteringEnabled,
             proactiveResponses: data.proactiveResponses,
-            respondToMentions: data.respondToMentions,
-            respondToCommands: data.respondToCommands,
-            privateResponses: data.privateResponses,
             enableHistoryLearning: data.enableHistoryLearning,
             adminLearningMode: data.adminLearningMode,
           }
@@ -154,11 +142,7 @@ export function ChatConfigurationDialog({
       form.reset({
         knowledgeBaseId: chatConfiguration.knowledgeBaseId || null,
         isActive: chatConfiguration.isActive,
-        contentFilteringEnabled: chatConfiguration.settings?.contentFilteringEnabled !== false,
         proactiveResponses: chatConfiguration.settings?.proactiveResponses !== false,
-        respondToMentions: chatConfiguration.settings?.respondToMentions !== false,
-        respondToCommands: chatConfiguration.settings?.respondToCommands !== false,
-        privateResponses: chatConfiguration.settings?.privateResponses || false,
         enableHistoryLearning: chatConfiguration.settings?.enableHistoryLearning || false,
         adminLearningMode: chatConfiguration.settings?.adminLearningMode || false,
       });
@@ -258,68 +242,7 @@ export function ChatConfigurationDialog({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="respondToCommands"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm">Respond to Commands</FormLabel>
-                        <FormDescription className="text-xs">
-                          Bot responds to slash commands and other bot interactions
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="privateResponses"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm">Private Responses</FormLabel>
-                        <FormDescription className="text-xs">
-                          Send responses as direct messages instead of in channels
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="contentFilteringEnabled"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm">Content Filtering</FormLabel>
-                        <FormDescription className="text-xs">
-                          Automatically detect and remove inappropriate content
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
