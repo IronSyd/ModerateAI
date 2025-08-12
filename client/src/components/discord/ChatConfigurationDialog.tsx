@@ -67,11 +67,6 @@ interface ChatConfiguration {
   };
 }
 
-interface AiConfiguration {
-  id: number;
-  name: string;
-}
-
 interface KnowledgeBase {
   id: number;
   name: string;
@@ -81,7 +76,6 @@ interface ChatConfigurationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   chatConfiguration: ChatConfiguration;
-  aiConfigurations: AiConfiguration[];
   knowledgeBases: KnowledgeBase[];
   platformId: number;
 }
@@ -90,7 +84,6 @@ export function ChatConfigurationDialog({
   open,
   onOpenChange,
   chatConfiguration,
-  aiConfigurations,
   knowledgeBases,
   platformId,
 }: ChatConfigurationDialogProps) {
@@ -99,7 +92,6 @@ export function ChatConfigurationDialog({
 
   const form = useForm({
     defaultValues: {
-      aiConfigurationId: chatConfiguration?.aiConfigurationId || null,
       knowledgeBaseId: chatConfiguration?.knowledgeBaseId || null,
       isActive: chatConfiguration?.isActive || false,
       contentFilteringEnabled: chatConfiguration?.settings?.contentFilteringEnabled !== false,
@@ -121,7 +113,6 @@ export function ChatConfigurationDialog({
         },
         credentials: 'include',
         body: JSON.stringify({
-          aiConfigurationId: data.aiConfigurationId ? parseInt(data.aiConfigurationId) : null,
           knowledgeBaseId: data.knowledgeBaseId ? parseInt(data.knowledgeBaseId) : null,
           isActive: data.isActive,
           settings: {
@@ -161,7 +152,6 @@ export function ChatConfigurationDialog({
   React.useEffect(() => {
     if (chatConfiguration) {
       form.reset({
-        aiConfigurationId: chatConfiguration.aiConfigurationId || null,
         knowledgeBaseId: chatConfiguration.knowledgeBaseId || null,
         isActive: chatConfiguration.isActive,
         contentFilteringEnabled: chatConfiguration.settings?.contentFilteringEnabled !== false,
@@ -213,34 +203,7 @@ export function ChatConfigurationDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="aiConfigurationId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>AI Configuration</FormLabel>
-                    <Select
-                      value={field.value ? String(field.value) : "none"}
-                      onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select AI configuration" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">No AI configuration</SelectItem>
-                        {aiConfigurations.map((config) => (
-                          <SelectItem key={config.id} value={String(config.id)}>
-                            {config.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               <FormField
                 control={form.control}

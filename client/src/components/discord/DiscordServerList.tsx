@@ -54,11 +54,6 @@ interface ChatConfiguration {
   };
 }
 
-interface AiConfiguration {
-  id: number;
-  name: string;
-}
-
 interface KnowledgeBase {
   id: number;
   name: string;
@@ -66,7 +61,6 @@ interface KnowledgeBase {
 
 interface DiscordServerListProps {
   chatConfigurations: ChatConfiguration[];
-  aiConfigurations: AiConfiguration[];
   knowledgeBases: KnowledgeBase[];
   platformId: number;
   channels: DiscordChannel[];
@@ -74,7 +68,6 @@ interface DiscordServerListProps {
 
 export function DiscordServerList({
   chatConfigurations,
-  aiConfigurations,
   knowledgeBases,
   platformId,
   channels,
@@ -181,11 +174,7 @@ export function DiscordServerList({
     );
   };
 
-  const getAiConfigName = (aiConfigId?: number) => {
-    if (!aiConfigId) return 'Default';
-    const config = aiConfigurations.find(c => c.id === aiConfigId);
-    return config?.name || 'Unknown';
-  };
+
 
   const getKnowledgeBaseName = (kbId?: number) => {
     if (!kbId) return 'Default';
@@ -300,7 +289,6 @@ export function DiscordServerList({
                                 checked={isEnabled}
                                 onCheckedChange={() => toggleChannel(server, channel.id, isEnabled)}
                                 disabled={!server.isActive || updateChannelMutation.isPending}
-                                size="sm"
                               />
                             </div>
                           </div>
@@ -320,7 +308,6 @@ export function DiscordServerList({
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           chatConfiguration={selectedServer}
-          aiConfigurations={aiConfigurations}
           knowledgeBases={knowledgeBases}
           platformId={platformId}
         />

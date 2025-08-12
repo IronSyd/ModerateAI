@@ -171,11 +171,7 @@ const DiscordIntegration = () => {
     enabled: !!platform && platform.status === "active",
   });
 
-  // Get AI configurations
-  const { data: aiConfigurations = [] } = useQuery({
-    queryKey: ["/api/ai-configurations"],
-    enabled: !!user,
-  });
+
 
   // Get knowledge bases
   const { data: knowledgeBases = [] } = useQuery({
@@ -723,7 +719,6 @@ const DiscordIntegration = () => {
             <CardContent>
               <DiscordServerList
                 chatConfigurations={chatConfigurations as any[]}
-                aiConfigurations={aiConfigurations as any[]}
                 knowledgeBases={knowledgeBases as any[]}
                 platformId={discordPlatformId}
                 channels={platform?.config?.channels || []}
