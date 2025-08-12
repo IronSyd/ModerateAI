@@ -289,7 +289,6 @@ export class MemStorage implements IStorage {
         ],
         dailyMessages: 134,
         moderationCount: 12,
-        welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
         permissions: "8",
         setupCompleted: true,
       },

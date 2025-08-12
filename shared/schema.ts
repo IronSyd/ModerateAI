@@ -307,7 +307,6 @@ export const chatConfigurations = pgTable("chat_configurations", {
     mentionOnly: false,
     contentFilteringEnabled: true,
     spamProtectionEnabled: true,
-    welcomeMessage: null,
     enableHistoryLearning: false,
     adminLearningMode: false
   }),

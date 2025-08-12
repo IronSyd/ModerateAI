@@ -22,7 +22,6 @@ interface DiscordConfig {
   channels?: DiscordChannel[];
   dailyMessages?: number;
   moderationCount?: number;
-  welcomeMessage?: string;
   permissions?: string;
   setupCompleted?: boolean;
   
@@ -934,20 +933,6 @@ const DiscordIntegration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="welcomeMessage">Welcome Message</Label>
-                <Textarea
-                  id="welcomeMessage"
-                  placeholder="Hello! I'm your AI assistant. How can I help you today?"
-                  value={platform?.config?.welcomeMessage || ""}
-                  onChange={(e) => updateBotConfigMutation.mutate({ welcomeMessage: e.target.value })}
-                  rows={3}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Message shown when the bot is first added to a server
-                </p>
-              </div>
-
               <Separator />
 
               <div className="space-y-4">
