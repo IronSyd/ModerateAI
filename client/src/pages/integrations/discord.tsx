@@ -15,7 +15,6 @@ interface DiscordChannel {
 }
 
 interface DiscordConfig {
-  serverId: string;
   botName?: string;
   serverName?: string;
   memberCount?: number;
@@ -708,10 +707,6 @@ const DiscordIntegration = () => {
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Server:</span>
                           <span className="text-sm font-medium">{platform?.config?.serverName || 'Loading...'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Server ID:</span>
-                          <span className="text-sm font-medium">{platform?.config?.serverId}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Status:</span>

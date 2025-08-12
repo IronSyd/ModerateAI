@@ -279,7 +279,6 @@ export class MemStorage implements IStorage {
       status: "active",
       userId: user.id,
       config: { 
-        serverId: "123456789",
         botName: "ModerateAI",
         serverName: "Moderation AI Community",
         memberCount: 127,
