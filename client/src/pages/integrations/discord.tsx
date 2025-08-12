@@ -24,12 +24,7 @@ interface DiscordConfig {
   permissions?: string;
   setupCompleted?: boolean;
   
-  // Response settings
-  respondToCommands?: boolean;
-  respondToMentions?: boolean;
-  
   // Moderation settings
-  contentFiltering?: boolean;
   automaticWarnings?: boolean;
   logModerationActions?: boolean;
   moderationLogChannel?: string;
@@ -294,9 +289,6 @@ const DiscordIntegration = () => {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [updatedChannels, setUpdatedChannels] = useState<DiscordChannel[]>([]);
   // Add state for settings
-  const [respondToCommands, setRespondToCommands] = useState(true);
-  const [respondToMentions, setRespondToMentions] = useState(true);
-  const [contentFiltering, setContentFiltering] = useState(true);
   const [automaticWarnings, setAutomaticWarnings] = useState(true);
   const [logModerationActions, setLogModerationActions] = useState(true);
   const [moderationLogChannel, setModerationLogChannel] = useState("mod-logs");
@@ -580,12 +572,7 @@ const DiscordIntegration = () => {
     
     // Initialize settings from platform config when it loads
     if (platform?.config) {
-      // Response settings
-      setRespondToCommands(platform.config.respondToCommands ?? true);
-      setRespondToMentions(platform.config.respondToMentions ?? true);
-      
       // Moderation settings
-      setContentFiltering(platform.config.contentFiltering ?? true);
       setAutomaticWarnings(platform.config.automaticWarnings ?? true);
       setLogModerationActions(platform.config.logModerationActions ?? true);
       setModerationLogChannel(platform.config.moderationLogChannel ?? "mod-logs");
@@ -917,52 +904,7 @@ const DiscordIntegration = () => {
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Response Settings</h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Respond to Commands</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Bot responds to slash commands
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={respondToCommands} 
-                    onCheckedChange={setRespondToCommands}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Respond to Mentions</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Bot responds when mentioned
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={respondToMentions} 
-                    onCheckedChange={setRespondToMentions}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
                 <h3 className="text-lg font-medium">Moderation Settings</h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Content Filtering</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Filter inappropriate content
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={contentFiltering} 
-                    onCheckedChange={setContentFiltering}
-                  />
-                </div>
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">

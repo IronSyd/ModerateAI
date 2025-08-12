@@ -9,6 +9,12 @@ Preferred communication style: Simple, everyday language.
 # Recent Changes
 
 ## August 2025
+- **Streamlined Discord Integration Settings Interface** (August 12, 2025):
+  - Removed "Respond to Commands" setting to simplify bot configuration
+  - Removed "Private Responses" setting as it's not applicable to multi-server Discord deployments
+  - Removed "Content Filtering" setting to focus on essential moderation features only
+  - Interface now contains only essential moderation settings: Automatic Warnings, Log Moderation Actions, and Moderation Log Channel
+  - Cleaned up all related state variables, initialization logic, and TypeScript interfaces
 - **Successfully Implemented Real Discord Bot Integration** (August 12, 2025):
   - Fixed OAuth flow confusion between authorization codes and bot tokens for Discord setup
   - Updated Discord setup process to properly request Discord bot tokens instead of authorization codes
