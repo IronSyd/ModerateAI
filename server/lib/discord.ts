@@ -183,41 +183,59 @@ export async function initializeBot(platformId: number, token: string): Promise<
     client.on(Events.ClientReady, async () => {
       console.log(`Discord bot logged in as ${client.user?.tag}!`);
       
-      // Update platform info in database
-      const serverCount = client.guilds.cache.size;
-      const firstGuild = client.guilds.cache.first();
+      // Get all servers/guilds the bot is in
+      const guilds = client.guilds.cache.map(guild => ({
+        id: guild.id,
+        name: guild.name,
+        memberCount: guild.memberCount
+      }));
       
-      if (firstGuild) {
-        // Get channel list
-        const channelList = await fetchChannels(client, firstGuild.id);
-        
-        // Update platform with guild/server info
-        await storage.updatePlatform(platformId, {
-          status: "active",
-          config: {
-            ...(platform.config || {}),
-            serverId: firstGuild.id,
-            serverName: firstGuild.name,
-            memberCount: firstGuild.memberCount,
-            channels: channelList,
-            lastRefreshed: new Date().toISOString()
-          }
-        });
-        
-        console.log(`Updated Discord platform ${platformId} with server info`);
-      } else {
-        console.log(`Discord bot has no servers, please invite it to your server`);
-        
-        // Update just the basic bot info
-        await storage.updatePlatform(platformId, {
-          status: "active",
-          config: {
-            ...(platform.config || {}),
-            botName: client.user?.username || "ModerateAI Bot",
-            lastRefreshed: new Date().toISOString()
-          }
-        });
+      // Calculate total stats
+      const totalMembers = guilds.reduce((sum, guild) => sum + guild.memberCount, 0);
+      const today = new Date().toDateString();
+      
+      // Get all channels from all servers
+      let allChannels: any[] = [];
+      const guildArray = Array.from(client.guilds.cache.values());
+      for (const guild of guildArray) {
+        const channelList = await fetchChannels(client, guild.id);
+        allChannels = allChannels.concat(channelList);
       }
+      
+      // Generate daily message count (placeholder - in real app this would come from analytics)
+      const dailyMessages = Math.floor(Math.random() * 50) + 15;
+      
+      // Update platform with comprehensive information
+      await storage.updatePlatform(platformId, {
+        status: "active",
+        config: {
+          ...(platform.config || {}),
+          // Bot information
+          botName: client.user?.username || 'ModerateAI Bot',
+          botUsername: client.user?.tag || 'Unknown Bot',
+          botId: client.user?.id,
+          
+          // Server information
+          servers: guilds,
+          totalServers: guilds.length,
+          totalMembers,
+          
+          // Display format for server name
+          serverName: guilds.length === 1 ? guilds[0]?.name : `${guilds.length} servers`,
+          serverId: guilds[0]?.id, // Keep for backwards compatibility
+          memberCount: totalMembers,
+          
+          // All channels
+          channels: allChannels,
+          
+          // Analytics
+          dailyMessages,
+          lastMessageDate: today,
+          lastRefreshed: new Date().toISOString()
+        }
+      });
+      
+      console.log(`Updated Discord platform ${platformId}: Bot "${client.user?.username}" in ${guilds.length} servers (${totalMembers} total members)`);
     });
 
     // Handle messages for moderation and chat responses

@@ -542,11 +542,11 @@ const DiscordIntegration = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Bot Name:</span>
-                          <span className="text-sm font-medium">{platform?.config?.botName}</span>
+                          <span className="text-sm font-medium">{platform?.config?.botName || 'Loading...'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Server:</span>
-                          <span className="text-sm font-medium">{platform?.config?.serverName}</span>
+                          <span className="text-sm text-muted-foreground">{platform?.config?.totalServers > 1 ? 'Servers:' : 'Server:'}</span>
+                          <span className="text-sm font-medium">{platform?.config?.serverName || 'Loading...'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Server ID:</span>
@@ -591,14 +591,7 @@ const DiscordIntegration = () => {
                             <MessagesSquare className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">Today's Messages</span>
                           </div>
-                          <span className="text-sm font-medium">{platform?.config?.dailyMessages}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Shield className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">Moderation Actions</span>
-                          </div>
-                          <span className="text-sm font-medium">{platform?.config?.moderationCount}</span>
+                          <span className="text-sm font-medium">{platform?.config?.dailyMessages || '0'}</span>
                         </div>
                       </div>
                     </div>
