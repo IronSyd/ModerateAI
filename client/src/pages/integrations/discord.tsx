@@ -191,7 +191,7 @@ const DiscordAnalytics = ({ platformId }: { platformId: number }) => {
       </div>
 
       {/* Server Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Server Activity</CardTitle>
@@ -212,31 +212,6 @@ const DiscordAnalytics = ({ platformId }: { platformId: number }) => {
                   <span className="text-sm">Total Channels</span>
                 </div>
                 <span className="font-semibold">{analytics.totalChannels || 0}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Moderation Activity</CardTitle>
-            <CardDescription>Content filtering and moderation stats</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Shield className="h-4 w-4 text-red-500 mr-2" />
-                  <span className="text-sm">Content Filtered</span>
-                </div>
-                <span className="font-semibold">{analytics.moderationActions?.contentFiltered || 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Shield className="h-4 w-4 text-orange-500 mr-2" />
-                  <span className="text-sm">Warnings Issued</span>
-                </div>
-                <span className="font-semibold">{analytics.moderationActions?.warningsIssued || 0}</span>
               </div>
             </div>
           </CardContent>
