@@ -249,8 +249,7 @@ const TelegramIntegration = () => {
   const [groupMode, setGroupMode] = useState(false);
   const [privateChatMode, setPrivateChatMode] = useState(true);
 
-  const [contentFilteringEnabled, setContentFilteringEnabled] = useState(true);
-  const [spamProtectionEnabled, setSpamProtectionEnabled] = useState(true);
+  // Removed moderation state variables
 
   // Fetch all platforms first to find the Telegram platform
   const { data: platforms, isLoading: platformsLoading } = useQuery({
@@ -294,8 +293,7 @@ const TelegramIntegration = () => {
       setGroupMode(config.groupMode || false);
       setPrivateChatMode(config.privateChatMode !== false); // Default to true
 
-      setContentFilteringEnabled(config.contentFilteringEnabled !== false); // Default to true
-      setSpamProtectionEnabled(config.spamProtectionEnabled !== false); // Default to true
+      // Removed moderation settings
     }
   }, [platform]);
 
@@ -311,8 +309,7 @@ const TelegramIntegration = () => {
           groupMode: true,
           privateChatMode: true,
 
-          contentFilteringEnabled: true,
-          spamProtectionEnabled: true,
+          // Removed moderation settings
           botCommands: [
             { command: "help", description: "Show help information" },
             { command: "about", description: "About this bot" }
@@ -1105,51 +1102,15 @@ const TelegramIntegration = () => {
                 
 
               </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Moderation</h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="content-filtering">Content Filtering</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Moderate inappropriate content
-                    </p>
-                  </div>
-                  <Switch 
-                    id="content-filtering"
-                    checked={contentFilteringEnabled} 
-                    onCheckedChange={setContentFilteringEnabled}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="spam-protection">Spam Protection</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Detect and filter spam messages
-                    </p>
-                  </div>
-                  <Switch 
-                    id="spam-protection"
-                    checked={spamProtectionEnabled} 
-                    onCheckedChange={setSpamProtectionEnabled}
-                  />
-                </div>
-              </div>
             </CardContent>
             <CardFooter>
               <Button 
                 className="ml-auto" 
                 onClick={() => {
-                  // Save all bot settings
+                  // Save response settings
                   updateBotConfigMutation.mutate({
                     groupMode: groupMode,
-                    privateChatMode: privateChatMode,
-                    contentFilteringEnabled: contentFilteringEnabled,
-                    spamProtectionEnabled: spamProtectionEnabled
+                    privateChatMode: privateChatMode
                   });
                 }}
               >
