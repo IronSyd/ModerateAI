@@ -574,7 +574,6 @@ const DiscordIntegration = () => {
       // Moderation settings
       setAutomaticWarnings(platform.config.automaticWarnings ?? true);
       setLogModerationActions(platform.config.logModerationActions ?? true);
-      setModerationLogChannel(platform.config.moderationLogChannel ?? "mod-logs");
     }
   }, [platform]);
 
