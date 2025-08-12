@@ -308,17 +308,12 @@ export async function initializeBot(platformId: number, token: string): Promise<
         
         // Get platform settings safely
         const config = updatedPlatform.config as any;
-        const respondToMentions = config?.respondToMentions !== false; // Default to true
-        const respondToCommands = config?.respondToCommands !== false; // Default to true
-        const privateResponses = config?.privateResponses === true; // Default to false
         
-        // Check if the bot was mentioned or this is a direct message
-        const isBotMentioned = message.mentions.has(client.user?.id || '');
+        // Check if this is a direct message
         const isDM = message.channel.type === ChannelType.DM;
-        const isCommand = message.content.startsWith('!') || message.content.startsWith('/');
         
-        // Check for proactive responses if not explicitly triggered
-        let shouldRespond = (respondToMentions && isBotMentioned) || isDM || (respondToCommands && isCommand);
+        // Only respond to direct messages, not mentions or commands
+        let shouldRespond = isDM;
         
         // If not explicitly triggered, check if message is relevant to knowledge base for proactive response
         if (!shouldRespond && !isDM) {
@@ -434,16 +429,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
               metadata: null
             });
             
-            // Send the response (either as a reply or DM based on settings)
-            if (privateResponses && !isDM) {
-              // For private responses, include the original question for context
-              const quotedMessage = `> ${message.content.split('\n').join('\n> ')}\n\n${aiResponse}`;
-              await message.author.send(quotedMessage);
-              await message.react('✅');
-            } else {
-              // Discord's reply method automatically quotes the original message
-              await message.reply(aiResponse);
-            }
+            // Send the response as a reply (Discord's reply method automatically quotes the original message)
+            await message.reply(aiResponse);
             
             const responseChannelName = isDM ? 'DM' : ('name' in message.channel ? message.channel.name : 'unknown channel');
             console.log(`Sent AI response for Discord message in ${isDM ? 'DM' : 'channel ' + responseChannelName}`);
