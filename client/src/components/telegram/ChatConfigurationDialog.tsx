@@ -116,7 +116,7 @@ export function ChatConfigurationDialog({
         description: 'Chat configuration updated successfully'
       });
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/platforms', chatConfig.platformId, 'chat-configurations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms', chatConfig?.platformId, 'chat-configurations'] });
       onClose();
     },
     onError: (error: any) => {
@@ -294,7 +294,7 @@ export function ChatConfigurationDialog({
             isOpen={showTrainingDialog}
             onClose={() => setShowTrainingDialog(false)}
             chatConfigId={chatConfig.id}
-            chatName={chatConfig.chatName || chatConfig.chatId}
+            chatName={chatConfig.chatName || chatConfig.externalId}
           />
         )}
       </DialogContent>

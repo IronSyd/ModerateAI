@@ -248,7 +248,7 @@ const TelegramIntegration = () => {
   // Bot settings state
   const [groupMode, setGroupMode] = useState(false);
   const [privateChatMode, setPrivateChatMode] = useState(true);
-  const [mentionOnly, setMentionOnly] = useState(true);
+
   const [contentFilteringEnabled, setContentFilteringEnabled] = useState(true);
   const [spamProtectionEnabled, setSpamProtectionEnabled] = useState(true);
 
@@ -293,7 +293,7 @@ const TelegramIntegration = () => {
       const config = platform.config as any;
       setGroupMode(config.groupMode || false);
       setPrivateChatMode(config.privateChatMode !== false); // Default to true
-      setMentionOnly(config.mentionOnly !== false); // Default to true
+
       setContentFilteringEnabled(config.contentFilteringEnabled !== false); // Default to true
       setSpamProtectionEnabled(config.spamProtectionEnabled !== false); // Default to true
     }
@@ -310,7 +310,7 @@ const TelegramIntegration = () => {
           welcomeMessage: "Hello! I'm your AI assistant. How can I help you today?",
           groupMode: true,
           privateChatMode: true,
-          mentionOnly: true,
+
           contentFilteringEnabled: true,
           spamProtectionEnabled: true,
           botCommands: [
@@ -1103,18 +1103,7 @@ const TelegramIntegration = () => {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Mention Only</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Only respond when mentioned in groups
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={mentionOnly}
-                    onCheckedChange={setMentionOnly}
-                  />
-                </div>
+
               </div>
 
               <Separator />
@@ -1156,10 +1145,9 @@ const TelegramIntegration = () => {
                 className="ml-auto" 
                 onClick={() => {
                   // Save all bot settings
-                  updateBotConfig({
+                  updateBotConfigMutation.mutate({
                     groupMode: groupMode,
                     privateChatMode: privateChatMode,
-                    mentionOnly: mentionOnly,
                     contentFilteringEnabled: contentFilteringEnabled,
                     spamProtectionEnabled: spamProtectionEnabled
                   });
