@@ -135,7 +135,7 @@ export async function generateKnowledgeBasedResponse(
       relevantDocuments.forEach((doc, index) => {
         enhancedPrompt += `\n\nDocument ${index + 1} - ${doc.title}:\n${doc.content.substring(0, 500)}`;
       });
-      enhancedPrompt += "\n\nIMPORTANT: When the user asks about topics covered in the knowledge base above, respond based on that information rather than general knowledge. If the knowledge base contains specific information about the user's question, use that as your primary source.";
+      enhancedPrompt += "\n\nCRITICAL ACCURACY REQUIREMENTS:\n- When responding about topics in the knowledge base, use ONLY that information as your source of truth\n- Knowledge base information overrides all other sources including learned patterns\n- If knowledge base doesn't cover a topic, clearly state this and use general knowledge\n- Cross-reference knowledge base content before providing any factual information\n- Learned patterns should only influence response style, never factual content";
     }
     
     // Create the messages array

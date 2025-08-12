@@ -409,12 +409,20 @@ export async function initializeBot(platformId: number, token: string): Promise<
             
             // Enhance system prompt with training insights if available
             let enhancedSystemPrompt = aiConfig?.systemPrompt || 'You are a helpful assistant for Discord. Provide concise and accurate responses.';
+            
+            // Always prioritize knowledge base accuracy
+            enhancedSystemPrompt += `\n\nIMPORTANT ACCURACY GUIDELINES:
+1. ALWAYS prioritize official knowledge base information for factual accuracy
+2. Use learned patterns from admin conversations only for response style and approach
+3. If knowledge base information conflicts with learned patterns, follow the knowledge base
+4. Double-check all factual claims against available knowledge base content`;
+            
             if (contextualInsights.length > 0) {
               const insightsText = contextualInsights.map(insight => 
                 `- ${insight.pattern} (confidence: ${Math.round(insight.confidence * 100)}%)`
               ).join('\n');
               
-              enhancedSystemPrompt += `\n\nBased on previous admin interactions in this server, please consider these learned patterns:\n${insightsText}`;
+              enhancedSystemPrompt += `\n\nLearned response patterns from admin interactions (use for style, not facts):\n${insightsText}`;
             }
             
             // Generate AI response with knowledge base if available
