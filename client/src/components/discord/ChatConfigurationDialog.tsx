@@ -221,26 +221,7 @@ export function ChatConfigurationDialog({
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Response Settings</h4>
                 
-                <FormField
-                  control={form.control}
-                  name="respondToMentions"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm">Respond to Mentions</FormLabel>
-                        <FormDescription className="text-xs">
-                          Bot responds when mentioned with @ModerateAI
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+
 
 
 
