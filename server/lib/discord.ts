@@ -243,8 +243,8 @@ export async function initializeBot(platformId: number, token: string): Promise<
       
       console.log(`Updated Discord platform ${platformId}: Bot "${client.user?.username}" in ${guilds.length} servers (${totalMembers} total members)`);
       
-      // Create chat configurations for all servers and text channels
-      await createDiscordChatConfigurations(platformId, guilds, allChannels);
+      // Create server-level configurations for all Discord servers
+      await createDiscordServerConfigurations(platformId, guilds, allChannels);
     });
 
     // Handle messages for moderation and chat responses
@@ -257,34 +257,45 @@ export async function initializeBot(platformId: number, token: string): Promise<
         const updatedPlatform = await storage.getPlatform(platformId);
         if (!updatedPlatform || !updatedPlatform.config) return;
         
-        // Auto-create chat configuration if it doesn't exist (like Telegram does)
-        const guildName = message.guild?.name || 'Unknown Server';
-        const channelName = 'name' in message.channel ? message.channel.name : 'Unknown Channel';
-        const serverChannelId = `${message.guildId || 'dm'}_${message.channel.id}`;
+        // Get server-level configuration (not channel-level)
+        const guildId = message.guildId;
+        if (!guildId) return; // Skip DM messages for now
         
-        let chatConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, serverChannelId);
+        let chatConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, guildId);
         
         if (!chatConfig) {
-          console.log(`Creating new Discord chat configuration for: ${guildName}/${channelName}`);
-          
-          const platformConfig = (updatedPlatform.config as any) || {};
+          // Auto-create server configuration if it doesn't exist
+          const guildName = message.guild?.name || 'Unknown Server';
+          console.log(`Creating new Discord server configuration for: ${guildName}`);
           
           chatConfig = await storage.createChatConfiguration({
             platformId,
-            externalId: serverChannelId,
-            chatType: message.guild ? 'server' : 'dm',
-            chatName: message.guild ? `${guildName}/${channelName}` : `DM: ${message.author.username}`,
-            aiConfigurationId: null, // Will use default
-            knowledgeBaseId: null, // Will use default
+            externalId: guildId,
+            chatType: 'server',
+            chatName: guildName,
+            aiConfigurationId: null,
+            knowledgeBaseId: null,
             settings: {
-              respondToMentions: platformConfig.respondToMentions !== false,
-              respondToCommands: platformConfig.respondToCommands !== false,
-              privateResponses: platformConfig.privateResponses === true,
-              contentFilteringEnabled: platformConfig.contentFiltering !== false,
-              proactiveResponses: platformConfig.proactiveResponses !== false
+              respondToMentions: true,
+              respondToCommands: true,
+              privateResponses: false,
+              contentFilteringEnabled: true,
+              proactiveResponses: true,
+              enabledChannels: { [message.channel.id]: true }, // Enable this channel
+              totalChannels: 1
             },
             isActive: true
           });
+        }
+        
+        // Check if this specific channel is enabled for bot responses
+        const settings = chatConfig.settings as any || {};
+        const enabledChannels = settings.enabledChannels || {};
+        const isChannelEnabled = enabledChannels[message.channel.id] !== false;
+        
+        // Skip if server or channel is disabled
+        if (!chatConfig.isActive || !isChannelEnabled) {
+          return;
         }
         
         // Safely access channels from config
@@ -499,46 +510,70 @@ export async function initializeBot(platformId: number, token: string): Promise<
 }
 
 /**
- * Create chat configurations for Discord servers and channels
+ * Create server-level chat configurations for Discord servers
  */
-async function createDiscordChatConfigurations(platformId: number, guilds: any[], channels: any[]) {
+async function createDiscordServerConfigurations(platformId: number, guilds: any[], channels: any[]) {
   try {
     for (const guild of guilds) {
-      // Get channels for this specific guild
+      // Get text channels for this guild
       const guildChannels = channels.filter(channel => 
         channel.guildId === guild.id && channel.type === 'text'
       );
       
-      for (const channel of guildChannels) {
-        const serverChannelId = `${guild.id}_${channel.id}`;
+      // Check if server configuration already exists
+      const existingConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, guild.id);
+      
+      if (!existingConfig) {
+        console.log(`Creating Discord server configuration for: ${guild.name}`);
         
-        // Check if configuration already exists
-        const existingConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, serverChannelId);
+        // Create enabled channels object (all channels enabled by default)
+        const enabledChannels: { [channelId: string]: boolean } = {};
+        guildChannels.forEach(channel => {
+          enabledChannels[channel.id] = true;
+        });
         
-        if (!existingConfig) {
-          console.log(`Creating Discord chat configuration for: ${guild.name}/${channel.name}`);
-          
-          await storage.createChatConfiguration({
-            platformId,
-            externalId: serverChannelId,
-            chatType: 'server',
-            chatName: `${guild.name}/${channel.name}`,
-            aiConfigurationId: null, // Will use default
-            knowledgeBaseId: null, // Will use default
-            settings: {
-              respondToMentions: true,
-              respondToCommands: true,
-              privateResponses: false,
-              contentFilteringEnabled: true,
-              proactiveResponses: true
-            },
-            isActive: true
-          });
-        }
+        await storage.createChatConfiguration({
+          platformId,
+          externalId: guild.id, // Server ID only
+          chatType: 'server',
+          chatName: guild.name, // Server name only
+          aiConfigurationId: null, // Will use default
+          knowledgeBaseId: null, // Will use default
+          settings: {
+            respondToMentions: true,
+            respondToCommands: true,
+            privateResponses: false,
+            contentFilteringEnabled: true,
+            proactiveResponses: true,
+            enabledChannels: enabledChannels, // Track which channels are enabled
+            totalChannels: guildChannels.length
+          },
+          isActive: true
+        });
+      } else {
+        // Update existing config with current channel list
+        const currentSettings = existingConfig.settings as any || {};
+        const enabledChannels = currentSettings.enabledChannels || {};
+        
+        // Add any new channels (enabled by default)
+        guildChannels.forEach(channel => {
+          if (!(channel.id in enabledChannels)) {
+            enabledChannels[channel.id] = true;
+          }
+        });
+        
+        // Update the configuration
+        await storage.updateChatConfiguration(existingConfig.id, {
+          settings: {
+            ...currentSettings,
+            enabledChannels,
+            totalChannels: guildChannels.length
+          }
+        });
       }
     }
   } catch (error) {
-    console.error('Error creating Discord chat configurations:', error);
+    console.error('Error creating Discord server configurations:', error);
   }
 }
 

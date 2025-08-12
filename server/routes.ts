@@ -854,43 +854,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Discord platform not properly configured with servers and channels" });
       }
       
-      // Create chat configurations for all text channels
+      // Create server-level configurations (not individual channels)
       let createdCount = 0;
       for (const guild of config.servers) {
         const guildChannels = config.channels.filter((channel: any) => 
           channel.guildId === guild.id && channel.type === 'text'
         );
         
-        for (const channel of guildChannels) {
-          const serverChannelId = `${guild.id}_${channel.id}`;
+        // Check if server configuration already exists
+        const existingConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, guild.id);
+        
+        if (!existingConfig) {
+          // Create enabled channels object (all channels enabled by default)
+          const enabledChannels: { [channelId: string]: boolean } = {};
+          guildChannels.forEach((channel: any) => {
+            enabledChannels[channel.id] = true;
+          });
           
-          // Check if configuration already exists
-          const existingConfig = await storage.getChatConfigurationByPlatformAndExternalId(platformId, serverChannelId);
+          await storage.createChatConfiguration({
+            platformId,
+            externalId: guild.id, // Server ID only
+            chatType: 'server',
+            chatName: guild.name, // Server name only
+            aiConfigurationId: null, // Will use default
+            knowledgeBaseId: null, // Will use default
+            settings: {
+              respondToMentions: true,
+              respondToCommands: true,
+              privateResponses: false,
+              contentFilteringEnabled: true,
+              proactiveResponses: true,
+              enabledChannels: enabledChannels, // Track which channels are enabled
+              totalChannels: guildChannels.length
+            },
+            isActive: true
+          });
+          createdCount++;
+          console.log(`Created Discord server config: ${guild.name} (${guildChannels.length} channels)`);
+        } else {
+          // Update existing config with current channel list
+          const currentSettings = existingConfig.settings as any || {};
+          const enabledChannels = currentSettings.enabledChannels || {};
           
-          if (!existingConfig) {
-            await storage.createChatConfiguration({
-              platformId,
-              externalId: serverChannelId,
-              chatType: 'server',
-              chatName: `${guild.name}/${channel.name}`,
-              aiConfigurationId: null, // Will use default
-              knowledgeBaseId: null, // Will use default
-              settings: {
-                respondToMentions: true,
-                respondToCommands: true,
-                privateResponses: false,
-                contentFilteringEnabled: true,
-                proactiveResponses: true
-              },
-              isActive: true
-            });
-            createdCount++;
-            console.log(`Created Discord chat config: ${guild.name}/${channel.name}`);
-          }
+          // Add any new channels (enabled by default)
+          guildChannels.forEach((channel: any) => {
+            if (!(channel.id in enabledChannels)) {
+              enabledChannels[channel.id] = true;
+            }
+          });
+          
+          // Update the configuration
+          await storage.updateChatConfiguration(existingConfig.id, {
+            settings: {
+              ...currentSettings,
+              enabledChannels,
+              totalChannels: guildChannels.length
+            }
+          });
+          console.log(`Updated Discord server config: ${guild.name} (${guildChannels.length} channels)`);
         }
       }
       
-      res.json({ message: `Generated ${createdCount} new server configurations`, count: createdCount });
+      res.json({ message: `Generated ${createdCount} server configurations`, count: createdCount });
     } catch (error: any) {
       console.error("Error generating chat configurations:", error);
       res.status(500).json({ message: error.message });

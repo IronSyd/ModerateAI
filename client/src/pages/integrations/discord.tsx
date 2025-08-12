@@ -58,6 +58,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { ChatConfigurationList } from "@/components/discord/ChatConfigurationList";
+import { DiscordServerList } from "@/components/discord/DiscordServerList";
 import {
   Tabs,
   TabsContent,
@@ -720,11 +721,12 @@ const DiscordIntegration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ChatConfigurationList
+              <DiscordServerList
                 chatConfigurations={chatConfigurations as any[]}
                 aiConfigurations={aiConfigurations as any[]}
                 knowledgeBases={knowledgeBases as any[]}
                 platformId={discordPlatformId}
+                channels={discordPlatform?.config?.channels || []}
               />
             </CardContent>
             <CardFooter className="flex justify-end">
