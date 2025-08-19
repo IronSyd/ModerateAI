@@ -183,17 +183,13 @@ export function WebsiteConfigurationDialog({
     saveMutation.mutate(formData);
   };
 
-  console.log('WebsiteConfigurationDialog render - isOpen:', isOpen, 'websiteConfig:', websiteConfig);
-  
   if (!isOpen) {
-    console.log('Dialog not rendering because isOpen is false');
     return null;
   }
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"
-        style={{ zIndex: 9999 }}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {websiteConfig ? 'Edit Website Configuration' : 'Create Website Configuration'}
