@@ -60,7 +60,6 @@ export function WebsiteConfigurationDialog({
   aiConfigurations,
   knowledgeBases
 }: WebsiteConfigurationDialogProps) {
-  console.log('WebsiteConfigurationDialog rendered with isOpen:', isOpen);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -199,6 +198,7 @@ export function WebsiteConfigurationDialog({
               <Label htmlFor="name">Configuration Name *</Label>
               <Input
                 id="name"
+                name="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="My Website Chat"
@@ -288,6 +288,8 @@ export function WebsiteConfigurationDialog({
                     className="w-16 h-10 p-1"
                   />
                   <Input
+                    id="primaryColorText"
+                    name="primaryColorText"
                     value={formData.primaryColor}
                     onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
                     placeholder="#3B82F6"
