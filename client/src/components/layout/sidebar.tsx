@@ -93,19 +93,18 @@ const Sidebar = () => {
     const isActive = location === item.path;
     
     return (
-      <Link href={item.path}>
-        <a 
-          className={`flex items-center px-4 py-3 hover:bg-accent ${
-            isActive 
-              ? "text-foreground bg-accent/60 border-r-4 border-primary" 
-              : "text-muted-foreground"
-          }`}
-        >
-          {React.cloneElement(item.icon as React.ReactElement, { 
-            className: `h-5 w-5 mr-3 ${isActive ? "text-primary" : "text-muted-foreground"}`
-          })}
-          {item.label}
-        </a>
+      <Link 
+        href={item.path}
+        className={`flex items-center px-4 py-3 hover:bg-accent ${
+          isActive 
+            ? "text-foreground bg-accent/60 border-r-4 border-primary" 
+            : "text-muted-foreground"
+        }`}
+      >
+        {React.cloneElement(item.icon as React.ReactElement, { 
+          className: `h-5 w-5 mr-3 ${isActive ? "text-primary" : "text-muted-foreground"}`
+        })}
+        {item.label}
       </Link>
     );
   };
