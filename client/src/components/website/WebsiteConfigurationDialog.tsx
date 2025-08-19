@@ -183,8 +183,6 @@ export function WebsiteConfigurationDialog({
     saveMutation.mutate(formData);
   };
 
-  console.log('WebsiteConfigurationDialog render - isOpen:', isOpen);
-  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -275,6 +273,7 @@ export function WebsiteConfigurationDialog({
                 <Label htmlFor="widgetTitle">Widget Title</Label>
                 <Input
                   id="widgetTitle"
+                  name="widgetTitle"
                   value={formData.widgetTitle}
                   onChange={(e) => setFormData(prev => ({ ...prev, widgetTitle: e.target.value }))}
                 />
@@ -285,6 +284,7 @@ export function WebsiteConfigurationDialog({
                 <div className="flex gap-2">
                   <Input
                     id="primaryColor"
+                    name="primaryColor"
                     type="color"
                     value={formData.primaryColor}
                     onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
@@ -306,6 +306,7 @@ export function WebsiteConfigurationDialog({
               <Label htmlFor="welcomeMessage">Welcome Message</Label>
               <Textarea
                 id="welcomeMessage"
+                name="welcomeMessage"
                 value={formData.welcomeMessage}
                 onChange={(e) => setFormData(prev => ({ ...prev, welcomeMessage: e.target.value }))}
                 rows={3}
@@ -335,6 +336,7 @@ export function WebsiteConfigurationDialog({
                 <Label htmlFor="autoOpenDelay">Auto-open Delay (ms)</Label>
                 <Input
                   id="autoOpenDelay"
+                  name="autoOpenDelay"
                   type="number"
                   value={formData.autoOpenDelay}
                   onChange={(e) => setFormData(prev => ({ ...prev, autoOpenDelay: parseInt(e.target.value) || 0 }))}
