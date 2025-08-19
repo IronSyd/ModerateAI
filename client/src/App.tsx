@@ -8,8 +8,6 @@ import Dashboard from "@/pages/dashboard";
 import Conversations from "@/pages/conversations";
 
 
-import WebsiteIntegration from "@/pages/integrations/website";
-import WebsiteDemoPage from "@/pages/integrations/website-demo";
 import TelegramIntegration from "@/pages/integrations/telegram";
 import DiscordIntegration from "@/pages/integrations/discord";
 import DiscordFix from "@/pages/discord-fix";
@@ -105,8 +103,6 @@ function Router() {
         <ProtectedRoute path="/conversations" component={Conversations} />
         <ProtectedRoute path="/knowledge-base" component={KnowledgeBasePage} />
 
-        <ProtectedRoute path="/integrations/website" component={WebsiteIntegration} />
-        <ProtectedRoute path="/integrations/website-demo" component={WebsiteDemoPage} />
         <ProtectedRoute path="/integrations/telegram" component={TelegramIntegration} />
         <ProtectedRoute path="/integrations/discord" component={DiscordIntegration} />
         <ProtectedRoute path="/integrations/discord-fix" component={DiscordFix} />

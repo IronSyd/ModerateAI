@@ -10,11 +10,10 @@ import {
   TeamInvitation, InsertTeamInvitation,
   TeamSettings, InsertTeamSettings,
   ChatConfiguration, InsertChatConfiguration,
-  WebsiteConfiguration, InsertWebsiteConfiguration,
   EmailWhitelist, InsertEmailWhitelist,
   ChatHistory, InsertChatHistory,
   TrainingInsights, InsertTrainingInsights,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, websiteConfigurations, emailWhitelist, chatHistory, trainingInsights
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, emailWhitelist, chatHistory, trainingInsights
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, ne, asc, desc, count, sql, ilike, inArray } from "drizzle-orm";
@@ -100,13 +99,6 @@ export interface IStorage {
   updateChatConfiguration(id: number, chatConfig: Partial<ChatConfiguration>): Promise<ChatConfiguration | undefined>;
   deleteChatConfiguration(id: number): Promise<boolean>;
   
-  // Website Configuration operations
-  getWebsiteConfiguration(id: number): Promise<WebsiteConfiguration | undefined>;
-  getWebsiteConfigurationByToken(token: string): Promise<WebsiteConfiguration | undefined>;
-  getWebsiteConfigurationsByUserId(userId: number): Promise<WebsiteConfiguration[]>;
-  createWebsiteConfiguration(websiteConfig: InsertWebsiteConfiguration): Promise<WebsiteConfiguration>;
-  updateWebsiteConfiguration(id: number, websiteConfig: Partial<WebsiteConfiguration>): Promise<WebsiteConfiguration | undefined>;
-  deleteWebsiteConfiguration(id: number): Promise<boolean>;
   
   // Analytics operations
   getConversationCount(): Promise<number>;
@@ -253,16 +245,6 @@ export class MemStorage implements IStorage {
     await this.createKnowledgeBase(knowledgeBase);
 
     // Create platforms
-    const websitePlatform: InsertPlatform = {
-      type: "website",
-      name: "Website Chat Widget",
-      status: "active",
-      userId: user.id,
-      config: { widgetColor: "#3B82F6", welcomeMessage: "Hi there! How can I help you today?" },
-      authToken: "website-token-12345"
-    };
-    const website = await this.createPlatform(websitePlatform);
-
     const telegramPlatform: InsertPlatform = {
       type: "telegram",
       name: "Telegram Bot",
@@ -271,7 +253,7 @@ export class MemStorage implements IStorage {
       config: null,
       authToken: null
     };
-    await this.createPlatform(telegramPlatform);
+    const telegram = await this.createPlatform(telegramPlatform);
 
     const discordPlatform: InsertPlatform = {
       type: "discord",
@@ -293,11 +275,11 @@ export class MemStorage implements IStorage {
       },
       authToken: "discord-token-partial"
     };
-    await this.createPlatform(discordPlatform);
+    const discord = await this.createPlatform(discordPlatform);
 
     // Create some conversations and messages
     const conversation1: InsertConversation = {
-      platformId: website.id,
+      platformId: telegram.id,
       externalUserId: "user1",
       externalUsername: "Chelsea Hagon",
       status: "active"
@@ -683,35 +665,11 @@ export class MemStorage implements IStorage {
 
   async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
     return [
-      { user: "Chelsea Hagon", action: "message", platform: "website", time: new Date() },
-      { user: "ai", action: "message", platform: "website", time: new Date() }
+      { user: "Chelsea Hagon", action: "message", platform: "telegram", time: new Date() },
+      { user: "ai", action: "message", platform: "discord", time: new Date() }
     ];
   }
 
-  // Website Configuration operations (placeholder implementations)
-  async getWebsiteConfiguration(id: number): Promise<WebsiteConfiguration | undefined> {
-    return undefined;
-  }
-
-  async getWebsiteConfigurationByToken(token: string): Promise<WebsiteConfiguration | undefined> {
-    return undefined;
-  }
-
-  async getWebsiteConfigurationsByUserId(userId: number): Promise<WebsiteConfiguration[]> {
-    return [];
-  }
-
-  async createWebsiteConfiguration(websiteConfig: InsertWebsiteConfiguration): Promise<WebsiteConfiguration> {
-    return { id: 1, userId: 1, name: "", authToken: "", isActive: true, createdAt: new Date(), updatedAt: new Date(), domain: null, aiConfigurationId: null, knowledgeBaseId: null, config: {} } as WebsiteConfiguration;
-  }
-
-  async updateWebsiteConfiguration(id: number, websiteConfig: Partial<WebsiteConfiguration>): Promise<WebsiteConfiguration | undefined> {
-    return undefined;
-  }
-
-  async deleteWebsiteConfiguration(id: number): Promise<boolean> {
-    return false;
-  }
 
   // Email Whitelist operations
   async isEmailWhitelisted(email: string): Promise<boolean> {
@@ -1678,43 +1636,6 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
-  // Website Configuration operations
-  async getWebsiteConfiguration(id: number): Promise<WebsiteConfiguration | undefined> {
-    const [config] = await db.select().from(websiteConfigurations).where(eq(websiteConfigurations.id, id));
-    return config;
-  }
-
-  async getWebsiteConfigurationByToken(token: string): Promise<WebsiteConfiguration | undefined> {
-    const [config] = await db.select().from(websiteConfigurations).where(eq(websiteConfigurations.authToken, token));
-    return config;
-  }
-
-  async getWebsiteConfigurationsByUserId(userId: number): Promise<WebsiteConfiguration[]> {
-    return await db
-      .select()
-      .from(websiteConfigurations)
-      .where(eq(websiteConfigurations.userId, userId))
-      .orderBy(asc(websiteConfigurations.name));
-  }
-
-  async createWebsiteConfiguration(websiteConfig: InsertWebsiteConfiguration): Promise<WebsiteConfiguration> {
-    const [createdConfig] = await db.insert(websiteConfigurations).values(websiteConfig).returning();
-    return createdConfig;
-  }
-
-  async updateWebsiteConfiguration(id: number, websiteConfig: Partial<WebsiteConfiguration>): Promise<WebsiteConfiguration | undefined> {
-    const [updatedConfig] = await db
-      .update(websiteConfigurations)
-      .set({ ...websiteConfig, updatedAt: new Date() })
-      .where(eq(websiteConfigurations.id, id))
-      .returning();
-    return updatedConfig;
-  }
-
-  async deleteWebsiteConfiguration(id: number): Promise<boolean> {
-    const result = await db.delete(websiteConfigurations).where(eq(websiteConfigurations.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
 
   // Email Whitelist methods implementation
   async isEmailWhitelisted(email: string): Promise<boolean> {

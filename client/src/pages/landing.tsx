@@ -13,7 +13,6 @@ import {
   MessageSquareMore
 } from "lucide-react";
 import { Logo } from "@/components/logo";
-import ChatWidget from "@/components/chat/chat-widget";
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -629,8 +628,6 @@ const LandingPage = () => {
         </div>
       </footer>
 
-      {/* Chat Widget */}
-      <ChatWidget />
     </div>
   );
 };

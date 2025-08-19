@@ -4,7 +4,6 @@ import {
   LayoutDashboard, 
   MessagesSquare, 
   Settings as SettingsIcon, 
-  Globe, 
   SendHorizontal, 
   MessageSquareMore,
   Users,
@@ -42,11 +41,6 @@ const mainItems: SidebarItem[] = [
 ];
 
 const integrationItems: SidebarItem[] = [
-  {
-    icon: <Globe className="h-5 w-5 mr-3" />,
-    label: "Website Chat",
-    path: "/integrations/website"
-  },
   {
     icon: <SendHorizontal className="h-5 w-5 mr-3" />,
     label: "Telegram",
