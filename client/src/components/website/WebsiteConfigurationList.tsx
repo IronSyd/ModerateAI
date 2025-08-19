@@ -129,9 +129,11 @@ export function WebsiteConfigurationList({
   const openNewConfiguration = () => {
     console.log('Button clicked!');
     setSelectedWebsite(null);
-    setDialogOpen(true);
-    console.log('State updated, dialogOpen should be true');
-    console.log('Current dialogOpen state:', dialogOpen);
+    setDialogOpen(prev => {
+      console.log('Previous dialogOpen state:', prev);
+      console.log('Setting dialogOpen to true');
+      return true;
+    });
   };
 
   const copyToken = async (token: string) => {
@@ -316,7 +318,10 @@ export function WebsiteConfigurationList({
       {console.log('Rendering WebsiteConfigurationDialog with dialogOpen:', dialogOpen)}
       <WebsiteConfigurationDialog
         isOpen={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => {
+          console.log('Dialog onClose called');
+          setDialogOpen(false);
+        }}
         websiteConfig={selectedWebsite}
         aiConfigurations={aiConfigurations}
         knowledgeBases={knowledgeBases}
