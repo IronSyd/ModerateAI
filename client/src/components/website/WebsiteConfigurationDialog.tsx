@@ -183,6 +183,8 @@ export function WebsiteConfigurationDialog({
     saveMutation.mutate(formData);
   };
 
+  console.log('WebsiteConfigurationDialog render - isOpen:', isOpen, 'websiteConfig:', websiteConfig);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
