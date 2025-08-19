@@ -60,6 +60,7 @@ export function WebsiteConfigurationDialog({
   aiConfigurations,
   knowledgeBases
 }: WebsiteConfigurationDialogProps) {
+  console.log('WebsiteConfigurationDialog rendered with isOpen:', isOpen);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
