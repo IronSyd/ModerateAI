@@ -44,11 +44,15 @@ interface WebsiteConfiguration {
 interface AIConfiguration {
   id: number;
   name: string;
+  systemPrompt?: string;
+  responseStyle?: string;
+  maxResponseLength?: number;
 }
 
 interface KnowledgeBase {
   id: number;
   name: string;
+  description?: string;
 }
 
 interface WebsiteConfigurationListProps {
