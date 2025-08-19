@@ -183,14 +183,9 @@ export function WebsiteConfigurationDialog({
     saveMutation.mutate(formData);
   };
 
-  console.log('Dialog component render - isOpen:', isOpen);
-  
   if (!isOpen) {
-    console.log('Dialog not showing because isOpen is false');
     return null;
   }
-  
-  console.log('Dialog should be visible now');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
