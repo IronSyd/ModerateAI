@@ -221,6 +221,7 @@ export function WebsiteConfigurationDialog({
             <div className="space-y-2">
               <Label htmlFor="aiConfig">AI Configuration</Label>
               <Select 
+                name="aiConfig"
                 value={formData.aiConfigurationId?.toString() || 'default'} 
                 onValueChange={(value) => setFormData(prev => ({ 
                   ...prev, 
@@ -244,6 +245,7 @@ export function WebsiteConfigurationDialog({
             <div className="space-y-2">
               <Label htmlFor="knowledgeBase">Knowledge Base</Label>
               <Select 
+                name="knowledgeBase"
                 value={formData.knowledgeBaseId?.toString() || 'default'} 
                 onValueChange={(value) => setFormData(prev => ({ 
                   ...prev, 
@@ -317,6 +319,7 @@ export function WebsiteConfigurationDialog({
               <div className="space-y-2">
                 <Label htmlFor="position">Widget Position</Label>
                 <Select 
+                  name="position"
                   value={formData.position} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, position: value }))}
                 >
