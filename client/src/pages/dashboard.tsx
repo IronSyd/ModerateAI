@@ -36,10 +36,9 @@ const Dashboard = () => {
 
   
   // Setup progress tracker
-  const totalSetupSteps = 3; // Website, Telegram, Discord integrations
+  const totalSetupSteps = 2; // Telegram, Discord integrations
   const [completedSteps, setCompletedSteps] = useState(0);
   const [setupProgress, setSetupProgress] = useState({
-    websiteIntegration: false,
     telegramIntegration: false,
     discordIntegration: false,
   });
@@ -50,7 +49,6 @@ const Dashboard = () => {
       let completed = 0;
       // Create initial progress object
       const progress = {
-        websiteIntegration: false,
         telegramIntegration: false,
         discordIntegration: false,
       };
@@ -59,12 +57,6 @@ const Dashboard = () => {
       
       // Check platform integrations
       if (platforms && Array.isArray(platforms)) {
-        const websitePlatform = platforms.find((p: any) => p.type === "website");
-        if (websitePlatform && websitePlatform.status === "active") {
-          completed += 1;
-          progress.websiteIntegration = true;
-        }
-        
         const telegramPlatform = platforms.find((p: any) => p.type === "telegram");
         if (telegramPlatform && telegramPlatform.status === "active") {
           completed += 1;
@@ -168,7 +160,7 @@ const Dashboard = () => {
         avatar: ""
       },
       action: activity.action,
-      platform: activity.platform as "website" | "discord" | "telegram",
+      platform: activity.platform as "discord" | "telegram",
       time: new Date(activity.time)
     }));
   };
@@ -209,7 +201,7 @@ const Dashboard = () => {
             {isLoadingPlatforms ? (
               // Loading skeleton
               <>
-                {[1, 2, 3].map((i) => (
+                {[1, 2].map((i) => (
                   <div key={i} className="border-b border-border p-6 last:border-b-0">
                     <div className="animate-pulse flex items-start justify-between">
                       <div className="flex items-center">
@@ -225,16 +217,16 @@ const Dashboard = () => {
                 ))}
               </>
             ) : (
-              // Display platforms
-              Array.isArray(platforms) ? platforms.map((platform: any) => (
+              // Display platforms (filter out website platforms)
+              Array.isArray(platforms) ? platforms
+                .filter((platform: any) => platform.type !== "website")
+                .map((platform: any) => (
                 <PlatformIntegrationCard
                   key={platform.id}
-                  type={platform.type as "website" | "telegram" | "discord"}
+                  type={platform.type as "telegram" | "discord"}
                   name={platform.name}
                   description={
-                    platform.type === "website" 
-                      ? "Embed an AI assistant on your website" 
-                      : platform.type === "telegram"
+                    platform.type === "telegram"
                       ? "Add AI responses to your Telegram groups"
                       : "Add AI moderation to your Discord server"
                   }

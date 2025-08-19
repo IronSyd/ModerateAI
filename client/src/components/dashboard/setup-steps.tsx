@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Settings, 
   MessageSquareMore, 
-  Globe, 
+ 
   Send, 
   Database, 
   CreditCard,
@@ -21,7 +21,6 @@ type SetupStep = {
 
 type SetupStepsProps = {
   completedSteps: {
-    websiteIntegration: boolean;
     telegramIntegration: boolean;
     discordIntegration: boolean;
   };
@@ -29,14 +28,6 @@ type SetupStepsProps = {
 
 const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
   const setupSteps: SetupStep[] = [
-    {
-      id: 'website-integration',
-      title: 'Website Integration',
-      description: 'Add the AI chat widget to your website',
-      link: '/integrations/website',
-      icon: <Globe className="h-5 w-5" />,
-      completed: completedSteps.websiteIntegration
-    },
     {
       id: 'telegram-integration',
       title: 'Telegram Integration',
@@ -52,8 +43,7 @@ const SetupSteps = ({ completedSteps }: SetupStepsProps) => {
       link: '/integrations/discord',
       icon: <MessageSquareMore className="h-5 w-5" />,
       completed: completedSteps.discordIntegration
-    },
-
+    }
   ];
 
   return (

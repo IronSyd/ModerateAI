@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Globe, Send, MessageSquareMore } from "lucide-react";
 
-type PlatformType = "website" | "telegram" | "discord";
+type PlatformType = "telegram" | "discord";
 type PlatformStatus = "active" | "not_connected" | "setup_required";
 
 type PlatformIntegrationCardProps = {
@@ -21,8 +21,6 @@ const PlatformIntegrationCard = ({
   // Get icon based on platform type
   const getPlatformIcon = () => {
     switch (type) {
-      case "website":
-        return <Globe className="h-6 w-6 text-primary" />;
       case "telegram":
         return <Send className="h-6 w-6 text-primary" />;
       case "discord":

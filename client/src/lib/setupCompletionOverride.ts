@@ -12,7 +12,6 @@
  */
 export function overrideSetupProgress(originalProgress: {
   aiConfig: boolean;
-  websiteIntegration: boolean;
   telegramIntegration: boolean;
   discordIntegration: boolean;
   knowledgeBase: boolean;
@@ -34,7 +33,6 @@ export function overrideCompletedStepCount(
   currentCount: number, 
   setupProgress: {
     aiConfig: boolean;
-    websiteIntegration: boolean;
     telegramIntegration: boolean;
     discordIntegration: boolean;
     knowledgeBase: boolean;

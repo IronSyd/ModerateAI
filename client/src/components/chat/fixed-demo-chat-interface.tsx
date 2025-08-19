@@ -22,7 +22,7 @@ type Message = {
 
 // Define conversation starters for the chat interface that highlight platform features
 const conversationStarters = [
-  "How does multi-platform integration work across Discord, Telegram, and Web?",
+  "How does multi-platform integration work across Discord and Telegram?",
   "Tell me about the AI-powered content moderation capabilities",
   "How can I train the AI with my own knowledge base?",
   "What analytics and insights does ModerateAI provide?",
