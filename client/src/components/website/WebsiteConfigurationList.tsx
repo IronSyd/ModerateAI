@@ -131,6 +131,7 @@ export function WebsiteConfigurationList({
     setSelectedWebsite(null);
     setDialogOpen(true);
     console.log('State updated, dialogOpen should be true');
+    console.log('Current dialogOpen state:', dialogOpen);
   };
 
   const copyToken = async (token: string) => {
@@ -312,6 +313,7 @@ export function WebsiteConfigurationList({
         </div>
       </div>
 
+      {console.log('Rendering WebsiteConfigurationDialog with dialogOpen:', dialogOpen)}
       <WebsiteConfigurationDialog
         isOpen={dialogOpen}
         onClose={() => setDialogOpen(false)}
