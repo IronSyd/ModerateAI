@@ -183,6 +183,8 @@ export function WebsiteConfigurationDialog({
     saveMutation.mutate(formData);
   };
 
+  console.log('WebsiteConfigurationDialog render - isOpen:', isOpen);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -209,6 +211,7 @@ export function WebsiteConfigurationDialog({
               <Label htmlFor="domain">Domain (optional)</Label>
               <Input
                 id="domain"
+                name="domain"
                 value={formData.domain}
                 onChange={(e) => setFormData(prev => ({ ...prev, domain: e.target.value }))}
                 placeholder="example.com"
