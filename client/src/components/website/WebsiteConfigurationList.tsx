@@ -127,8 +127,10 @@ export function WebsiteConfigurationList({
   };
 
   const openNewConfiguration = () => {
+    console.log('Button clicked!');
     setSelectedWebsite(null);
     setDialogOpen(true);
+    console.log('State updated, dialogOpen should be true');
   };
 
   const copyToken = async (token: string) => {
