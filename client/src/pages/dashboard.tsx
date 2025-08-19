@@ -6,7 +6,6 @@ import StatsCard from "@/components/dashboard/stats-card";
 import PlatformIntegrationCard from "@/components/dashboard/platform-integration-card";
 import RecentActivityList from "@/components/dashboard/recent-activity-list";
 
-import DemoChatInterface from "@/components/chat/fixed-demo-chat-interface";
 import { MessagesSquare, MonitorSmartphone, CheckCircle } from "lucide-react";
 
 
@@ -247,11 +246,6 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Demo Chat Interface */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Demo Chat Interface</h2>
-        <DemoChatInterface />
-      </div>
     </div>
   );
 };
