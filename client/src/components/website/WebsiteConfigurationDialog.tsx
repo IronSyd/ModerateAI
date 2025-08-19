@@ -185,9 +185,15 @@ export function WebsiteConfigurationDialog({
 
   console.log('WebsiteConfigurationDialog render - isOpen:', isOpen, 'websiteConfig:', websiteConfig);
   
+  if (!isOpen) {
+    console.log('Dialog not rendering because isOpen is false');
+    return null;
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{ zIndex: 9999 }}>
         <DialogHeader>
           <DialogTitle>
             {websiteConfig ? 'Edit Website Configuration' : 'Create Website Configuration'}
