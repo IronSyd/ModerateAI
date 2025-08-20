@@ -32,23 +32,28 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Rate limiting middleware
+// Rate limiting middleware - more generous for normal usage
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 1000 : 10000, // Much higher limits
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for static assets in development
+    return process.env.NODE_ENV === "development" && !req.path.startsWith('/api');
+  }
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login attempts per windowMs
+  max: 20, // 20 login attempts per 15 minutes should be sufficient
   message: "Too many login attempts, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
+// Apply rate limiting
 app.use(limiter);
 app.use("/api/login", authLimiter);
 
