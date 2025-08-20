@@ -202,108 +202,6 @@ export class MemStorage implements IStorage {
     this.conversationTrainingIdCounter = 1;
     this.teamInvitationIdCounter = 1;
 
-    // Initialize with demo data
-    this.initializeDemoData().catch(error => {
-      console.error("Error initializing demo data:", error);
-    });
-  }
-
-  private async initializeDemoData() {
-    // Create demo user
-    const demoUser: InsertUser = {
-      email: "demo@example.com",
-      fullName: "Demo User",
-      role: "admin"
-    };
-    const user = await this.createUser(demoUser);
-
-    // Create example AI configuration
-    const aiConfig: InsertAiConfiguration = {
-      userId: user.id,
-      name: "Default Configuration",
-      responseStyle: 75, // Friendly
-      responseLength: 40, // Concise
-
-      isActive: true,
-      model: "gpt-4o",
-      systemPrompt: "You are a helpful customer support assistant for ModerateAI. ModerateAI is a SaaS platform that provides AI-powered chat support and community moderation across websites, Telegram, and Discord. Be friendly, helpful, and professional when answering questions.",
-      enableProactiveResponses: false,
-      enableConversationMemory: true,
-      enableSentimentAnalysis: true,
-      enableConversationTraining: false,
-    };
-    await this.createAiConfiguration(aiConfig);
-
-    // Create knowledge base
-    const knowledgeBase: InsertKnowledgeBase = {
-      userId: user.id,
-      name: "Product Documentation",
-      description: "Knowledge base containing product documentation",
-      documentCount: 42,
-      isActive: true
-    };
-    await this.createKnowledgeBase(knowledgeBase);
-
-    // Create platforms
-    const telegramPlatform: InsertPlatform = {
-      type: "telegram",
-      name: "Telegram Bot",
-      status: "not_connected",
-      userId: user.id,
-      config: null,
-      authToken: null
-    };
-    const telegram = await this.createPlatform(telegramPlatform);
-
-    const discordPlatform: InsertPlatform = {
-      type: "discord",
-      name: "Discord Bot",
-      status: "active",
-      userId: user.id,
-      config: { 
-        botName: "ModerateAI",
-        serverName: "Moderation AI Community",
-        memberCount: 127,
-        channels: [
-          { id: "1", name: "general", type: "text", moderationEnabled: true, active: true },
-          { id: "2", name: "help", type: "text", moderationEnabled: true, active: true }
-        ],
-        dailyMessages: 134,
-        moderationCount: 12,
-        permissions: "8",
-        setupCompleted: true,
-      },
-      authToken: "discord-token-partial"
-    };
-    const discord = await this.createPlatform(discordPlatform);
-
-    // Create some conversations and messages
-    const conversation1: InsertConversation = {
-      platformId: telegram.id,
-      externalUserId: "user1",
-      externalUsername: "Chelsea Hagon",
-      status: "active"
-    };
-    const conv1 = await this.createConversation(conversation1);
-
-    const message1: InsertMessage = {
-      conversationId: conv1.id,
-      content: "Asked a question about product pricing",
-      sender: "user",
-      metadata: null
-    };
-    await this.createMessage(message1);
-
-    const message2: InsertMessage = {
-      conversationId: conv1.id,
-      content: "Our pricing is flexible based on your needs. The Basic plan starts at $29/month, the Pro plan at $79/month, and we offer custom Enterprise solutions. Would you like specific details about any of these plans?",
-      sender: "ai",
-      metadata: null
-    };
-    await this.createMessage(message2);
-
-    // Add moderation actions
-
   }
 
   // User operations
@@ -673,7 +571,7 @@ export class MemStorage implements IStorage {
 
   // Email Whitelist operations
   async isEmailWhitelisted(email: string): Promise<boolean> {
-    return email === "demo@example.com"; // For demo purposes
+    return false; // No whitelisted emails in memory storage
   }
 
   async addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist> {

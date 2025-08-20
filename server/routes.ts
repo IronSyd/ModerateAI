@@ -10,7 +10,6 @@ import {
 import { initializeBot as initializeTelegramBot, disconnectBot as disconnectTelegramBot, initializeAllBots as initializeAllTelegramBots } from "./lib/telegram";
 import { initializeBot as initializeDiscordBot, disconnectBot as disconnectDiscordBot, initializeAllBots as initializeAllDiscordBots, refreshChannels as refreshDiscordChannels, exchangeDiscordAuthCode } from "./lib/discord";
 import { setupAuth } from "./auth";
-import testEmailRoutes from "./test-email";
 import trainingRoutes from "./routes/training";
 import { 
   insertPlatformSchema, 
@@ -29,87 +28,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Auth middleware to check if the user is authenticated
   const authMiddleware = (req: Request, res: Response, next: Function) => {
-    console.log(`Auth check - isAuthenticated: ${req.isAuthenticated()}, user: ${req.user ? 'exists' : 'missing'}, session: ${req.session ? 'exists' : 'missing'}`);
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     next();
   };
   
-  // Register test email routes
-  app.use("/api/email", testEmailRoutes);
   
   // Register training routes
   app.use("/api/training", trainingRoutes);
   
-  // TEMPORARY: Fix demo user password for testing
-  app.get("/api/fix-demo-password", async (req, res) => {
-    try {
-      const { hashPassword } = await import("./auth");
-      const { users } = await import("@shared/schema");
-      const { eq } = await import("drizzle-orm");
-      const { db } = await import("./db");
-      
-      // Email-only auth now, password not needed
-      console.log("Demo user setup complete (email-only auth)");
-      
-      res.json({ success: true, message: "Demo password fixed" });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  });
   
-  // TEMPORARY: Fix existing chat configurations to match platform settings
-  app.post("/api/fix-chat-configs", authMiddleware, async (req, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      // Get user's platforms
-      const platforms = await storage.getPlatformsByUserId(userId);
-      
-      let updatedCount = 0;
-      
-      for (const platform of platforms) {
-        const platformConfig = (platform.config as any) || {};
-        
-        // Get all chat configurations for this platform
-        const chatConfigs = await storage.getChatConfigurationsByPlatformId(platform.id);
-        
-        for (const chatConfig of chatConfigs) {
-          const currentSettings = (chatConfig.settings as any) || {};
-          
-          // Update settings to match platform configuration
-          const updatedSettings = {
-            ...currentSettings,
-            groupMode: platformConfig.groupMode !== undefined ? platformConfig.groupMode : currentSettings.groupMode,
-            privateChatMode: platformConfig.privateChatMode !== undefined ? platformConfig.privateChatMode : currentSettings.privateChatMode,
-            mentionOnly: platformConfig.mentionOnly !== undefined ? platformConfig.mentionOnly : currentSettings.mentionOnly,
-            contentFilteringEnabled: platformConfig.contentFilteringEnabled !== undefined ? platformConfig.contentFilteringEnabled : currentSettings.contentFilteringEnabled,
-            spamProtectionEnabled: platformConfig.spamProtectionEnabled !== undefined ? platformConfig.spamProtectionEnabled : currentSettings.spamProtectionEnabled
-          };
-          
-          // Update the chat configuration
-          await storage.updateChatConfiguration(chatConfig.id, {
-            settings: updatedSettings
-          });
-          
-          updatedCount++;
-        }
-      }
-      
-      res.json({ 
-        success: true, 
-        message: `Updated ${updatedCount} chat configurations to match platform settings`,
-        updatedCount 
-      });
-    } catch (error: any) {
-      console.error("Error fixing chat configurations:", error);
-      res.status(500).json({ success: false, message: error.message });
-    }
-  });
   
   // Team members API endpoint
   app.get("/api/team/members", authMiddleware, async (req, res) => {
@@ -566,87 +495,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
-  // Direct OpenAI chat completion for the website demo interface
-  app.post("/api/openai-demo", async (req, res) => {
-    try {
-      const { message } = req.body;
-      
-      if (!message) {
-        return res.status(400).json({ message: "Message is required" });
-      }
-      
-      // Get a demo user for accessing the knowledge base and AI configuration
-      const demoUsers = await storage.getAllUsers();
-      const demoUser = demoUsers.find(user => user.email === "michael@x8c.io") || demoUsers.find(user => user.email === "demo@example.com") || demoUsers[0];
-      
-      
-      if (!demoUser) {
-        // Fallback if no demo user exists
-        return res.status(500).json({ 
-          message: "Demo user not found",
-          error: "configuration_error"
-        });
-      }
-      
-      // Get active AI configuration
-      const aiConfig = await storage.getActiveAiConfiguration(demoUser.id);
-      
-      // Get active knowledge base
-      const knowledgeBase = await storage.getActiveKnowledgeBase(demoUser.id);
-      
-      // Create a more comprehensive system prompt with knowledge base information
-      let systemPrompt = 
-        "You are an AI assistant for ModerateAI, a SaaS platform that provides customer support " + 
-        "and community moderation across multiple platforms (Website, Telegram, Discord). " + 
-        "Answer user questions in a helpful, friendly, and concise manner. " +
-        "Focus on information about ModerateAI's features, pricing, and integrations. " +
-        "Keep responses under 150 words.";
-      
-      // Add knowledge base info
-      if (knowledgeBase) {
-        systemPrompt += `\n\nYou have access to the "${knowledgeBase.name}" knowledge base with ${knowledgeBase.documentCount} documents containing detailed product information.`;
-      }
-      
-      // Add product information for better responses
-      systemPrompt += `\n\nHere is key information about ModerateAI:
-- Features: Multi-platform integration (Website, Telegram, Discord), AI-powered chat responses, content moderation, customizable AI configurations
-- Pricing: Basic plan ($29/month), Pro plan ($79/month), Enterprise (custom pricing)
-- Integration: Easy setup via web dashboard with platform-specific wizards
-- Moderation: Customizable strictness levels, policy-based filtering, manual review options
-- AI Configuration: Adjustable response style, length, and tone; knowledge base customization`;
-      
-      try {
-        // Use knowledge-based response generation
-        const response = await generateKnowledgeBasedResponse(
-          message,
-          [], // No conversation history 
-          aiConfig?.systemPrompt || systemPrompt,
-          aiConfig?.responseStyle || 75, // Friendly tone
-          aiConfig?.responseLength || 50,  // Moderate length
-          demoUser.id // Pass demo user ID for knowledge base access
-        );
-        res.status(200).json({ content: response });
-      } catch (openaiError: any) {
-        // Log the specific OpenAI error for debugging
-        console.error("Error generating AI response:", openaiError);
-        
-        // Return a specific error format that the client can detect and handle gracefully
-        // Always use HTTP 200 with error field so the client can process it properly
-        return res.status(200).json({ 
-          error: "ai_service_error",
-          errorType: openaiError.status === 429 ? "rate_limit_exceeded" : "service_error",
-          message: "AI service is currently at capacity or experiencing issues.",
-          status: openaiError.status || 500
-        });
-      }
-    } catch (error: any) {
-      console.error("Error with direct OpenAI call:", error);
-      res.status(500).json({ 
-        message: "Error generating AI response",
-        error: error.message || "Unknown error"
-      });
-    }
-  });
 
   // Dashboard stats
   app.get("/api/dashboard/stats", authMiddleware, async (req, res) => {
