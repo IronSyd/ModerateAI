@@ -53,11 +53,11 @@ const AuthPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-background flex items-center">
-      <div className="container max-w-7xl mx-auto px-8 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-full max-w-7xl mx-auto p-8">
         <div className="grid gap-8 md:grid-cols-2 items-center">
           {/* Auth Form */}
-          <div className="flex flex-col items-center md:items-start">
+          <div>
             <div className="mb-4">
               <Logo />
             </div>
