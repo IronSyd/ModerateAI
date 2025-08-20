@@ -54,10 +54,10 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center">
-      <div className="container max-w-7xl mx-auto px-4 pt-4 pb-8">
+      <div className="container max-w-7xl mx-auto px-8 py-8">
         <div className="grid gap-8 md:grid-cols-2 items-center">
           {/* Auth Form */}
-          <div className="ml-8">
+          <div className="flex flex-col items-center md:items-start">
             <div className="mb-4">
               <Logo />
             </div>
