@@ -62,7 +62,7 @@ const AuthPage = () => {
               <Logo />
             </div>
 
-            <Card className="w-full max-w-md mx-auto">
+            <Card className="w-full max-w-md">
               <CardHeader>
                 <CardDescription className="text-lg">
                   Sign in to your ModerateAI account
