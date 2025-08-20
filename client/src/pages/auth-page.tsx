@@ -57,7 +57,7 @@ const AuthPage = () => {
       <div className="container max-w-7xl mx-auto px-4 pt-4 pb-8">
         <div className="grid gap-8 md:grid-cols-2 items-center">
           {/* Auth Form */}
-          <div>
+          <div className="ml-8">
             <div className="mb-4">
               <Logo />
             </div>
