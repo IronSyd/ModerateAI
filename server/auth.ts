@@ -6,7 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual, scryptSync } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as UserType } from "@shared/schema";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
 
 declare global {
   namespace Express {
@@ -24,7 +24,7 @@ export async function hashPassword(password: string) {
 
 async function comparePasswords(supplied: string, stored: string) {
   if (!stored || typeof stored !== 'string') {
-    console.error('Invalid stored password format:', stored);
+    console.error('Invalid stored password format');
     return false;
   }
   
@@ -38,26 +38,37 @@ async function comparePasswords(supplied: string, stored: string) {
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     return timingSafeEqual(hashedBuf, suppliedBuf);
-  } catch (error) {
-    console.error('Error comparing passwords:', error);
+  } catch (error: any) {
+    console.error('Error comparing passwords:', error?.message || 'Unknown error');
     return false;
   }
 }
 
 export function setupAuth(app: Express) {
-  // Create MemoryStore for session storage
-  const MemoryStore = createMemoryStore(session);
-  const sessionStore = new MemoryStore({
-    checkPeriod: 86400000, // prune expired entries every 24h
+  // Enforce SESSION_SECRET environment variable
+  if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET environment variable is required for production");
+  }
+
+  // Create database-backed session storage for production reliability
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    ttl: 24 * 60 * 60 * 1000, // 24 hours
+    tableName: "sessions"
   });
 
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "moderation-ai-dev-secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: "strict" // CSRF protection
     },
   };
 
@@ -70,26 +81,24 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy({ usernameField: 'email', passwordField: 'email' }, async (email, password, done) => {
       try {
-        console.log(`Authenticating user: ${email}`);
+        // Authentication attempt (email redacted for security)
         
         // Check if email is whitelisted first
         const isWhitelisted = await storage.isEmailWhitelisted(email);
         if (!isWhitelisted) {
-          console.log(`Email not whitelisted: ${email}`);
           return done(null, false, { message: "Email not authorized" });
         }
         
         // Find user by email
         const user = await storage.getUserByEmail(email);
         if (!user) {
-          console.log(`User not found: ${email}`);
           return done(null, false, { message: "User not found" });
         }
         
-        console.log(`User ${email} authenticated successfully`);
+        // Authentication successful
         return done(null, user);
       } catch (error) {
-        console.error(`Authentication error for ${email}:`, error);
+        console.error('Authentication error:', error.message);
         return done(error);
       }
     }),
@@ -103,7 +112,7 @@ export function setupAuth(app: Express) {
     try {
       const user = await storage.getUser(id);
       done(null, user);
-    } catch (error) {
+    } catch (error: any) {
       done(error, null);
     }
   });
@@ -111,7 +120,7 @@ export function setupAuth(app: Express) {
 
 
   app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
-    console.log("Login attempt for:", req.body.email);
+    // Login attempt logged
     
     if (!req.body.email) {
       console.error("Missing email");
@@ -120,25 +129,23 @@ export function setupAuth(app: Express) {
     
     passport.authenticate("local", (err: Error, user: UserType, info: { message: string }) => {
       if (err) {
-        console.error("Login error:", err);
+        console.error("Login error:", err.message);
         return next(err);
       }
       
       if (!user) {
         console.log("Login failed - Invalid credentials");
-        console.log("Login info:", info);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
       // Direct login without 2FA
       req.login(user, (loginErr) => {
         if (loginErr) {
-          console.error("Login session error:", loginErr);
+          console.error("Login session error:", loginErr.message);
           return next(loginErr);
         }
         
-        console.log(`Login successful for user ${user.id}, session ID: ${req.sessionID}`);
-        console.log(`Session cookie set: ${JSON.stringify(req.session)}`);
+        console.log(`Login successful for user ${user.id}`);
         
         // Return user without sensitive information
         const safeUser = {
@@ -163,13 +170,10 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req: Request, res: Response) => {
-    console.log(`GET /api/user - isAuthenticated: ${req.isAuthenticated()}, sessionID: ${req.sessionID}, session:`, req.session);
-    
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    console.log(`User found in session: ${JSON.stringify(req.user)}`);
     res.status(200).json(req.user);
   });
 }

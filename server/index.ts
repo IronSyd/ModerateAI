@@ -9,6 +9,8 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { initializeAllBots as initializeAllTelegramBots } from "./lib/telegram";
 import { initializeAllBots as initializeAllDiscordBots } from "./lib/discord";
+import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 // Function to hash passwords
 const scryptAsync = promisify(scrypt);
@@ -19,8 +21,39 @@ async function hashPassword(password: string) {
 }
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Security middleware - CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === "production" 
+    ? [process.env.FRONTEND_URL || "https://yourapp.replit.app"] 
+    : ["http://localhost:5000", "http://127.0.0.1:5000"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 login attempts per windowMs
+  message: "Too many login attempts, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
+app.use("/api/login", authLimiter);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -37,7 +70,8 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      if (capturedJsonResponse && process.env.NODE_ENV === "development") {
+        // Only log response data in development for security
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
@@ -59,8 +93,11 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = process.env.NODE_ENV === "production" 
+      ? "Internal Server Error" 
+      : err.message || "Internal Server Error";
 
+    console.error('Application error:', err.message);
     res.status(status).json({ message });
     throw err;
   });
