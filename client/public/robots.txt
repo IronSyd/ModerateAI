@@ -21,4 +21,4 @@ Disallow: /billing
 Disallow: /help
 Disallow: /api/
 
-Sitemap: https://moderate.ai/sitemap.xml
+Sitemap: https://moderateai.net/sitemap.xml
