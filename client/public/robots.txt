@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Public landing page only (docs are hosted on GitBook)
+Disallow: /auth
+Disallow: /accept-invitation
+Disallow: /choose-plan
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /conversations
+Disallow: /knowledge-base
+Disallow: /admin
+Disallow: /integrations
+Disallow: /team
+Disallow: /settings
+Disallow: /activity
+Disallow: /analytics
+Disallow: /profile
+Disallow: /preferences
+Disallow: /billing
+Disallow: /help
+Disallow: /api/
+
+Sitemap: https://moderate.ai/sitemap.xml
