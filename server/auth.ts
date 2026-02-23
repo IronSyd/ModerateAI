@@ -50,7 +50,7 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 function getConfiguredOwnerEmail(): string {
-  return String(process.env.OWNER_EMAIL || process.env.ADMIN_EMAIL || "admin@moderate.ai")
+  return String(process.env.OWNER_EMAIL || process.env.ADMIN_EMAIL || "admin@moderateai.net")
     .toLowerCase()
     .trim();
 }

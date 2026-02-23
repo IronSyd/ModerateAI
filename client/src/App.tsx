@@ -145,7 +145,7 @@ function RouteSeoManager({ location }: { location: string }) {
     const siteBase =
       normalizeBaseUrl(import.meta.env.VITE_SITE_URL) ??
       normalizeBaseUrl(window.location.origin) ??
-      "https://moderate.ai";
+      "https://moderateai.net";
     const canonicalUrl = new URL(seo.canonicalPath ?? "/", siteBase).toString();
 
     document.title = seo.title;

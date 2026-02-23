@@ -77,7 +77,7 @@ export type KnowledgeUrlSyncTriggerResult =
   | { status: "already_completed"; runId: number | null; message: string; canForce: true }
   | { status: "error"; message: string };
 
-const DEFAULT_USER_AGENT = "ModerateAI-Bot/1.0 (+https://ModerateAI.com)";
+const DEFAULT_USER_AGENT = "ModerateAI-Bot/1.0 (+https://moderateai.net)";
 const MAX_PAGE_SUMMARY_ITEMS = 200;
 const MAX_PAGES_PER_RUN = parsePositiveIntEnv("KB_URL_SYNC_MAX_PAGES_PER_RUN", 200);
 const MAX_DEPTH = parsePositiveIntEnv("KB_URL_SYNC_MAX_DEPTH", 4);

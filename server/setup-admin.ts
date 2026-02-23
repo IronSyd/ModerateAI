@@ -6,7 +6,7 @@ import { eq, or } from "drizzle-orm";
 async function setupAdminAccount() {
   console.log("Setting up admin account...");
 
-  const email = String(process.env.OWNER_EMAIL || process.env.ADMIN_EMAIL || "admin@moderate.ai")
+  const email = String(process.env.OWNER_EMAIL || process.env.ADMIN_EMAIL || "admin@moderateai.net")
     .toLowerCase()
     .trim();
   const fullName = String(process.env.OWNER_NAME || "ModerateAI Admin").trim() || "ModerateAI Admin";

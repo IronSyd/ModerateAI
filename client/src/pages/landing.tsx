@@ -654,7 +654,7 @@ const LandingPage = () => {
               <ul className="space-y-2">
                 <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</a></li>
                 <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Careers</a></li>
-                <li><a href="mailto:admin@moderate.ai" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+                <li><a href="mailto:admin@moderateai.net" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
               </ul>
             </div>
           </div>
