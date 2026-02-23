@@ -1,4 +1,4 @@
-import { MessagesSquare } from "lucide-react";
+﻿import { MessagesSquare } from "lucide-react";
 import { Link } from "wouter";
 
 interface LogoProps {

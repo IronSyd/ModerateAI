@@ -2,17 +2,19 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
+  BarChart3,
   MessagesSquare, 
-  Settings as SettingsIcon, 
-  SendHorizontal, 
-  MessageSquareMore,
   Users,
+  UserCog,
   Settings as SettingsCog,
-  Activity,
-  Database
+  Database,
+  Globe
 } from "lucide-react";
+import { SiDiscord, SiTelegram } from "react-icons/si";
 import { Logo } from "@/components/logo";
 import { useMobile } from "@/hooks/use-mobile";
+import { useAdminUser } from "@/hooks/use-admin-user";
+import { useAuth } from "@/hooks/use-auth";
 
 type SidebarItem = {
   icon: React.ReactNode;
@@ -25,6 +27,11 @@ const mainItems: SidebarItem[] = [
     icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
     label: "Dashboard",
     path: "/dashboard"
+  },
+  {
+    icon: <BarChart3 className="h-5 w-5 mr-3" />,
+    label: "Deep Analytics",
+    path: "/analytics/deep"
   },
   {
     icon: <MessagesSquare className="h-5 w-5 mr-3" />,
@@ -42,23 +49,31 @@ const mainItems: SidebarItem[] = [
 
 const integrationItems: SidebarItem[] = [
   {
-    icon: <SendHorizontal className="h-5 w-5 mr-3" />,
+    icon: <SiTelegram />,
     label: "Telegram",
     path: "/integrations/telegram"
   },
   {
-    icon: <MessageSquareMore className="h-5 w-5 mr-3" />,
+    icon: <SiDiscord />,
     label: "Discord",
     path: "/integrations/discord"
+  },
+  {
+    icon: <Globe />,
+    label: "Website",
+    path: "/integrations/website"
   }
 ];
 
-const settingsItems: SidebarItem[] = [
+const teamItems: SidebarItem[] = [
   {
     icon: <Users className="h-5 w-5 mr-3" />,
     label: "Team",
     path: "/team"
   },
+];
+
+const settingsItems: SidebarItem[] = [
   {
     icon: <SettingsCog className="h-5 w-5 mr-3" />,
     label: "Settings",
@@ -70,6 +85,26 @@ const Sidebar = () => {
   const [location] = useLocation();
   const isMobile = useMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
+  const { isAdminUser } = useAdminUser();
+  const { user } = useAuth();
+
+  const workspaceRole = (user as any)?.workspaceRole ?? null;
+  const isWorkspaceAdmin = isAdminUser || workspaceRole === "admin";
+
+  const adminItems: SidebarItem[] = isAdminUser
+    ? [
+        {
+          icon: <UserCog className="h-5 w-5 mr-3" />,
+          label: "Users",
+          path: "/admin/users",
+        },
+        {
+          icon: <BarChart3 className="h-5 w-5 mr-3" />,
+          label: "Learning Ops",
+          path: "/admin/ops/admin-history-learning",
+        },
+      ]
+    : [];
   
   // Close sidebar on mobile when location changes
   useEffect(() => {
@@ -118,7 +153,7 @@ const Sidebar = () => {
     );
   };
   
-  const sidebarClasses = `fixed md:static inset-y-0 left-0 z-50 w-64 bg-background shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
+  const sidebarClasses = `fixed inset-y-0 left-0 z-50 w-64 bg-background shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
     isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
   }`;
   
@@ -135,7 +170,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div className={sidebarClasses}>
         {/* Logo - Clickable and links to homepage */}
-        <div className="p-4 border-b border-border">
+        <div className="h-[60px] px-4 border-b border-border flex items-center">
           <Logo size="md" className="hover:opacity-90 transition-opacity" />
         </div>
         
@@ -143,6 +178,8 @@ const Sidebar = () => {
         <nav className="flex-1 py-4 overflow-y-auto">
           <SidebarSection title="" items={mainItems} />
           <SidebarSection title="" items={integrationItems} />
+          {isWorkspaceAdmin && <SidebarSection title="" items={teamItems} />}
+          {isAdminUser && <SidebarSection title="" items={adminItems} />}
           <SidebarSection title="" items={settingsItems} />
         </nav>
       </div>

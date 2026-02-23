@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import { User } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
@@ -12,57 +12,22 @@ interface AdminUserContextType {
 
 const AdminUserContext = createContext<AdminUserContextType | null>(null);
 
-// Mock admin user data
-const ADMIN_USER: User = {
-  id: 0,
-  username: "admin",
-  email: "excelay@gmail.com",
-  password: "",
-  passwordHash: null,
-  passwordSalt: null,
-  fullName: "Admin User",
-  role: "admin",
-  isActive: true,
-  requireTwoFactor: false,
-  twoFactorCode: null,
-  twoFactorCodeExpiry: null,
-  createdAt: new Date()
-};
-
 export function AdminUserProvider({ children }: { children: ReactNode }) {
-  const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
-  
   // Get current authenticated user
   const { data: currentUser } = useQuery<User | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
-  
-  // Check if admin user was previously enabled
-  useEffect(() => {
-    const storedValue = localStorage.getItem("isAdminUser");
-    if (storedValue === "true") {
-      setIsAdminUser(true);
-    }
-  }, []);
-
-  // Automatically disable admin mode for non-admin users
-  useEffect(() => {
-    if (currentUser && currentUser.role !== "admin" && isAdminUser) {
-      setIsAdminUser(false);
-      localStorage.removeItem("isAdminUser");
-    }
-  }, [currentUser, isAdminUser]);
 
   const enableAdminUser = () => {
-    setIsAdminUser(true);
-    localStorage.setItem("isAdminUser", "true");
+    // No-op: admin mode is derived from authenticated role.
   };
 
   const disableAdminUser = () => {
-    setIsAdminUser(false);
-    localStorage.removeItem("isAdminUser");
+    // No-op: admin mode is derived from authenticated role.
   };
+
+  const isAdminUser = currentUser?.role === "admin" || currentUser?.role === "owner";
 
   return (
     <AdminUserContext.Provider
@@ -70,7 +35,7 @@ export function AdminUserProvider({ children }: { children: ReactNode }) {
         isAdminUser,
         enableAdminUser,
         disableAdminUser,
-        adminUser: isAdminUser ? ADMIN_USER : null
+        adminUser: isAdminUser ? currentUser ?? null : null
       }}
     >
       {children}

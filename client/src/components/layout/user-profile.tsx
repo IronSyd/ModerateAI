@@ -36,13 +36,13 @@ const UserProfile = () => {
       <Avatar>
         <AvatarImage 
           src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-          alt={user.fullName || user.username} 
+          alt={user.fullName || user.email} 
         />
-        <AvatarFallback>{(user.fullName || user.username).charAt(0)}</AvatarFallback>
+        <AvatarFallback>{(user.fullName || user.email).charAt(0)}</AvatarFallback>
       </Avatar>
       
       <div className="ml-3">
-        <p className="text-sm font-medium text-foreground">{user.fullName || user.username}</p>
+        <p className="text-sm font-medium text-foreground">{user.fullName || user.email}</p>
         <p className="text-xs text-muted-foreground">{user.role}</p>
       </div>
       

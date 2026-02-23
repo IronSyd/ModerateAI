@@ -1,4 +1,4 @@
-import { db } from './server/db';
+﻿import { db } from './server/db';
 import { knowledgeDocuments } from './shared/schema';
 
 async function addKnowledgeDocuments() {

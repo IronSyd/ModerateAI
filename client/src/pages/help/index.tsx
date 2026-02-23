@@ -1,664 +1,86 @@
-import React from "react";
-import { useLocation } from "wouter";
-import { 
-  Search, 
-  BookOpen, 
-  Info,
-  MessageCircle,
-  ShieldAlert,
-  Puzzle,
-  VideoIcon,
-  Headphones,
-  ChevronRight,
-  ArrowRight
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Link } from "wouter";
+import { ArrowUpRight, BookOpen, ExternalLink, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useReadArticles } from "@/hooks/use-read-articles";
-
-// Types from help-menu.tsx
-type HelpCategory = {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  articles?: HelpArticle[];
-};
-
-type HelpArticle = {
-  id: string;
-  title: string;
-  category: string;
-  preview: string;
-  popular?: boolean;
-  new?: boolean;
-};
-
-const helpCategories: HelpCategory[] = [
-  {
-    id: 'getting-started',
-    title: 'Getting Started',
-    description: 'Learn the basics of ModerateAI',
-    icon: <Info className="h-5 w-5 text-blue-500" />,
-    articles: [
-      {
-        id: 'onboarding',
-        title: 'Setting up your first platform',
-        category: 'getting-started',
-        preview: 'Learn how to connect your first platform to ModerateAI',
-        popular: true
-      },
-      {
-        id: 'ai-config',
-        title: 'AI configuration basics',
-        category: 'getting-started',
-        preview: 'Understanding response styles and moderation strictness',
-        new: true
-      }
-    ]
-  },
-  {
-    id: 'platform-integration',
-    title: 'Platform Integration',
-    description: 'Connect various platforms',
-    icon: <Puzzle className="h-5 w-5 text-green-500" />,
-    articles: [
-      {
-        id: 'website-integration',
-        title: 'Website chat widget setup',
-        category: 'platform-integration',
-        preview: 'How to add the chat widget to your website'
-      },
-      {
-        id: 'telegram-bot',
-        title: 'Creating a Telegram bot',
-        category: 'platform-integration',
-        preview: 'Connect ModerateAI to your Telegram channels'
-      },
-      {
-        id: 'discord-setup',
-        title: 'Discord server integration',
-        category: 'platform-integration',
-        preview: 'Automatic moderation for Discord servers'
-      }
-    ]
-  },
-  {
-    id: 'ai-configuration',
-    title: 'AI Configuration',
-    description: 'Optimize AI responses',
-    icon: <MessageCircle className="h-5 w-5 text-purple-500" />,
-    articles: [
-      {
-        id: 'ai-training',
-        title: 'Training a custom AI model',
-        category: 'ai-configuration',
-        preview: 'How to use your data to improve AI responses'
-      },
-      {
-        id: 'analytics-dashboard',
-        title: 'User Analytics Dashboard',
-        category: 'ai-configuration',
-        preview: 'How to track and analyze user interactions with your AI',
-        new: true
-      },
-      {
-        id: 'response-templates',
-        title: 'Creating AI Response Templates',
-        category: 'ai-configuration',
-        preview: 'How to design effective response patterns for your AI'
-      }
-    ]
-  },
-  {
-    id: 'moderation',
-    title: 'Content Moderation',
-    description: 'Set up moderation rules',
-    icon: <ShieldAlert className="h-5 w-5 text-orange-500" />,
-    articles: [
-      {
-        id: 'content-rules',
-        title: 'Setting up content filtering rules',
-        category: 'moderation',
-        preview: 'Create custom rules for content moderation'
-      },
-      {
-        id: 'custom-responses',
-        title: 'Custom Response Templates',
-        category: 'moderation',
-        preview: 'Setting up personalized response templates for different scenarios',
-        new: true
-      },
-      {
-        id: 'banned-words',
-        title: 'Managing banned words and phrases',
-        category: 'moderation',
-        preview: 'How to set up and maintain your banned content list'
-      },
-      {
-        id: 'moderation-levels',
-        title: 'Understanding moderation levels',
-        category: 'moderation',
-        preview: 'How to set appropriate strictness for different platforms'
-      }
-    ]
-  },
-  {
-    id: 'videos',
-    title: 'Video Tutorials',
-    description: 'Watch step-by-step guides',
-    icon: <VideoIcon className="h-5 w-5 text-red-500" />,
-    articles: [
-      {
-        id: 'intro-video',
-        title: 'Introduction to ModerateAI',
-        category: 'videos',
-        preview: 'A complete overview of the platform features'
-      },
-      {
-        id: 'telegram-video',
-        title: 'Setting up Telegram integration',
-        category: 'videos',
-        preview: 'Video guide for connecting your Telegram bot'
-      }
-    ]
-  },
-  {
-    id: 'support',
-    title: 'Support',
-    description: 'Get help from our team',
-    icon: <Headphones className="h-5 w-5 text-gray-500" />,
-    articles: [
-      {
-        id: 'contact-support',
-        title: 'How to contact support',
-        category: 'support',
-        preview: 'Different ways to get help from our support team'
-      },
-      {
-        id: 'billing-support',
-        title: 'Billing and subscription help',
-        category: 'support',
-        preview: 'Answers to common billing questions'
-      }
-    ]
-  }
-];
-
-const popularArticles: HelpArticle[] = [
-  {
-    id: 'onboarding',
-    title: 'Setting up your first platform',
-    category: 'getting-started',
-    preview: 'Learn how to connect your first platform to ModerateAI',
-    popular: true
-  },
-  {
-    id: 'website-integration',
-    title: 'Website chat widget setup',
-    category: 'platform-integration',
-    preview: 'How to add the chat widget to your website'
-  },
-  {
-    id: 'ai-training',
-    title: 'Training a custom AI model',
-    category: 'ai-configuration',
-    preview: 'How to use your data to improve AI responses'
-  },
-  {
-    id: 'content-rules',
-    title: 'Setting up content filtering rules',
-    category: 'moderation',
-    preview: 'Create custom rules for content moderation'
-  },
-  {
-    id: 'telegram-integration', 
-    title: 'Telegram Bot Integration',
-    category: 'platform-integration',
-    preview: 'How to setup and configure your Telegram bot with ModerateAI',
-    popular: true
-  },
-  {
-    id: 'discord-integration',
-    title: 'Discord Server Integration',
-    category: 'platform-integration',
-    preview: 'How to connect and moderate Discord servers with AI-powered tools',
-    popular: true
-  }
-];
-
-const newArticles: HelpArticle[] = [
-  {
-    id: 'ai-config',
-    title: 'AI configuration basics',
-    category: 'getting-started',
-    preview: 'Understanding response styles and moderation strictness',
-    new: true
-  },
-  {
-    id: 'team-roles',
-    title: 'Team roles and permissions',
-    category: 'getting-started',
-    preview: 'Managing access for your team members',
-    new: true
-  },
-  {
-    id: 'analytics-dashboard',
-    title: 'User Analytics Dashboard',
-    category: 'ai-configuration',
-    preview: 'How to track and analyze user interactions with your AI',
-    new: true
-  },
-  {
-    id: 'custom-responses',
-    title: 'Custom Response Templates',
-    category: 'moderation',
-    preview: 'Setting up personalized response templates for different scenarios',
-    new: true
-  }
-];
-
-// Article Card Component
-function ArticleCard({ article, onNavigate }: { article: HelpArticle, onNavigate: (path: string) => void }) {
-  // Use the read articles hook to check if this article has been read
-  const { hasReadArticle } = useReadArticles();
-  const isRead = hasReadArticle(article.id);
-  
-  // Only show the "New" badge if the article is marked as new AND has not been read
-  const showNewBadge = article.new && !isRead;
-  
-  return (
-    <div 
-      className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
-      onClick={() => onNavigate(`/help/article/${article.id}`)}
-    >
-      <div className="flex items-start">
-        <BookOpen className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-        <div className="min-w-0 flex-grow">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-foreground group-hover:text-primary truncate">
-              {article.title}
-            </h3>
-
-            {showNewBadge && (
-              <Badge className="ml-2 bg-green-900/20 text-green-500 hover:bg-green-900/30">
-                New
-              </Badge>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{article.preview}</p>
-        </div>
-        <ChevronRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
-      </div>
-    </div>
-  );
-}
-
-// Category Card Component
-function CategoryCard({ category, onNavigate }: { category: HelpCategory, onNavigate: (path: string) => void }) {
-  const handleCategoryClick = () => {
-    // If there are articles, go to the first article
-    if (category.articles && category.articles.length > 0) {
-      // For simplicity, let's go to the most popular or first article
-      const firstArticle = category.articles.find(a => a.popular) || category.articles[0];
-      onNavigate(`/help/article/${firstArticle.id}`);
-    } else {
-      // Fallback
-      onNavigate('/help');
-    }
-  };
-
-  return (
-    <div 
-      className="border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer group"
-      onClick={handleCategoryClick}
-    >
-      <div className="flex items-start">
-        <div className="mr-3 flex-shrink-0">
-          {category.icon}
-        </div>
-        <div className="min-w-0 flex-grow">
-          <h3 className="font-medium text-foreground group-hover:text-primary">
-            {category.title}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-            {category.description}
-          </p>
-        </div>
-        <ChevronRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
-      </div>
-    </div>
-  );
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { docsSections, getDocsBaseUrl, getDocsUrl } from "@/lib/docs";
+import { getSupportTelegramUrl } from "@/lib/support";
 
 export default function HelpCenterPage() {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [location, navigate] = useLocation();
-
-  // Parse URL parameters on each render
-  const params = new URLSearchParams(window.location.search);
-  const selectedCategory = params.get('category');
-
-  // Function to navigate while immediately updating the view
-  const navigateTo = (path: string) => {
-    navigate(path);
-    // Force a re-render to update the UI immediately
-    setTimeout(() => window.dispatchEvent(new Event('popstate')), 0);
-  };
-
-  // Get all articles from all categories
-  const allArticles = React.useMemo(() => {
-    const articles: HelpArticle[] = [];
-    helpCategories.forEach(category => {
-      if (category.articles) {
-        articles.push(...category.articles);
-      }
-    });
-    return articles;
-  }, []);
-
-  // Find selected category
-  const selectedCategoryData = React.useMemo(() => {
-    if (!selectedCategory) return null;
-    return helpCategories.find(c => c.id === selectedCategory);
-  }, [selectedCategory]);
-
-  // Filter articles by category and search query
-  const filteredArticles = React.useMemo(() => {
-    let filtered = allArticles;
-
-    // Filter by category if selected
-    if (selectedCategory) {
-      // Directly use the selected category's articles
-      const category = helpCategories.find(c => c.id === selectedCategory);
-      if (category && category.articles) {
-        return category.articles;
-      } else {
-        console.log(`Category ${selectedCategory} not found or has no articles`);
-        return [];
-      }
-    }
-
-    // Filter by search query if provided
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(article => 
-        article.title.toLowerCase().includes(query) || 
-        article.preview.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [selectedCategory, searchQuery, allArticles, helpCategories]);
+  const docsBaseUrl = getDocsBaseUrl();
+  const supportUrl = getSupportTelegramUrl();
+  const docsUnavailable = !docsBaseUrl;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-0 pb-8">
-      <div className="bg-gradient-to-r from-primary/20 to-background border border-primary/10 rounded-xl p-8 mb-10">
-        <h1 className="text-3xl font-bold mb-3">Help Center</h1>
-        <p className="text-muted-foreground text-lg mb-6 max-w-2xl">
-          Find guides, tutorials, and answers to common questions
+    <div className="mx-auto max-w-6xl px-4 pb-8">
+      <div className="glass-card rounded-2xl border border-primary/20 p-6 md:p-8">
+        <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Documentation</p>
+        <h1 className="kinetic-headline mt-2 text-3xl font-semibold text-foreground">ModerateAI Docs Hub</h1>
+        <p className="mt-3 max-w-3xl text-muted-foreground">
+          GitBook is the canonical source for product docs, onboarding, integrations, admin operations, and troubleshooting.
         </p>
 
-        {/* Search */}
-        <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search help articles..."
-            className="pl-10 pr-10 py-6 text-lg bg-background/80 border-primary/20 focus:border-primary"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button 
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
-            </button>
-          )}
-        </div>
+        {docsUnavailable ? (
+          <div className="mt-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+            <p className="text-sm font-medium text-amber-300">Docs unavailable</p>
+            <p className="mt-1 text-sm text-amber-200/90">
+              `VITE_DOCS_BASE_URL` is not configured in this environment. Set it to your GitBook URL to enable docs links.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href="/">
+                <Button type="button" className="tactile-button">Go to Homepage</Button>
+              </Link>
+              <a href={supportUrl} target="_blank" rel="noopener noreferrer">
+                <Button type="button" variant="outline" className="glass-chip">
+                  <LifeBuoy className="mr-2 h-4 w-4" />
+                  Contact Support
+                </Button>
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a href={docsBaseUrl} target="_blank" rel="noopener noreferrer">
+              <Button type="button" className="tactile-button">
+                Open Full Documentation
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+            <a href={supportUrl} target="_blank" rel="noopener noreferrer">
+              <Button type="button" variant="outline" className="glass-chip">
+                <LifeBuoy className="mr-2 h-4 w-4" />
+                Contact Support
+              </Button>
+            </a>
+          </div>
+        )}
       </div>
 
-      {/* Selected Category Banner */}
-      {selectedCategoryData && (
-        <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 mb-8 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="mr-3">{selectedCategoryData.icon}</div>
-            <div>
-              <h2 className="font-semibold text-lg">{selectedCategoryData.title}</h2>
-              <p className="text-sm text-muted-foreground">{selectedCategoryData.description}</p>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              // Clear the filter - navigate back to main help center
-              navigateTo('/help');
-            }}
-          >
-            Clear Filter
-          </Button>
-        </div>
-      )}
+      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {docsSections.map((section) => {
+          const href = getDocsUrl(section.path);
 
-      {/* If user is searching, show search results */}
-      {searchQuery.trim() ? (
-        <div className="mb-12">
-          <div className="flex items-center mb-4">
-            <h2 className="text-2xl font-semibold">
-              Search results for "{searchQuery}"
-            </h2>
-          </div>
-
-          {filteredArticles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-muted/20 rounded-lg border border-border">
-              <p className="text-muted-foreground">
-                No articles found matching your search. Try different keywords.
-              </p>
-            </div>
-          )}
-        </div>
-      ) : selectedCategory ? (
-        /* Category Selected - Show Filtered Articles */
-        <div className="mb-12">
-          <div className="flex items-center mb-4">
-            <h2 className="text-2xl font-semibold">Articles in {selectedCategoryData?.title}</h2>
-          </div>
-
-          {filteredArticles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-muted/20 rounded-lg border border-border">
-              <p className="text-muted-foreground">
-                No articles found in this category.
-              </p>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* No Category Selected - Show Default Content */
-        <>
-          {/* Popular Articles */}
-          <div className="mb-12">
-            <div className="flex items-center mb-4">
-              <h2 className="text-2xl font-semibold">Popular Articles</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {popularArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
-              ))}
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Browse by Category</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {helpCategories.map((category) => (
-                <CategoryCard key={category.id} category={category} onNavigate={navigateTo} />
-              ))}
-            </div>
-          </div>
-
-          {/* New Articles */}
-          <div className="mb-12">
-            <div className="flex items-center mb-4">
-              <h2 className="text-2xl font-semibold">New Articles</h2>
-              <Badge className="ml-3 bg-green-900/20 text-green-500 hover:bg-green-900/30">
-                New
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {newArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} onNavigate={navigateTo} />
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      <Separator className="my-12" />
-
-      {/* Need more help */}
-      <div className="text-center max-w-2xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-4">Need more help?</h2>
-        <p className="text-muted-foreground mb-6">
-          If you couldn't find what you were looking for, our support team is ready to help.
-        </p>
-
-        <div className="flex justify-center space-x-4">
-          <Button 
-            className="flex items-center" 
-            size="lg"
-            onClick={() => {
-              const liveChatModal = document.createElement('div');
-              liveChatModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-              liveChatModal.innerHTML = `
-                <div class="bg-card p-6 rounded-lg shadow-lg max-w-md w-full">
-                  <h3 class="text-xl font-semibold mb-4">Live Chat</h3>
-                  <p class="mb-4">Our support agents are online and ready to help you.</p>
-                  <div class="bg-muted p-4 rounded mb-4">
-                    <p class="text-sm text-muted-foreground">Support agent will be with you shortly...</p>
-                  </div>
-                  <div class="flex justify-end">
-                    <button class="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90" id="close-live-chat">
-                      Close
-                    </button>
-                  </div>
-                </div>
-              `;
-              
-              document.body.appendChild(liveChatModal);
-              
-              // Add event listener to close button
-              document.getElementById('close-live-chat')?.addEventListener('click', () => {
-                liveChatModal.remove();
-              });
-            }}
-          >
-            <MessageCircle className="h-5 w-5 mr-2" />
-            Live Chat
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg"
-            onClick={() => {
-              const contactModal = document.createElement('div');
-              contactModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-              contactModal.innerHTML = `
-                <div class="bg-card p-6 rounded-lg shadow-lg max-w-md w-full">
-                  <h3 class="text-xl font-semibold mb-4">Contact Support</h3>
-                  <p class="mb-4">Please fill out the form below and we'll get back to you as soon as possible.</p>
-                  <div class="space-y-4 mb-4">
-                    <div>
-                      <label class="block text-sm font-medium mb-1">Email</label>
-                      <input type="email" class="w-full px-3 py-2 border rounded bg-background" placeholder="your@email.com" />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium mb-1">Issue</label>
-                      <select class="w-full px-3 py-2 border rounded bg-background">
-                        <option>Technical issue</option>
-                        <option>Billing question</option>
-                        <option>Feature request</option>
-                        <option>Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium mb-1">Message</label>
-                      <textarea class="w-full px-3 py-2 border rounded bg-background" rows="3" placeholder="Describe your issue..."></textarea>
-                    </div>
-                  </div>
-                  <div class="flex justify-end space-x-2">
-                    <button class="px-4 py-2 border border-border rounded hover:bg-accent" id="cancel-contact">
-                      Cancel
-                    </button>
-                    <button class="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90" id="submit-contact">
-                      Submit
-                    </button>
-                  </div>
-                </div>
-              `;
-              
-              document.body.appendChild(contactModal);
-              
-              // Add event listeners to buttons
-              document.getElementById('cancel-contact')?.addEventListener('click', () => {
-                contactModal.remove();
-              });
-              
-              document.getElementById('submit-contact')?.addEventListener('click', () => {
-                const successMessage = document.createElement('div');
-                successMessage.className = 'bg-green-500/10 text-green-500 p-3 rounded mt-4';
-                successMessage.textContent = 'Your request has been submitted. We\'ll get back to you soon!';
-                
-                const form = contactModal.querySelector('.space-y-4');
-                if (form) {
-                  form.innerHTML = '';
-                  form.appendChild(successMessage);
-                  
-                  // Change button text
-                  const submitButton = document.getElementById('submit-contact');
-                  if (submitButton) {
-                    submitButton.textContent = 'Close';
-                    submitButton.addEventListener('click', () => {
-                      contactModal.remove();
-                    }, { once: true });
-                  }
-                  
-                  // Remove cancel button
-                  const cancelButton = document.getElementById('cancel-contact');
-                  if (cancelButton) {
-                    cancelButton.remove();
-                  }
-                }
-              });
-            }}
-          >
-            <Headphones className="h-5 w-5 mr-2" />
-            Contact Support
-          </Button>
-        </div>
+          return (
+            <Card key={section.id} className="glass-card border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  {section.title}
+                </CardTitle>
+                <CardDescription>{section.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {href ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+                    Open in GitBook
+                    <ArrowUpRight className="ml-1 h-4 w-4" />
+                  </a>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Docs URL not configured</span>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

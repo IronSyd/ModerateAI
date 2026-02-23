@@ -20,14 +20,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Loader2, 
   Upload, 
   FileText, 
   Globe, 
   HelpCircle, 
-  MessageSquare 
+  MessageSquare,
+  RefreshCcw,
 } from "lucide-react";
 
 interface DocumentUploadDialogProps {
@@ -40,6 +50,19 @@ interface FAQItem {
   question: string;
   answer: string;
 }
+
+type UrlSyncMode = "manual" | "scheduled";
+type UrlSyncRecurrence = "daily" | "weekly";
+
+const WEEKDAY_OPTIONS = [
+  { label: "Sun", value: 0 },
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+  { label: "Sat", value: 6 },
+];
 
 export function DocumentUploadDialog({
   open,
@@ -54,6 +77,7 @@ export function DocumentUploadDialog({
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isFileReading, setIsFileReading] = useState(false);
+  const [fileExtractedMetadata, setFileExtractedMetadata] = useState<Record<string, unknown> | null>(null);
   
   // URL scraping state
   const [url, setUrl] = useState("");
@@ -70,8 +94,20 @@ export function DocumentUploadDialog({
   const [qaQuestion, setQaQuestion] = useState("");
   const [qaAnswer, setQaAnswer] = useState("");
 
+  // URL Sync source state
+  const [urlSyncName, setUrlSyncName] = useState("");
+  const [urlSyncSeedUrl, setUrlSyncSeedUrl] = useState("");
+  const [urlSyncPathPrefix, setUrlSyncPathPrefix] = useState("/");
+  const [urlSyncMode, setUrlSyncMode] = useState<UrlSyncMode>("manual");
+  const [urlSyncRecurrence, setUrlSyncRecurrence] = useState<UrlSyncRecurrence>("daily");
+  const [urlSyncTime, setUrlSyncTime] = useState("09:00");
+  const [urlSyncTimezone, setUrlSyncTimezone] = useState(
+    typeof window !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" : "UTC",
+  );
+  const [urlSyncDaysOfWeek, setUrlSyncDaysOfWeek] = useState<number[]>([1]);
+
   const uploadMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string }) => {
+    mutationFn: async (data: { title: string; content: string; metadata?: Record<string, unknown> }) => {
       return apiRequest("POST", `/api/knowledge-bases/${knowledgeBaseId}/documents`, data);
     },
     onSuccess: () => {
@@ -100,11 +136,64 @@ export function DocumentUploadDialog({
     },
   });
 
+  const createUrlSourceMutation = useMutation({
+    mutationFn: async (payload: {
+      name?: string;
+      seedUrl: string;
+      pathPrefix: string;
+      syncMode: UrlSyncMode;
+      scheduleRecurrence?: UrlSyncRecurrence;
+      scheduleDaysOfWeek?: number[];
+      scheduleTime?: string;
+      scheduleTimezone?: string;
+    }) => {
+      const res = await apiRequest("POST", `/api/knowledge-bases/${knowledgeBaseId}/url-sources`, payload);
+      return res.json();
+    },
+    onSuccess: async (created: any) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/knowledge-bases/${knowledgeBaseId}/url-sources`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-bases"] });
+      toast({
+        title: "URL sync source created",
+        description: "You can now sync pages from this path into the knowledge base.",
+      });
+      return created;
+    },
+    onError: (error: any) => {
+      toast({
+        title: "URL sync source failed",
+        description: error.message || "Failed to create URL sync source.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const runUrlSourceSyncMutation = useMutation({
+    mutationFn: async (sourceId: number) => {
+      const res = await apiRequest("POST", `/api/knowledge-url-sources/${sourceId}/sync`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sync started",
+        description: "The URL sync run has started in the background.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync trigger failed",
+        description: error.message || "Failed to start URL sync.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetAllForms = () => {
     // Reset file upload
     setTitle("");
     setContent("");
     setFile(null);
+    setFileExtractedMetadata(null);
     
     // Reset URL form
     setUrl("");
@@ -119,40 +208,122 @@ export function DocumentUploadDialog({
     setQaTitle("");
     setQaQuestion("");
     setQaAnswer("");
+
+    // Reset URL sync form
+    setUrlSyncName("");
+    setUrlSyncSeedUrl("");
+    setUrlSyncPathPrefix("/");
+    setUrlSyncMode("manual");
+    setUrlSyncRecurrence("daily");
+    setUrlSyncTime("09:00");
+    setUrlSyncTimezone(typeof window !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" : "UTC");
+    setUrlSyncDaysOfWeek([1]);
     
     // Reset to first tab
     setActiveTab("file");
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const derivePathPrefixFromUrl = (value: string) => {
+    try {
+      const u = new URL(value);
+      const path = u.pathname && u.pathname !== "/" ? u.pathname.replace(/\/+$/, "") || "/" : "/";
+      setUrlSyncPathPrefix(path.startsWith("/") ? path : `/${path}`);
+    } catch {
+      // ignore invalid URL while typing
+    }
+  };
+
+  const toggleUrlSyncWeekday = (day: number, checked: boolean) => {
+    setUrlSyncDaysOfWeek((prev) => {
+      const next = checked ? [...prev, day] : prev.filter((d) => d !== day);
+      return Array.from(new Set(next)).sort((a, b) => a - b);
+    });
+  };
+
+  const isUrlSyncScheduled = urlSyncMode === "scheduled";
+  const isUrlSyncInvalid =
+    !urlSyncSeedUrl.trim() ||
+    !urlSyncPathPrefix.trim() ||
+    (isUrlSyncScheduled &&
+      (!urlSyncTime.trim() ||
+        (urlSyncRecurrence === "weekly" && urlSyncDaysOfWeek.length === 0) ||
+        !urlSyncTimezone.trim()));
+
+  const isUrlSyncBusy = createUrlSourceMutation.isPending || runUrlSourceSyncMutation.isPending;
+
+  const handleCreateUrlSyncSource = async (runImmediately: boolean) => {
+    if (isUrlSyncInvalid) {
+      toast({
+        title: "Missing URL sync details",
+        description: "Please provide a valid seed URL, path prefix, and schedule fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload: any = {
+      name: urlSyncName.trim() || undefined,
+      seedUrl: urlSyncSeedUrl.trim(),
+      pathPrefix: urlSyncPathPrefix.trim(),
+      syncMode: urlSyncMode,
+    };
+    if (isUrlSyncScheduled) {
+      payload.scheduleRecurrence = urlSyncRecurrence;
+      payload.scheduleTime = urlSyncTime;
+      payload.scheduleTimezone = urlSyncTimezone;
+      if (urlSyncRecurrence === "weekly") {
+        payload.scheduleDaysOfWeek = urlSyncDaysOfWeek;
+      }
+    }
+
+    try {
+      const created = await createUrlSourceMutation.mutateAsync(payload);
+      if (runImmediately && created?.id) {
+        await runUrlSourceSyncMutation.mutateAsync(created.id);
+      }
+      onOpenChange(false);
+      resetAllForms();
+    } catch {
+      // handled in mutation callbacks
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
     
     setFile(selectedFile);
     setIsFileReading(true);
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        // Extract title from filename (remove extension)
-        const fileName = selectedFile.name.replace(/\.[^/.]+$/, "");
-        setTitle(fileName);
-        
-        // Set content from file
-        setContent(event.target.result as string);
-        setIsFileReading(false);
-      }
-    };
-    reader.onerror = () => {
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      const response = await apiRequest("POST", `/api/knowledge-bases/${knowledgeBaseId}/documents/parse-file`, formData);
+      const parsed = await response.json();
+
+      setTitle(String(parsed.title || selectedFile.name.replace(/\.[^/.]+$/, "")));
+      setContent(String(parsed.content || ""));
+      setFileExtractedMetadata(
+        parsed?.metadata && typeof parsed.metadata === "object"
+          ? (parsed.metadata as Record<string, unknown>)
+          : null,
+      );
+
       toast({
-        title: "File reading error",
-        description: "Failed to read the selected file",
+        title: "File processed",
+        description: "Content extracted on the server. Review and edit before saving if needed.",
+      });
+    } catch (error: any) {
+      setContent("");
+      setFileExtractedMetadata(null);
+      toast({
+        title: "File processing failed",
+        description: error.message || "Failed to parse the selected file.",
         variant: "destructive",
       });
+    } finally {
       setIsFileReading(false);
-    };
-    
-    reader.readAsText(selectedFile);
+    }
   };
   
   const handleUrlScrape = async () => {
@@ -283,9 +454,16 @@ export function DocumentUploadDialog({
         submissionTitle = qaTitle || `Q&A: ${qaQuestion.substring(0, 30)}...`;
         submissionContent = prepareQaContent();
         break;
+
+      case "url-sync":
+        return;
     }
     
-    uploadMutation.mutate({ title: submissionTitle, content: submissionContent });
+    uploadMutation.mutate({
+      title: submissionTitle,
+      content: submissionContent,
+      metadata: activeTab === "file" ? (fileExtractedMetadata || undefined) : undefined,
+    });
   };
 
   const isUploading = uploadMutation.isPending;
@@ -305,7 +483,7 @@ export function DocumentUploadDialog({
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="file">
               <FileText className="h-4 w-4 mr-2" />
               File
@@ -322,6 +500,10 @@ export function DocumentUploadDialog({
               <MessageSquare className="h-4 w-4 mr-2" />
               Q&A
             </TabsTrigger>
+            <TabsTrigger value="url-sync">
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              URL Sync
+            </TabsTrigger>
           </TabsList>
           
           <form onSubmit={handleSubmit}>
@@ -331,13 +513,13 @@ export function DocumentUploadDialog({
                 <Input
                   id="file"
                   type="file"
-                  accept=".txt,.md,.csv,.json,.pdf"
+                  accept=".txt,.md,.csv,.json,.pdf,.doc,.docx,.xlsx,.pptx"
                   onChange={handleFileChange}
                   disabled={isUploading}
                   className="mt-1 cursor-pointer"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supported formats: .txt, .md, .csv, .json, .pdf
+                  Supported formats: .txt, .md, .csv, .json, .pdf, .docx, .xlsx, .pptx (.doc: convert to .docx)
                 </p>
               </div>
               
@@ -411,9 +593,12 @@ export function DocumentUploadDialog({
                 <Label>Preview Content</Label>
                 <div className="min-h-[120px] max-h-[300px] mt-1 border rounded-md p-4 text-sm bg-muted/50 overflow-y-auto">
                   {isScrapingUrl ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="mt-2 text-sm text-muted-foreground">Extracting content from URL...</p>
+                    <div className="h-full space-y-3">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-5/6" />
+                      <Skeleton className="h-3 w-3/4" />
                     </div>
                   ) : urlContent ? (
                     <div>
@@ -548,6 +733,144 @@ export function DocumentUploadDialog({
                 />
               </div>
             </TabsContent>
+
+            <TabsContent value="url-sync" className="space-y-4">
+              <div className="rounded-md border p-3 bg-muted/30">
+                <p className="text-sm font-medium">Managed URL Sync</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Crawl and re-sync pages under a path prefix into your knowledge base. Each page becomes one document.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="urlSyncName">Source Name (Optional)</Label>
+                <Input
+                  id="urlSyncName"
+                  value={urlSyncName}
+                  onChange={(e) => setUrlSyncName(e.target.value)}
+                  placeholder="Docs site (e.g. Product Docs)"
+                  disabled={isUrlSyncBusy}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  File content is extracted server-side so binary formats can be parsed before saving.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="urlSyncSeedUrl">Seed URL</Label>
+                <Input
+                  id="urlSyncSeedUrl"
+                  value={urlSyncSeedUrl}
+                  onChange={(e) => {
+                    setUrlSyncSeedUrl(e.target.value);
+                    derivePathPrefixFromUrl(e.target.value);
+                  }}
+                  placeholder="https://example.com/docs"
+                  disabled={isUrlSyncBusy}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Crawl is limited to the same host and the path prefix below.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="urlSyncPathPrefix">Path Prefix</Label>
+                <Input
+                  id="urlSyncPathPrefix"
+                  value={urlSyncPathPrefix}
+                  onChange={(e) => setUrlSyncPathPrefix(e.target.value)}
+                  placeholder="/docs"
+                  disabled={isUrlSyncBusy}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Sync Mode</Label>
+                  <Select value={urlSyncMode} onValueChange={(v: UrlSyncMode) => setUrlSyncMode(v)} disabled={isUrlSyncBusy}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {isUrlSyncScheduled && (
+                  <div>
+                    <Label>Recurrence</Label>
+                    <Select
+                      value={urlSyncRecurrence}
+                      onValueChange={(v: UrlSyncRecurrence) => setUrlSyncRecurrence(v)}
+                      disabled={isUrlSyncBusy}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {isUrlSyncScheduled && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="urlSyncTime">Run Time</Label>
+                      <Input
+                        id="urlSyncTime"
+                        type="time"
+                        value={urlSyncTime}
+                        onChange={(e) => setUrlSyncTime(e.target.value)}
+                        disabled={isUrlSyncBusy}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="urlSyncTimezone">Timezone</Label>
+                      <Input
+                        id="urlSyncTimezone"
+                        value={urlSyncTimezone}
+                        onChange={(e) => setUrlSyncTimezone(e.target.value)}
+                        placeholder="UTC"
+                        disabled={isUrlSyncBusy}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  {urlSyncRecurrence === "weekly" && (
+                    <div>
+                      <Label>Days of Week</Label>
+                      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mt-2">
+                        {WEEKDAY_OPTIONS.map((day) => (
+                          <label
+                            key={day.value}
+                            className="flex items-center gap-2 text-sm border rounded-md px-2 py-2 cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={urlSyncDaysOfWeek.includes(day.value)}
+                              onCheckedChange={(checked) => toggleUrlSyncWeekday(day.value, checked === true)}
+                              disabled={isUrlSyncBusy}
+                            />
+                            <span>{day.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
             
             <DialogFooter className="mt-6">
               <Button 
@@ -558,28 +881,68 @@ export function DocumentUploadDialog({
               >
                 Cancel
               </Button>
-              
-              <Button 
-                type="submit" 
-                disabled={
-                  (activeTab === "file" && isFileDisabled) ||
-                  (activeTab === "url" && isUrlDisabled) ||
-                  (activeTab === "faq" && isFaqDisabled) ||
-                  (activeTab === "qa" && isQaDisabled)
-                }
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Add to Knowledge Base
-                  </>
-                )}
-              </Button>
+
+              {activeTab === "url-sync" ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCreateUrlSyncSource(false)}
+                    disabled={isUrlSyncBusy || isUrlSyncInvalid}
+                  >
+                    {createUrlSourceMutation.isPending && !runUrlSourceSyncMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        Create Source
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleCreateUrlSyncSource(true)}
+                    disabled={isUrlSyncBusy || isUrlSyncInvalid}
+                  >
+                    {isUrlSyncBusy ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Working...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        Create & Run First Sync
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  type="submit" 
+                  disabled={
+                    (activeTab === "file" && isFileDisabled) ||
+                    (activeTab === "url" && isUrlDisabled) ||
+                    (activeTab === "faq" && isFaqDisabled) ||
+                    (activeTab === "qa" && isQaDisabled)
+                  }
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Add to Knowledge Base
+                    </>
+                  )}
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Tabs>

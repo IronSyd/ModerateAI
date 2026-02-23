@@ -9,15 +9,25 @@ import {
   ConversationTraining, InsertConversationTraining,
   TeamInvitation, InsertTeamInvitation,
   TeamSettings, InsertTeamSettings,
+  WorkspaceSettings, InsertWorkspaceSettings,
   ChatConfiguration, InsertChatConfiguration,
+  DestinationLock, InsertDestinationLock,
+  DestinationModerationHit, InsertDestinationModerationHit,
+  IntegrationClaimCode, InsertIntegrationClaimCode,
   EmailWhitelist, InsertEmailWhitelist,
   ChatHistory, InsertChatHistory,
   TrainingInsights, InsertTrainingInsights,
-  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, teamSettings, chatConfigurations, emailWhitelist, chatHistory, trainingInsights
+  users, platforms, conversations, messages, aiConfigurations, knowledgeBases, knowledgeDocuments, conversationTrainings, teamInvitations, integrationClaimCodes, teamSettings, workspaceSettings, chatConfigurations, destinationLocks, destinationModerationHits, emailWhitelist, chatHistory, trainingInsights
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, ne, asc, desc, count, sql, ilike, inArray } from "drizzle-orm";
+import { eq, and, or, ne, asc, desc, count, sql, ilike, inArray, gt, isNull } from "drizzle-orm";
 import type { QueryResult } from 'pg';
+import { getModerationActionCountsForPlatform } from "./lib/moderation-actions";
+
+export type WorkspaceSettingsPatch = {
+  moderationPreset?: string;
+  moderationRules?: unknown;
+};
 
 export interface IStorage {
   // User operations
@@ -36,9 +46,44 @@ export interface IStorage {
   createPlatform(platform: InsertPlatform): Promise<Platform>;
   updatePlatform(id: number, platform: Partial<Platform>): Promise<Platform | undefined>;
   deletePlatform(id: number): Promise<boolean>;
+  getActiveIntegrationClaimCodeForPlatform(platformId: number): Promise<IntegrationClaimCode | undefined>;
+  getIntegrationClaimCodeByCode(code: string): Promise<IntegrationClaimCode | undefined>;
+  createIntegrationClaimCode(claimCode: InsertIntegrationClaimCode): Promise<IntegrationClaimCode>;
+  revokeLatestActiveIntegrationClaimCode(platformId: number): Promise<IntegrationClaimCode | undefined>;
+  markIntegrationClaimCodeUsed(
+    claimCodeId: number,
+    used: { usedAt: Date; usedExternalId: string; usedByPlatformUserId: string },
+  ): Promise<IntegrationClaimCode | undefined>;
+  consumeIntegrationClaimCodeIfActive(
+    claimCodeId: number,
+    used: { usedAt: Date; usedExternalId: string; usedByPlatformUserId: string },
+  ): Promise<IntegrationClaimCode | undefined>;
+  getDestinationLock(id: number): Promise<DestinationLock | undefined>;
+  getActiveDestinationLockByChatConfiguration(chatConfigurationId: number): Promise<DestinationLock | undefined>;
+  getActiveDestinationLockByPlatformAndExternalId(
+    platformId: number,
+    destinationExternalId: string,
+  ): Promise<DestinationLock | undefined>;
+  getActiveDestinationLocksByPlatform(platformId: number): Promise<DestinationLock[]>;
+  getActiveDestinationLocksByChatConfigurationIds(chatConfigurationIds: number[]): Promise<DestinationLock[]>;
+  getDueActiveDestinationLocks(before: Date, limit?: number): Promise<DestinationLock[]>;
+  createDestinationLock(lock: InsertDestinationLock): Promise<DestinationLock>;
+  updateDestinationLock(id: number, lock: Partial<DestinationLock>): Promise<DestinationLock | undefined>;
+  createDestinationModerationHit(hit: InsertDestinationModerationHit): Promise<DestinationModerationHit>;
+  countDestinationModerationHitsSince(chatConfigurationId: number, since: Date): Promise<number>;
 
   // Conversation operations
   getConversation(id: number): Promise<Conversation | undefined>;
+  getConversationByExternalId(externalId: string): Promise<Conversation | undefined>;
+  getConversationByPlatformAndExternalId(
+    platformId: number,
+    externalId: string,
+  ): Promise<Conversation | undefined>;
+  getConversationByPlatformExternalAndUser(
+    platformId: number,
+    externalId: string,
+    externalUserId: string,
+  ): Promise<Conversation | undefined>;
   getConversationsByPlatformId(platformId: number): Promise<Conversation[]>;
   createConversation(conversation: InsertConversation): Promise<Conversation>;
   updateConversation(id: number, conversation: Partial<Conversation>): Promise<Conversation | undefined>;
@@ -122,7 +167,7 @@ export interface IStorage {
     moderationActions: { contentFiltered: number; warningsIssued: number };
   }>;
   getResponseRate(): Promise<number>;
-  getRecentActivity(limit: number): Promise<{
+  getRecentActivity(limit: number, userId?: number): Promise<{
     user: string;
     action: string;
     platform: string;
@@ -154,6 +199,10 @@ export interface IStorage {
   updateTrainingInsight(id: number, insight: Partial<TrainingInsights>): Promise<TrainingInsights | undefined>;
   deleteTrainingInsight(id: number): Promise<boolean>;
   getEmailsWhitelistedBy(userId: number): Promise<EmailWhitelist[]>;
+
+  // Workspace Settings operations
+  getWorkspaceSettings(ownerUserId: number): Promise<WorkspaceSettings | undefined>;
+  upsertWorkspaceSettings(ownerUserId: number, patch: WorkspaceSettingsPatch): Promise<WorkspaceSettings>;
 }
 
 export class MemStorage implements IStorage {
@@ -167,6 +216,10 @@ export class MemStorage implements IStorage {
 
   private conversationTrainings: Map<number, ConversationTraining>;
   private teamInvitations: Map<number, TeamInvitation>;
+  private integrationClaimCodes: Map<number, IntegrationClaimCode>;
+  private destinationLocks: Map<number, DestinationLock>;
+  private destinationModerationHits: Map<number, DestinationModerationHit>;
+  private workspaceSettings: Map<number, WorkspaceSettings>;
 
   private userIdCounter: number;
   private platformIdCounter: number;
@@ -178,6 +231,10 @@ export class MemStorage implements IStorage {
 
   private conversationTrainingIdCounter: number;
   private teamInvitationIdCounter: number;
+  private integrationClaimCodeIdCounter: number;
+  private destinationLockIdCounter: number;
+  private destinationModerationHitIdCounter: number;
+  private workspaceSettingsIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -190,6 +247,10 @@ export class MemStorage implements IStorage {
 
     this.conversationTrainings = new Map();
     this.teamInvitations = new Map();
+    this.integrationClaimCodes = new Map();
+    this.destinationLocks = new Map();
+    this.destinationModerationHits = new Map();
+    this.workspaceSettings = new Map();
 
     this.userIdCounter = 1;
     this.platformIdCounter = 1;
@@ -201,6 +262,10 @@ export class MemStorage implements IStorage {
 
     this.conversationTrainingIdCounter = 1;
     this.teamInvitationIdCounter = 1;
+    this.integrationClaimCodeIdCounter = 1;
+    this.destinationLockIdCounter = 1;
+    this.destinationModerationHitIdCounter = 1;
+    this.workspaceSettingsIdCounter = 1;
 
   }
 
@@ -218,7 +283,37 @@ export class MemStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
     const now = new Date();
-    const newUser = { ...user, id, createdAt: now };
+    const newUser: User = {
+      id,
+      email: user.email,
+      password: user.password ?? null,
+      fullName: user.fullName,
+      mustChangePassword: false,
+      temporaryPasswordIssuedAt: null,
+      temporaryPasswordExpiresAt: null,
+      temporaryPasswordIssuedBy: null,
+      plan: "free",
+      planStatus: "active",
+      trialStartedAt: null,
+      trialEndsAt: null,
+      planSelectedAt: null,
+      planUpdatedAt: now,
+      paidThroughAt: null,
+      billingSuspendedAt: null,
+      billingSuspendedReason: null,
+      billingSuspendedBy: null,
+      role: user.role ?? "user",
+      workspaceOwnerId: null,
+      workspaceRole: "admin",
+      isActive: true,
+      isBanned: false,
+      bannedAt: null,
+      banReason: null,
+      requireTwoFactor: false,
+      twoFactorCode: null,
+      twoFactorCodeExpiry: null,
+      createdAt: now,
+    };
     this.users.set(id, newUser);
     return newUser;
   }
@@ -246,12 +341,7 @@ export class MemStorage implements IStorage {
   }
 
   async getPlatformByToken(token: string): Promise<Platform | undefined> {
-    for (const platform of this.platforms.values()) {
-      if (platform.authToken === token) {
-        return platform;
-      }
-    }
-    return undefined;
+    return Array.from(this.platforms.values()).find(platform => platform.authToken === token);
   }
 
   async getPlatformsByUserId(userId: number): Promise<Platform[]> {
@@ -265,7 +355,17 @@ export class MemStorage implements IStorage {
   async createPlatform(platform: InsertPlatform): Promise<Platform> {
     const id = this.platformIdCounter++;
     const now = new Date();
-    const newPlatform = { ...platform, id, createdAt: now };
+    const newPlatform: Platform = {
+      id,
+      type: platform.type,
+      name: platform.name,
+      status: platform.status,
+      botOwnershipMode: platform.botOwnershipMode ?? "app_owned",
+      userId: platform.userId,
+      config: platform.config ?? null,
+      authToken: platform.authToken ?? null,
+      createdAt: now,
+    };
     this.platforms.set(id, newPlatform);
     return newPlatform;
   }
@@ -283,6 +383,199 @@ export class MemStorage implements IStorage {
     return this.platforms.delete(id);
   }
 
+  async getActiveIntegrationClaimCodeForPlatform(platformId: number): Promise<IntegrationClaimCode | undefined> {
+    const now = Date.now();
+    const active = Array.from(this.integrationClaimCodes.values())
+      .filter((claim) => {
+        return (
+          claim.platformId === platformId &&
+          !claim.usedAt &&
+          !claim.revokedAt &&
+          new Date(claim.expiresAt).getTime() > now
+        );
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return active[0];
+  }
+
+  async getIntegrationClaimCodeByCode(code: string): Promise<IntegrationClaimCode | undefined> {
+    const normalized = String(code ?? "").trim();
+    return Array.from(this.integrationClaimCodes.values()).find((claim) => claim.code === normalized);
+  }
+
+  async createIntegrationClaimCode(claimCode: InsertIntegrationClaimCode): Promise<IntegrationClaimCode> {
+    const id = this.integrationClaimCodeIdCounter++;
+    const now = new Date();
+    const created: IntegrationClaimCode = {
+      id,
+      platformId: claimCode.platformId,
+      workspaceOwnerId: claimCode.workspaceOwnerId,
+      platformType: claimCode.platformType,
+      code: claimCode.code,
+      createdByUserId: claimCode.createdByUserId,
+      expiresAt: claimCode.expiresAt,
+      usedAt: claimCode.usedAt ?? null,
+      usedExternalId: claimCode.usedExternalId ?? null,
+      usedByPlatformUserId: claimCode.usedByPlatformUserId ?? null,
+      revokedAt: claimCode.revokedAt ?? null,
+      createdAt: now,
+    };
+    this.integrationClaimCodes.set(id, created);
+    return created;
+  }
+
+  async revokeLatestActiveIntegrationClaimCode(platformId: number): Promise<IntegrationClaimCode | undefined> {
+    const active = await this.getActiveIntegrationClaimCodeForPlatform(platformId);
+    if (!active) return undefined;
+    const updated = {
+      ...active,
+      revokedAt: new Date(),
+    };
+    this.integrationClaimCodes.set(active.id, updated);
+    return updated;
+  }
+
+  async markIntegrationClaimCodeUsed(
+    claimCodeId: number,
+    used: { usedAt: Date; usedExternalId: string; usedByPlatformUserId: string },
+  ): Promise<IntegrationClaimCode | undefined> {
+    const existing = this.integrationClaimCodes.get(claimCodeId);
+    if (!existing) return undefined;
+    const updated = {
+      ...existing,
+      usedAt: used.usedAt,
+      usedExternalId: used.usedExternalId,
+      usedByPlatformUserId: used.usedByPlatformUserId,
+    };
+    this.integrationClaimCodes.set(claimCodeId, updated);
+    return updated;
+  }
+
+  async consumeIntegrationClaimCodeIfActive(
+    claimCodeId: number,
+    used: { usedAt: Date; usedExternalId: string; usedByPlatformUserId: string },
+  ): Promise<IntegrationClaimCode | undefined> {
+    const existing = this.integrationClaimCodes.get(claimCodeId);
+    if (!existing) return undefined;
+    const nowMs = used.usedAt.getTime();
+    const isExpired = new Date(existing.expiresAt).getTime() <= nowMs;
+    if (existing.usedAt || existing.revokedAt || isExpired) {
+      return undefined;
+    }
+    const updated = {
+      ...existing,
+      usedAt: used.usedAt,
+      usedExternalId: used.usedExternalId,
+      usedByPlatformUserId: used.usedByPlatformUserId,
+    };
+    this.integrationClaimCodes.set(claimCodeId, updated);
+    return updated;
+  }
+
+  async getDestinationLock(id: number): Promise<DestinationLock | undefined> {
+    return this.destinationLocks.get(id);
+  }
+
+  async getActiveDestinationLockByChatConfiguration(chatConfigurationId: number): Promise<DestinationLock | undefined> {
+    return Array.from(this.destinationLocks.values()).find(
+      (lock) => lock.chatConfigurationId === chatConfigurationId && lock.status === "active",
+    );
+  }
+
+  async getActiveDestinationLockByPlatformAndExternalId(
+    platformId: number,
+    destinationExternalId: string,
+  ): Promise<DestinationLock | undefined> {
+    return Array.from(this.destinationLocks.values()).find(
+      (lock) =>
+        lock.platformId === platformId &&
+        lock.destinationExternalId === destinationExternalId &&
+        lock.status === "active",
+    );
+  }
+
+  async getActiveDestinationLocksByPlatform(platformId: number): Promise<DestinationLock[]> {
+    return Array.from(this.destinationLocks.values()).filter(
+      (lock) => lock.platformId === platformId && lock.status === "active",
+    );
+  }
+
+  async getActiveDestinationLocksByChatConfigurationIds(chatConfigurationIds: number[]): Promise<DestinationLock[]> {
+    const ids = new Set(chatConfigurationIds);
+    return Array.from(this.destinationLocks.values()).filter(
+      (lock) => lock.status === "active" && ids.has(lock.chatConfigurationId),
+    );
+  }
+
+  async getDueActiveDestinationLocks(before: Date, limit: number = 200): Promise<DestinationLock[]> {
+    return Array.from(this.destinationLocks.values())
+      .filter((lock) => lock.status === "active" && new Date(lock.endsAt).getTime() <= before.getTime())
+      .sort((a, b) => new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime())
+      .slice(0, limit);
+  }
+
+  async createDestinationLock(lock: InsertDestinationLock): Promise<DestinationLock> {
+    const id = this.destinationLockIdCounter++;
+    const now = new Date();
+    const created: DestinationLock = {
+      id,
+      chatConfigurationId: lock.chatConfigurationId,
+      platformId: lock.platformId,
+      platformType: lock.platformType,
+      destinationExternalId: lock.destinationExternalId,
+      status: lock.status ?? "active",
+      source: lock.source,
+      reason: lock.reason ?? null,
+      requestedByUserId: lock.requestedByUserId ?? null,
+      requestedByPlatformUserId: lock.requestedByPlatformUserId ?? null,
+      requestedByPlatformUsername: lock.requestedByPlatformUsername ?? null,
+      startedAt: lock.startedAt,
+      endsAt: lock.endsAt,
+      releasedAt: lock.releasedAt ?? null,
+      releaseReason: lock.releaseReason ?? null,
+      permissionSnapshot: lock.permissionSnapshot ?? {},
+      noticeChannelExternalId: lock.noticeChannelExternalId ?? null,
+      metadata: lock.metadata ?? {},
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.destinationLocks.set(id, created);
+    return created;
+  }
+
+  async updateDestinationLock(id: number, lock: Partial<DestinationLock>): Promise<DestinationLock | undefined> {
+    const existing = this.destinationLocks.get(id);
+    if (!existing) return undefined;
+    const updated: DestinationLock = {
+      ...existing,
+      ...lock,
+      updatedAt: new Date(),
+    };
+    this.destinationLocks.set(id, updated);
+    return updated;
+  }
+
+  async createDestinationModerationHit(hit: InsertDestinationModerationHit): Promise<DestinationModerationHit> {
+    const id = this.destinationModerationHitIdCounter++;
+    const created: DestinationModerationHit = {
+      id,
+      chatConfigurationId: hit.chatConfigurationId,
+      platformId: hit.platformId,
+      platformType: hit.platformType,
+      destinationExternalId: hit.destinationExternalId,
+      metadata: hit.metadata ?? {},
+      createdAt: new Date(),
+    };
+    this.destinationModerationHits.set(id, created);
+    return created;
+  }
+
+  async countDestinationModerationHitsSince(chatConfigurationId: number, since: Date): Promise<number> {
+    return Array.from(this.destinationModerationHits.values()).filter(
+      (hit) => hit.chatConfigurationId === chatConfigurationId && new Date(hit.createdAt).getTime() >= since.getTime(),
+    ).length;
+  }
+
   // ... rest of the implementation
   
   // Add stubs for the remaining methods to satisfy the interface
@@ -294,6 +587,28 @@ export class MemStorage implements IStorage {
     return Array.from(this.conversations.values()).find(conv => (conv as any).externalId === externalId);
   }
 
+  async getConversationByPlatformAndExternalId(
+    platformId: number,
+    externalId: string,
+  ): Promise<Conversation | undefined> {
+    return Array.from(this.conversations.values()).find(
+      (conv) => conv.platformId === platformId && conv.externalId === externalId,
+    );
+  }
+
+  async getConversationByPlatformExternalAndUser(
+    platformId: number,
+    externalId: string,
+    externalUserId: string,
+  ): Promise<Conversation | undefined> {
+    return Array.from(this.conversations.values()).find(
+      (conv) =>
+        conv.platformId === platformId &&
+        conv.externalId === externalId &&
+        conv.externalUserId === externalUserId,
+    );
+  }
+
   async getConversationsByPlatformId(platformId: number): Promise<Conversation[]> {
     return Array.from(this.conversations.values()).filter(conv => conv.platformId === platformId);
   }
@@ -301,11 +616,15 @@ export class MemStorage implements IStorage {
   async createConversation(conversation: InsertConversation): Promise<Conversation> {
     const id = this.conversationIdCounter++;
     const now = new Date();
-    const newConversation = { 
-      ...conversation, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
+    const newConversation: Conversation = { 
+      id,
+      platformId: conversation.platformId,
+      externalUserId: conversation.externalUserId,
+      externalUsername: conversation.externalUsername ?? null,
+      externalId: conversation.externalId ?? null,
+      status: conversation.status ?? "active",
+      createdAt: now,
+      updatedAt: now,
     };
     this.conversations.set(id, newConversation);
     return newConversation;
@@ -341,7 +660,14 @@ export class MemStorage implements IStorage {
   async createMessage(message: InsertMessage): Promise<Message> {
     const id = this.messageIdCounter++;
     const now = new Date();
-    const newMessage = { ...message, id, createdAt: now };
+    const newMessage: Message = {
+      id,
+      conversationId: message.conversationId,
+      content: message.content,
+      sender: message.sender,
+      createdAt: now,
+      metadata: message.metadata ?? null,
+    };
     this.messages.set(id, newMessage);
 
     // Update the conversation's updatedAt
@@ -376,7 +702,22 @@ export class MemStorage implements IStorage {
   async createAiConfiguration(aiConfiguration: InsertAiConfiguration): Promise<AiConfiguration> {
     const id = this.aiConfigurationIdCounter++;
     const now = new Date();
-    const newConfig = { ...aiConfiguration, id, createdAt: now, updatedAt: now };
+    const newConfig: AiConfiguration = {
+      id,
+      userId: aiConfiguration.userId,
+      name: aiConfiguration.name,
+      responseStyle: aiConfiguration.responseStyle ?? 75,
+      responseLength: aiConfiguration.responseLength ?? 40,
+      isActive: aiConfiguration.isActive ?? true,
+      model: aiConfiguration.model ?? "gpt-4o",
+      systemPrompt: aiConfiguration.systemPrompt ?? null,
+      enableProactiveResponses: aiConfiguration.enableProactiveResponses ?? false,
+      enableConversationMemory: aiConfiguration.enableConversationMemory ?? true,
+      enableSentimentAnalysis: aiConfiguration.enableSentimentAnalysis ?? true,
+      enableConversationTraining: aiConfiguration.enableConversationTraining ?? false,
+      createdAt: now,
+      updatedAt: now,
+    };
     this.aiConfigurations.set(id, newConfig);
     return newConfig;
   }
@@ -409,7 +750,15 @@ export class MemStorage implements IStorage {
   async createKnowledgeBase(knowledgeBase: InsertKnowledgeBase): Promise<KnowledgeBase> {
     const id = this.knowledgeBaseIdCounter++;
     const now = new Date();
-    const newKnowledgeBase = { ...knowledgeBase, id, createdAt: now };
+    const newKnowledgeBase: KnowledgeBase = {
+      id,
+      userId: knowledgeBase.userId,
+      name: knowledgeBase.name,
+      description: knowledgeBase.description ?? null,
+      documentCount: knowledgeBase.documentCount ?? 0,
+      isActive: knowledgeBase.isActive ?? true,
+      createdAt: now,
+    };
     this.knowledgeBases.set(id, newKnowledgeBase);
     return newKnowledgeBase;
   }
@@ -536,7 +885,18 @@ export class MemStorage implements IStorage {
   }
 
   async createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation> {
-    return { id: 1, email: "", role: "user", createdAt: new Date(), status: "pending", token: "", invitedBy: 1, expiresAt: new Date(), acceptedAt: null } as TeamInvitation;
+    return {
+      id: 1,
+      token: "",
+      email: invitation.email,
+      role: invitation.role,
+      invitedBy: invitation.invitedBy,
+      workspaceOwnerId: invitation.workspaceOwnerId ?? null,
+      status: "pending",
+      createdAt: new Date(),
+      expiresAt: invitation.expiresAt,
+      acceptedAt: null,
+    } as TeamInvitation;
   }
 
   async updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined> {
@@ -555,13 +915,53 @@ export class MemStorage implements IStorage {
     return this.messages.size;
   }
 
+  async getTelegramAnalytics(platformId: number): Promise<{
+    totalMessages: number;
+    aiResponses: number;
+    conversations: number;
+    responseRate: number;
+    messagesByDay: { date: string; messages: number }[];
+    chatTypes: { private: number; group: number };
+    moderationActions: { contentFiltered: number; spamBlocked: number };
+  }> {
+    return {
+      totalMessages: 0,
+      aiResponses: 0,
+      conversations: 0,
+      responseRate: 0,
+      messagesByDay: [],
+      chatTypes: { private: 0, group: 0 },
+      moderationActions: { contentFiltered: 0, spamBlocked: 0 },
+    };
+  }
+
+  async getDiscordAnalytics(platformId: number): Promise<{
+    totalMessages: number;
+    aiResponses: number;
+    activeServers: number;
+    totalChannels: number;
+    responseRate: number;
+    messagesByDay: { date: string; messages: number }[];
+    moderationActions: { contentFiltered: number; warningsIssued: number };
+  }> {
+    return {
+      totalMessages: 0,
+      aiResponses: 0,
+      activeServers: 0,
+      totalChannels: 0,
+      responseRate: 0,
+      messagesByDay: [],
+      moderationActions: { contentFiltered: 0, warningsIssued: 0 },
+    };
+  }
+
 
 
   async getResponseRate(): Promise<number> {
     return 0.95;
   }
 
-  async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
+  async getRecentActivity(limit: number, userId?: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
     return [
       { user: "Chelsea Hagon", action: "message", platform: "telegram", time: new Date() },
       { user: "ai", action: "message", platform: "discord", time: new Date() }
@@ -619,7 +1019,7 @@ export class MemStorage implements IStorage {
       aiConfigurationId: chatConfig.aiConfigurationId || null,
       knowledgeBaseId: chatConfig.knowledgeBaseId || null,
       settings: chatConfig.settings || {},
-      isActive: chatConfig.isActive || true,
+      isActive: chatConfig.isActive ?? true,
       createdAt: new Date(),
       updatedAt: new Date()
     } as ChatConfiguration;
@@ -655,6 +1055,7 @@ export class MemStorage implements IStorage {
       id: 1,
       chatConfigurationId: chatHistory.chatConfigurationId,
       platformId: chatHistory.platformId,
+      sourceMessageId: chatHistory.sourceMessageId ?? null,
       externalUserId: chatHistory.externalUserId,
       externalUsername: chatHistory.externalUsername || null,
       messageId: chatHistory.messageId || null,
@@ -710,7 +1111,7 @@ export class MemStorage implements IStorage {
       confidence: insight.confidence || 50,
       usageCount: insight.usageCount || 0,
       successRate: insight.successRate || 0,
-      isActive: insight.isActive || true,
+      isActive: insight.isActive ?? true,
       learnedFrom: insight.learnedFrom || null,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -723,6 +1124,43 @@ export class MemStorage implements IStorage {
 
   async deleteTrainingInsight(id: number): Promise<boolean> {
     return false;
+  }
+
+  async getWorkspaceSettings(ownerUserId: number): Promise<WorkspaceSettings | undefined> {
+    return Array.from(this.workspaceSettings.values()).find((s) => s.ownerUserId === ownerUserId);
+  }
+
+  async upsertWorkspaceSettings(ownerUserId: number, patch: WorkspaceSettingsPatch): Promise<WorkspaceSettings> {
+    const existing = await this.getWorkspaceSettings(ownerUserId);
+    const now = new Date();
+
+    if (existing) {
+      const updated: WorkspaceSettings = {
+        ...existing,
+        moderationPreset: patch.moderationPreset ?? existing.moderationPreset,
+        moderationRules: patch.moderationRules ?? existing.moderationRules,
+        updatedAt: now,
+      };
+      this.workspaceSettings.set(updated.id, updated);
+      return updated;
+    }
+
+    const created: WorkspaceSettings = {
+      id: this.workspaceSettingsIdCounter++,
+      ownerUserId,
+      moderationPreset: patch.moderationPreset ?? "basic",
+      moderationRules: patch.moderationRules ?? {
+        blockedKeywords: [],
+        allowedKeywords: [],
+        spamSensitivity: 50,
+        strictness: 50,
+      },
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.workspaceSettings.set(created.id, created);
+    return created;
   }
 }
 
@@ -743,8 +1181,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const [createdUser] = await db.insert(users).values(user).returning();
-    return createdUser;
+    const insertedUsers = await db.insert(users).values(user).returning();
+    const createdUser = Array.isArray(insertedUsers) ? insertedUsers[0] : (insertedUsers as any)?.rows?.[0];
+    if (!createdUser) {
+      throw new Error("Failed to create user");
+    }
+    return createdUser as any;
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -802,6 +1244,190 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
+  async getActiveIntegrationClaimCodeForPlatform(platformId: number): Promise<IntegrationClaimCode | undefined> {
+    const now = new Date();
+    const [claimCode] = await db
+      .select()
+      .from(integrationClaimCodes)
+      .where(
+        and(
+          eq(integrationClaimCodes.platformId, platformId),
+          isNull(integrationClaimCodes.usedAt),
+          isNull(integrationClaimCodes.revokedAt),
+          gt(integrationClaimCodes.expiresAt, now),
+        ),
+      )
+      .orderBy(desc(integrationClaimCodes.createdAt))
+      .limit(1);
+    return claimCode;
+  }
+
+  async getIntegrationClaimCodeByCode(code: string): Promise<IntegrationClaimCode | undefined> {
+    const [claimCode] = await db
+      .select()
+      .from(integrationClaimCodes)
+      .where(eq(integrationClaimCodes.code, String(code ?? "").trim()))
+      .limit(1);
+    return claimCode;
+  }
+
+  async createIntegrationClaimCode(claimCode: InsertIntegrationClaimCode): Promise<IntegrationClaimCode> {
+    const [created] = await db.insert(integrationClaimCodes).values(claimCode).returning();
+    return created;
+  }
+
+  async revokeLatestActiveIntegrationClaimCode(platformId: number): Promise<IntegrationClaimCode | undefined> {
+    const active = await this.getActiveIntegrationClaimCodeForPlatform(platformId);
+    if (!active) return undefined;
+    const [updated] = await db
+      .update(integrationClaimCodes)
+      .set({ revokedAt: new Date() })
+      .where(eq(integrationClaimCodes.id, active.id))
+      .returning();
+    return updated;
+  }
+
+  async consumeIntegrationClaimCodeIfActive(
+    claimCodeId: number,
+    used: { usedAt: Date; usedExternalId: string; usedByPlatformUserId: string },
+  ): Promise<IntegrationClaimCode | undefined> {
+    const [updated] = await db
+      .update(integrationClaimCodes)
+      .set({
+        usedAt: used.usedAt,
+        usedExternalId: used.usedExternalId,
+        usedByPlatformUserId: used.usedByPlatformUserId,
+      })
+      .where(
+        and(
+          eq(integrationClaimCodes.id, claimCodeId),
+          isNull(integrationClaimCodes.usedAt),
+          isNull(integrationClaimCodes.revokedAt),
+          gt(integrationClaimCodes.expiresAt, used.usedAt),
+        ),
+      )
+      .returning();
+    return updated;
+  }
+
+  async markIntegrationClaimCodeUsed(
+    claimCodeId: number,
+    used: { usedAt: Date; usedExternalId: string; usedByPlatformUserId: string },
+  ): Promise<IntegrationClaimCode | undefined> {
+    const [updated] = await db
+      .update(integrationClaimCodes)
+      .set({
+        usedAt: used.usedAt,
+        usedExternalId: used.usedExternalId,
+        usedByPlatformUserId: used.usedByPlatformUserId,
+      })
+      .where(eq(integrationClaimCodes.id, claimCodeId))
+      .returning();
+    return updated;
+  }
+
+  async getDestinationLock(id: number): Promise<DestinationLock | undefined> {
+    const [lock] = await db.select().from(destinationLocks).where(eq(destinationLocks.id, id)).limit(1);
+    return lock;
+  }
+
+  async getActiveDestinationLockByChatConfiguration(chatConfigurationId: number): Promise<DestinationLock | undefined> {
+    const [lock] = await db
+      .select()
+      .from(destinationLocks)
+      .where(
+        and(
+          eq(destinationLocks.chatConfigurationId, chatConfigurationId),
+          eq(destinationLocks.status, "active"),
+        ),
+      )
+      .orderBy(desc(destinationLocks.createdAt))
+      .limit(1);
+    return lock;
+  }
+
+  async getActiveDestinationLockByPlatformAndExternalId(
+    platformId: number,
+    destinationExternalId: string,
+  ): Promise<DestinationLock | undefined> {
+    const [lock] = await db
+      .select()
+      .from(destinationLocks)
+      .where(
+        and(
+          eq(destinationLocks.platformId, platformId),
+          eq(destinationLocks.destinationExternalId, destinationExternalId),
+          eq(destinationLocks.status, "active"),
+        ),
+      )
+      .orderBy(desc(destinationLocks.createdAt))
+      .limit(1);
+    return lock;
+  }
+
+  async getActiveDestinationLocksByPlatform(platformId: number): Promise<DestinationLock[]> {
+    return db
+      .select()
+      .from(destinationLocks)
+      .where(and(eq(destinationLocks.platformId, platformId), eq(destinationLocks.status, "active")))
+      .orderBy(asc(destinationLocks.endsAt));
+  }
+
+  async getActiveDestinationLocksByChatConfigurationIds(chatConfigurationIds: number[]): Promise<DestinationLock[]> {
+    if (chatConfigurationIds.length === 0) return [];
+    return db
+      .select()
+      .from(destinationLocks)
+      .where(
+        and(
+          inArray(destinationLocks.chatConfigurationId, chatConfigurationIds),
+          eq(destinationLocks.status, "active"),
+        ),
+      )
+      .orderBy(asc(destinationLocks.endsAt));
+  }
+
+  async getDueActiveDestinationLocks(before: Date, limit: number = 200): Promise<DestinationLock[]> {
+    return db
+      .select()
+      .from(destinationLocks)
+      .where(and(eq(destinationLocks.status, "active"), sql`${destinationLocks.endsAt} <= ${before}`))
+      .orderBy(asc(destinationLocks.endsAt))
+      .limit(Math.max(1, Math.min(1000, limit)));
+  }
+
+  async createDestinationLock(lock: InsertDestinationLock): Promise<DestinationLock> {
+    const [created] = await db.insert(destinationLocks).values(lock).returning();
+    return created;
+  }
+
+  async updateDestinationLock(id: number, lock: Partial<DestinationLock>): Promise<DestinationLock | undefined> {
+    const [updated] = await db
+      .update(destinationLocks)
+      .set({ ...lock, updatedAt: new Date() })
+      .where(eq(destinationLocks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createDestinationModerationHit(hit: InsertDestinationModerationHit): Promise<DestinationModerationHit> {
+    const [created] = await db.insert(destinationModerationHits).values(hit).returning();
+    return created;
+  }
+
+  async countDestinationModerationHitsSince(chatConfigurationId: number, since: Date): Promise<number> {
+    const [row] = await db
+      .select({ count: count() })
+      .from(destinationModerationHits)
+      .where(
+        and(
+          eq(destinationModerationHits.chatConfigurationId, chatConfigurationId),
+          sql`${destinationModerationHits.createdAt} >= ${since}`,
+        ),
+      );
+    return Number(row?.count ?? 0);
+  }
+
   async getConversation(id: number): Promise<Conversation | undefined> {
     const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
     return conversation;
@@ -810,6 +1436,45 @@ export class DatabaseStorage implements IStorage {
   async getConversationByExternalId(externalId: string): Promise<Conversation | undefined> {
     const [conversation] = await db.select().from(conversations).where(eq(conversations.externalId, externalId));
     return conversation;
+  }
+
+  async getConversationByPlatformAndExternalId(
+    platformId: number,
+    externalId: string,
+  ): Promise<Conversation | undefined> {
+    const [conversation] = await db
+      .select()
+      .from(conversations)
+      .where(and(eq(conversations.platformId, platformId), eq(conversations.externalId, externalId)))
+      .limit(1);
+    return conversation;
+  }
+
+  async getConversationByPlatformExternalAndUser(
+    platformId: number,
+    externalId: string,
+    externalUserId: string,
+  ): Promise<Conversation | undefined> {
+    const [conversation] = await db
+      .select()
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.platformId, platformId),
+          eq(conversations.externalId, externalId),
+          eq(conversations.externalUserId, externalUserId),
+        ),
+      )
+      .limit(1);
+    return conversation;
+  }
+
+  async getConversationTraining(id: number): Promise<ConversationTraining | undefined> {
+    const [training] = await db
+      .select()
+      .from(conversationTrainings)
+      .where(eq(conversationTrainings.id, id));
+    return training;
   }
 
   async getConversationsByPlatformId(platformId: number): Promise<Conversation[]> {
@@ -976,17 +1641,10 @@ export class DatabaseStorage implements IStorage {
       }
     });
 
-    // Moderation actions (check message metadata for blocked content)
-    let contentFiltered = 0;
-    let spamBlocked = 0;
-    
-    allMessages.forEach(msg => {
-      if (msg.metadata && typeof msg.metadata === 'object' && msg.metadata !== null) {
-        const metadata = msg.metadata as any;
-        if (metadata.blocked === 'content') contentFiltered++;
-        if (metadata.blocked === 'spam') spamBlocked++;
-      }
-    });
+    // Moderation actions are sourced from the dedicated moderation_actions table.
+    const moderationCounts = await getModerationActionCountsForPlatform(platformId);
+    const contentFiltered = moderationCounts.content_filtered ?? 0;
+    const spamBlocked = moderationCounts.spam_blocked ?? 0;
 
     return {
       totalMessages: allMessages.length,
@@ -1068,17 +1726,10 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    // Moderation actions (check message metadata for blocked content)
-    let contentFiltered = 0;
-    let warningsIssued = 0;
-    
-    allMessages.forEach(msg => {
-      if (msg.metadata && typeof msg.metadata === 'object' && msg.metadata !== null) {
-        const metadata = msg.metadata as any;
-        if (metadata.blocked === 'content') contentFiltered++;
-        if (metadata.action === 'warning') warningsIssued++;
-      }
-    });
+    // Moderation actions are sourced from the dedicated moderation_actions table.
+    const moderationCounts = await getModerationActionCountsForPlatform(platformId);
+    const contentFiltered = moderationCounts.content_filtered ?? 0;
+    const warningsIssued = moderationCounts.warning_issued ?? 0;
 
     return {
       totalMessages: allMessages.length,
@@ -1091,50 +1742,38 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
-    // Get the most recent messages from all conversations
-    const recentMessages = await db
+  async getRecentActivity(limit: number, userId?: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
+    const baseQuery = db
       .select({
-        id: messages.id,
-        conversationId: messages.conversationId,
         sender: messages.sender,
         createdAt: messages.createdAt,
-        metadata: messages.metadata
+        metadata: messages.metadata,
+        platformType: platforms.type,
       })
       .from(messages)
-      .orderBy(desc(messages.createdAt))
-      .limit(limit);
-    
-    // Get the platform information for each conversation
-    const messageActivities = await Promise.all(
-      recentMessages.map(async (message) => {
-        const [conversation] = await db
-          .select({
-            platformId: conversations.platformId
-          })
-          .from(conversations)
-          .where(eq(conversations.id, message.conversationId));
-          
-        const [platform] = conversation ? await db
-          .select({
-            type: platforms.type
-          })
-          .from(platforms)
-          .where(eq(platforms.id, conversation.platformId)) : [{ type: 'unknown' }];
-          
-        return {
-          user: message.metadata?.username || message.sender,
-          action: "message",
-          platform: platform.type,
-          time: message.createdAt
-        };
-      })
-    );
-    
-    // Return only message activities, sorted by time and limited to the requested number
-    return messageActivities
-      .sort((a, b) => b.time.getTime() - a.time.getTime())
-      .slice(0, limit);
+      .innerJoin(conversations, eq(conversations.id, messages.conversationId))
+      .innerJoin(platforms, eq(platforms.id, conversations.platformId));
+
+    const recentMessages = await (userId
+      ? baseQuery.where(eq(platforms.userId, userId)).orderBy(desc(messages.createdAt)).limit(limit)
+      : baseQuery.orderBy(desc(messages.createdAt)).limit(limit));
+
+    return recentMessages.map((message) => {
+      const username = (
+        typeof message.metadata === "object" &&
+        message.metadata !== null &&
+        "username" in message.metadata
+      )
+        ? String((message.metadata as any).username)
+        : message.sender;
+
+      return {
+        user: username,
+        action: "message",
+        platform: message.platformType,
+        time: message.createdAt,
+      };
+    });
   }
 
   // Implement remaining methods as stubs for now, to be completed as needed
@@ -1266,17 +1905,34 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  // Implement remaining methods as stubs
+  // Conversation training operations
   async getConversationTrainingsByUserId(userId: number): Promise<ConversationTraining[]> {
-    return [];
+    return await db
+      .select()
+      .from(conversationTrainings)
+      .where(eq(conversationTrainings.userId, userId))
+      .orderBy(desc(conversationTrainings.createdAt));
   }
 
   async getConversationTrainingsByPlatformId(platformId: number): Promise<ConversationTraining[]> {
-    return [];
+    return await db
+      .select()
+      .from(conversationTrainings)
+      .where(eq(conversationTrainings.platformId, platformId))
+      .orderBy(desc(conversationTrainings.createdAt));
   }
 
   async getLatestConversationTraining(userId: number, platformId: number): Promise<ConversationTraining | undefined> {
-    return undefined;
+    const [training] = await db
+      .select()
+      .from(conversationTrainings)
+      .where(and(
+        eq(conversationTrainings.userId, userId),
+        eq(conversationTrainings.platformId, platformId),
+      ))
+      .orderBy(desc(conversationTrainings.createdAt))
+      .limit(1);
+    return training;
   }
 
   async createConversationTraining(training: InsertConversationTraining): Promise<ConversationTraining> {
@@ -1285,27 +1941,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateConversationTraining(id: number, training: Partial<ConversationTraining>): Promise<ConversationTraining | undefined> {
-    return undefined;
+    const [updatedTraining] = await db
+      .update(conversationTrainings)
+      .set({ ...training, updatedAt: new Date() })
+      .where(eq(conversationTrainings.id, id))
+      .returning();
+    return updatedTraining;
   }
 
   async getTeamInvitation(id: number): Promise<TeamInvitation | undefined> {
-    return undefined;
+    const [invitation] = await db
+      .select()
+      .from(teamInvitations)
+      .where(eq(teamInvitations.id, id))
+      .limit(1);
+    return invitation;
   }
 
   async getTeamInvitationByToken(token: string): Promise<TeamInvitation | undefined> {
-    return undefined;
+    const [invitation] = await db
+      .select()
+      .from(teamInvitations)
+      .where(eq(teamInvitations.token, token))
+      .limit(1);
+    return invitation;
   }
 
   async getTeamInvitationsByEmail(email: string): Promise<TeamInvitation[]> {
-    return [];
+    return await db
+      .select()
+      .from(teamInvitations)
+      .where(eq(teamInvitations.email, email.toLowerCase()))
+      .orderBy(desc(teamInvitations.createdAt));
   }
 
   async getTeamInvitationsByInviter(inviterId: number): Promise<TeamInvitation[]> {
-    return [];
+    return await db
+      .select()
+      .from(teamInvitations)
+      .where(eq(teamInvitations.invitedBy, inviterId))
+      .orderBy(desc(teamInvitations.createdAt));
   }
 
   async getPendingTeamInvitations(): Promise<TeamInvitation[]> {
-    return [];
+    return await db
+      .select()
+      .from(teamInvitations)
+      .where(eq(teamInvitations.status, "pending"))
+      .orderBy(desc(teamInvitations.createdAt));
   }
 
   async createTeamInvitation(invitation: InsertTeamInvitation): Promise<TeamInvitation> {
@@ -1314,154 +1997,69 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTeamInvitation(id: number, invitation: Partial<TeamInvitation>): Promise<TeamInvitation | undefined> {
-    return undefined;
+    const [updatedInvitation] = await db
+      .update(teamInvitations)
+      .set(invitation)
+      .where(eq(teamInvitations.id, id))
+      .returning();
+    return updatedInvitation;
   }
 
   async deleteTeamInvitation(id: number): Promise<boolean> {
-    return false;
+    const result = await db.delete(teamInvitations).where(eq(teamInvitations.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
-  /**
-   * Get total conversation count from the database
-   */
-  async getConversationCount(): Promise<number> {
-    const result = await db.select({ count: count() }).from(conversations);
-    return result[0]?.count || 0;
+  private async getDashboardCountsForUser(userId: number): Promise<{
+    totalConversations: number;
+    aiMessages: number;
+    userMessages: number;
+  }> {
+    const [row] = await db
+      .select({
+        totalConversations: sql<number>`count(distinct ${conversations.id})`,
+        aiMessages: sql<number>`coalesce(sum(case when ${messages.sender} = 'ai' then 1 else 0 end), 0)`,
+        userMessages: sql<number>`coalesce(sum(case when ${messages.sender} = 'user' then 1 else 0 end), 0)`,
+      })
+      .from(platforms)
+      .leftJoin(conversations, eq(conversations.platformId, platforms.id))
+      .leftJoin(messages, eq(messages.conversationId, conversations.id))
+      .where(eq(platforms.userId, userId));
+
+    return {
+      totalConversations: Number(row?.totalConversations ?? 0),
+      aiMessages: Number(row?.aiMessages ?? 0),
+      userMessages: Number(row?.userMessages ?? 0),
+    };
   }
 
   /**
    * Get conversation count for a specific user (only conversations with messages)
    */
   async getConversationCountForUser(userId: number): Promise<number> {
-    const result = await db
-      .select({ count: count() })
-      .from(conversations)
-      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
-      .innerJoin(messages, eq(messages.conversationId, conversations.id))
-      .where(eq(platforms.userId, userId));
-    return result[0]?.count || 0;
-  }
-
-  /**
-   * Get total message count from the database
-   * This represents AI responses
-   */
-  async getMessageCount(): Promise<number> {
-    const result = await db
-      .select({ count: count() })
-      .from(messages)
-      .where(eq(messages.sender, 'ai'));
-    return result[0]?.count || 0;
+    const counts = await this.getDashboardCountsForUser(userId);
+    return counts.totalConversations;
   }
 
   /**
    * Get message count for a specific user
    */
   async getMessageCountForUser(userId: number): Promise<number> {
-    const result = await db
-      .select({ count: count() })
-      .from(messages)
-      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
-      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
-      .where(and(eq(messages.sender, 'ai'), eq(platforms.userId, userId)));
-    return result[0]?.count || 0;
+    const counts = await this.getDashboardCountsForUser(userId);
+    return counts.aiMessages;
   }
 
 
-
-  /**
-   * Calculate response rate based on the number of AI responses vs total messages
-   */
-  async getResponseRate(): Promise<number> {
-    // Get total message count
-    const totalResult = await db.select({ count: count() }).from(messages);
-    const totalMessages = totalResult[0]?.count || 0;
-    
-    // Get AI message count
-    const aiResult = await db
-      .select({ count: count() })
-      .from(messages)
-      .where(eq(messages.sender, 'ai'));
-    const aiMessages = aiResult[0]?.count || 0;
-    
-    // Calculate response rate as percentage
-    return totalMessages > 0 ? (aiMessages / totalMessages) * 100 : 0;
-  }
 
   /**
    * Calculate response rate for a specific user
    */
   async getResponseRateForUser(userId: number): Promise<number> {
-    // Get user message count 
-    const userResult = await db
-      .select({ count: count() })
-      .from(messages)
-      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
-      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
-      .where(and(eq(messages.sender, 'user'), eq(platforms.userId, userId)));
-    const userMessages = userResult[0]?.count || 0;
-    
-    // Get AI message count for user
-    const aiResult = await db
-      .select({ count: count() })
-      .from(messages)
-      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
-      .innerJoin(platforms, eq(conversations.platformId, platforms.id))
-      .where(and(eq(messages.sender, 'ai'), eq(platforms.userId, userId)));
-    const aiMessages = aiResult[0]?.count || 0;
-    
-    // Calculate response rate as percentage (AI responses / User messages)
-    return userMessages > 0 ? (aiMessages / userMessages) * 100 : 0;
-  }
+    const counts = await this.getDashboardCountsForUser(userId);
+    const userMessages = counts.userMessages;
+    const aiMessages = counts.aiMessages;
 
-  /**
-   * Get recent activity from messages and moderation actions
-   */
-  async getRecentActivity(limit: number): Promise<{ user: string; action: string; platform: string; time: Date; }[]> {
-    // Get the most recent messages
-    const recentMessages = await db
-      .select({
-        id: messages.id,
-        content: messages.content,
-        sender: messages.sender,
-        conversationId: messages.conversationId,
-        createdAt: messages.createdAt,
-        metadata: messages.metadata
-      })
-      .from(messages)
-      .orderBy(desc(messages.createdAt))
-      .limit(Math.floor(limit / 2));
-      
-    // Get the conversation and platform information for each message
-    const messageActivities = await Promise.all(
-      recentMessages.map(async (message) => {
-        const [conversation] = message.conversationId ? await db
-          .select()
-          .from(conversations)
-          .where(eq(conversations.id, message.conversationId)) : [];
-        
-        const [platform] = conversation ? await db
-          .select({
-            type: platforms.type
-          })
-          .from(platforms)
-          .where(eq(platforms.id, conversation.platformId)) : [{ type: 'unknown' }];
-          
-        return {
-          user: typeof message.metadata === 'object' && message.metadata !== null && 'username' in message.metadata 
-            ? message.metadata.username as string 
-            : message.sender,
-          action: "message",
-          platform: platform.type,
-          time: message.createdAt
-        };
-      })
-    );
-    
-    // Return only message activities, sorted by time and limited to the requested number
-    return messageActivities
-      .sort((a, b) => b.time.getTime() - a.time.getTime())
-      .slice(0, limit);
+    return userMessages > 0 ? (aiMessages / userMessages) * 100 : 0;
   }
 
   // Chat Configuration methods implementation
@@ -1534,6 +2132,129 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  // Chat history methods implementation
+  async getChatHistory(id: number): Promise<ChatHistory | undefined> {
+    const [history] = await db.select().from(chatHistory).where(eq(chatHistory.id, id));
+    return history;
+  }
+
+  async getChatHistoryByChatConfiguration(chatConfigId: number, limit: number = 100): Promise<ChatHistory[]> {
+    return await db
+      .select()
+      .from(chatHistory)
+      .where(eq(chatHistory.chatConfigurationId, chatConfigId))
+      .orderBy(desc(chatHistory.sentAt))
+      .limit(limit);
+  }
+
+  async getChatHistoryByPlatform(platformId: number, limit: number = 100): Promise<ChatHistory[]> {
+    return await db
+      .select()
+      .from(chatHistory)
+      .where(eq(chatHistory.platformId, platformId))
+      .orderBy(desc(chatHistory.sentAt))
+      .limit(limit);
+  }
+
+  async getAdminChatHistory(chatConfigId: number, limit: number = 100): Promise<ChatHistory[]> {
+    return await db
+      .select()
+      .from(chatHistory)
+      .where(and(
+        eq(chatHistory.chatConfigurationId, chatConfigId),
+        eq(chatHistory.isAdmin, true),
+      ))
+      .orderBy(desc(chatHistory.sentAt))
+      .limit(limit);
+  }
+
+  async createChatHistory(chatHistoryData: InsertChatHistory): Promise<ChatHistory> {
+    const [created] = await db.insert(chatHistory).values(chatHistoryData).returning();
+    return created;
+  }
+
+  async updateChatHistory(id: number, chatHistoryData: Partial<ChatHistory>): Promise<ChatHistory | undefined> {
+    const [updated] = await db
+      .update(chatHistory)
+      .set(chatHistoryData)
+      .where(eq(chatHistory.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteChatHistory(id: number): Promise<boolean> {
+    const result = await db.delete(chatHistory).where(eq(chatHistory.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async markChatHistoryForTraining(ids: number[]): Promise<boolean> {
+    if (ids.length === 0) return true;
+    const result = await db
+      .update(chatHistory)
+      .set({ isUsedForTraining: true })
+      .where(inArray(chatHistory.id, ids))
+      .returning({ id: chatHistory.id });
+    return result.length > 0;
+  }
+
+  // Training insights methods implementation
+  async getTrainingInsight(id: number): Promise<TrainingInsights | undefined> {
+    const [insight] = await db.select().from(trainingInsights).where(eq(trainingInsights.id, id));
+    return insight;
+  }
+
+  async getTrainingInsightsByUser(userId: number): Promise<TrainingInsights[]> {
+    return await db
+      .select()
+      .from(trainingInsights)
+      .where(eq(trainingInsights.userId, userId))
+      .orderBy(desc(trainingInsights.updatedAt));
+  }
+
+  async getTrainingInsightsByChatConfiguration(chatConfigId: number): Promise<TrainingInsights[]> {
+    return await db
+      .select()
+      .from(trainingInsights)
+      .where(eq(trainingInsights.chatConfigurationId, chatConfigId))
+      .orderBy(desc(trainingInsights.updatedAt));
+  }
+
+  async getActiveTrainingInsights(userId: number, insightType?: string): Promise<TrainingInsights[]> {
+    const filters = [
+      eq(trainingInsights.userId, userId),
+      eq(trainingInsights.isActive, true),
+    ];
+
+    if (insightType) {
+      filters.push(eq(trainingInsights.insightType, insightType));
+    }
+
+    return await db
+      .select()
+      .from(trainingInsights)
+      .where(and(...filters))
+      .orderBy(desc(trainingInsights.updatedAt));
+  }
+
+  async createTrainingInsight(insight: InsertTrainingInsights): Promise<TrainingInsights> {
+    const [created] = await db.insert(trainingInsights).values(insight).returning();
+    return created;
+  }
+
+  async updateTrainingInsight(id: number, insight: Partial<TrainingInsights>): Promise<TrainingInsights | undefined> {
+    const [updated] = await db
+      .update(trainingInsights)
+      .set({ ...insight, updatedAt: new Date() })
+      .where(eq(trainingInsights.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingInsight(id: number): Promise<boolean> {
+    const result = await db.delete(trainingInsights).where(eq(trainingInsights.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
 
   // Email Whitelist methods implementation
   async isEmailWhitelisted(email: string): Promise<boolean> {
@@ -1546,12 +2267,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addEmailToWhitelist(email: string, addedBy?: number): Promise<EmailWhitelist> {
+    const normalizedEmail = email.toLowerCase();
     const [whitelist] = await db
       .insert(emailWhitelist)
       .values({
-        email: email.toLowerCase(),
-        addedBy,
-        isActive: true
+        email: normalizedEmail,
+        addedBy: addedBy ?? null,
+        isActive: true,
+      })
+      // If the email was previously removed (is_active=false), re-activate it instead of throwing
+      // on the unique(email) constraint.
+      .onConflictDoUpdate({
+        target: emailWhitelist.email,
+        set: {
+          addedBy: addedBy ?? null,
+          isActive: true,
+        },
       })
       .returning();
     return whitelist;
@@ -1580,6 +2311,64 @@ export class DatabaseStorage implements IStorage {
       .from(emailWhitelist)
       .where(and(eq(emailWhitelist.addedBy, userId), eq(emailWhitelist.isActive, true)))
       .orderBy(emailWhitelist.createdAt);
+  }
+
+  async getWorkspaceSettings(ownerUserId: number): Promise<WorkspaceSettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(workspaceSettings)
+      .where(eq(workspaceSettings.ownerUserId, ownerUserId))
+      .limit(1);
+    return settings;
+  }
+
+  async upsertWorkspaceSettings(ownerUserId: number, patch: WorkspaceSettingsPatch): Promise<WorkspaceSettings> {
+    const existing = await this.getWorkspaceSettings(ownerUserId);
+    const now = new Date();
+
+    if (!existing) {
+      const [created] = await db
+        .insert(workspaceSettings)
+        .values({
+          ownerUserId,
+          moderationPreset: patch.moderationPreset ?? "basic",
+          moderationRules: patch.moderationRules ?? {
+            blockedKeywords: [],
+            allowedKeywords: [],
+            spamSensitivity: 50,
+            strictness: 50,
+          },
+          createdAt: now,
+          updatedAt: now,
+        } as InsertWorkspaceSettings)
+        .returning();
+
+      if (!created) {
+        throw new Error("Failed to create workspace settings");
+      }
+      return created;
+    }
+
+    const updatePayload: Partial<WorkspaceSettings> = {
+      updatedAt: now,
+    };
+    if (patch.moderationPreset !== undefined) {
+      updatePayload.moderationPreset = patch.moderationPreset;
+    }
+    if (patch.moderationRules !== undefined) {
+      updatePayload.moderationRules = patch.moderationRules;
+    }
+
+    const [updated] = await db
+      .update(workspaceSettings)
+      .set(updatePayload)
+      .where(eq(workspaceSettings.ownerUserId, ownerUserId))
+      .returning();
+
+    if (!updated) {
+      throw new Error("Failed to update workspace settings");
+    }
+    return updated;
   }
 }
 

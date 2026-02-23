@@ -20,7 +20,7 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  const serverOptions = {
+  const serverOptions: import("vite").ServerOptions = {
     middlewareMode: true,
     hmr: { server },
     allowedHosts: true,
@@ -76,10 +76,31 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.use(
+    express.static(distPath, {
+      index: false,
+      setHeaders: (res, filePath) => {
+        const relativePath = path.relative(distPath, filePath).replace(/\\/g, "/");
+
+        if (relativePath.startsWith("assets/")) {
+          // Fingerprinted build artifacts can be cached aggressively.
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          return;
+        }
+
+        if (relativePath.endsWith("index.html")) {
+          res.setHeader("Cache-Control", "no-cache");
+          return;
+        }
+
+        res.setHeader("Cache-Control", "public, max-age=3600");
+      },
+    }),
+  );
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache");
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

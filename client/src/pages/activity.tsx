@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { 
   Select, 
@@ -127,18 +128,18 @@ const ActivityPage = () => {
     return (
       <div className="space-y-3 -mt-2">
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
-          <div className="w-full sm:w-64 h-10 bg-muted rounded-md animate-pulse"></div>
-          <div className="w-full sm:w-48 h-10 bg-muted rounded-md animate-pulse"></div>
+          <Skeleton className="w-full sm:w-64 h-10 rounded-md" />
+          <Skeleton className="w-full sm:w-48 h-10 rounded-md" />
         </div>
         <div className="bg-card rounded-lg shadow-sm p-6 border border-border">
-          <div className="animate-pulse space-y-6">
+          <div className="space-y-6">
             {Array(10).fill(0).map((_, i) => (
               <div key={i} className="flex items-start space-x-3">
-                <div className="rounded-full bg-muted h-10 w-10"></div>
+                <Skeleton className="rounded-full h-10 w-10" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-1/4"></div>
-                  <div className="h-3 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/3"></div>
+                  <Skeleton className="h-4 rounded w-1/4" />
+                  <Skeleton className="h-3 rounded w-3/4" />
+                  <Skeleton className="h-3 rounded w-1/3" />
                 </div>
               </div>
             ))}
@@ -207,7 +208,7 @@ const ActivityPage = () => {
                         </svg>
                         {activity.platform.charAt(0).toUpperCase() + activity.platform.slice(1)}
                       </span>
-                      <span className="text-xs text-muted-foreground mx-2">•</span>
+                      <span className="text-xs text-muted-foreground mx-2">&middot;</span>
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(activity.time, { addSuffix: true })}
                       </span>

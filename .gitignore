@@ -1,6 +1,13 @@
 node_modules
 dist
+.env
+.dev-server.pid
 .DS_Store
 server/public
 vite.config.ts.*
 *.tar.gz
+attached_assets/
+generated-icon.png
+cookies.txt
+logs/
+checkpoints/

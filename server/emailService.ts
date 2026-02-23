@@ -1,4 +1,4 @@
-import { MailService } from '@sendgrid/mail';
+﻿import { MailService } from '@sendgrid/mail';
 
 // Initialize SendGrid mail service
 const mailService = new MailService();
@@ -10,7 +10,7 @@ if (process.env.SENDGRID_API_KEY) {
 
 interface EmailParams {
   to: string;
-  from: string;
+  from?: string;
   subject: string;
   text?: string;
   html?: string;
@@ -36,13 +36,27 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       return false;
     }
 
-    await mailService.send({
+    const message: {
+      to: string;
+      from: string;
+      subject: string;
+      text?: string;
+      html?: string;
+    } = {
       to: params.to,
       from: senderEmail,
       subject: params.subject,
-      text: params.text,
-      html: params.html,
-    });
+    };
+
+    if (params.text) {
+      message.text = params.text;
+    }
+
+    if (params.html) {
+      message.html = params.html;
+    }
+
+    await mailService.send(message as any);
 
     console.log(`Email sent successfully to ${params.to}`);
     return true;
@@ -127,7 +141,7 @@ This invitation will expire in 7 days.
 
 If you have any questions, please contact the person who invited you.
 
-© ${new Date().getFullYear()} ModerateAI. All rights reserved.
+ © ${new Date().getFullYear()} ModerateAI. All rights reserved.
 If you didn't request this invitation, you can ignore this email.
   `;
   
@@ -139,3 +153,4 @@ If you didn't request this invitation, you can ignore this email.
     html
   });
 }
+

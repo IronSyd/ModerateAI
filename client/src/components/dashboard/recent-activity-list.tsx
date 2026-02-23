@@ -1,7 +1,8 @@
-import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
+import { motion, useReducedMotion } from "framer-motion";
 
 type ActivityItem = {
   id: string;
@@ -20,6 +21,7 @@ type RecentActivityListProps = {
 };
 
 const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) => {
+  const shouldReduceMotion = useReducedMotion();
   // Get appropriate avatar based on user type
   const getAvatarForUser = (userName: string) => {
     if (userName === 'ai') {
@@ -60,15 +62,15 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-card rounded-lg shadow-sm p-4 border border-border">
-        <div className="animate-pulse space-y-4">
+      <div className="rounded-2xl shadow-sm p-4 surface-glow glass-surface">
+        <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-start space-x-3">
-              <div className="rounded-full bg-muted h-10 w-10"></div>
+              <Skeleton className="rounded-full h-10 w-10" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted rounded w-1/4"></div>
-                <div className="h-3 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/3"></div>
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-3 w-1/3" />
               </div>
             </div>
           ))}
@@ -78,11 +80,17 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
   }
   
   return (
-    <div className="bg-card rounded-lg shadow-sm p-4 border border-border">
+    <div className="rounded-2xl shadow-sm p-4 surface-glow glass-surface">
       <div className="flow-root">
-        <ul className="-my-5 divide-y divide-border">
+        <ul className="-my-5 divide-y glass-divider">
           {activities.map((activity, index) => (
-            <li key={activity.id} className="py-4">
+            <motion.li
+              key={activity.id}
+              className="py-4"
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: "easeOut", delay: shouldReduceMotion ? 0 : index * 0.04 }}
+            >
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <Avatar>
@@ -105,21 +113,21 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
                       </svg>
                       {activity.platform.charAt(0).toUpperCase() + activity.platform.slice(1)}
                     </span>
-                    <span className="text-xs text-muted-foreground mx-2">•</span>
+                    <span className="text-xs text-muted-foreground mx-2">&middot;</span>
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(activity.time, { addSuffix: true })}
                     </span>
                   </div>
                 </div>
               </div>
-            </li>
+            </motion.li>
           ))}
         </ul>
       </div>
       <div className="mt-5">
         <Button 
           variant="outline" 
-          className="w-full text-center"
+          className="w-full text-center glass-chip"
           onClick={() => window.location.href = "/activity"}
         >
           View all activity
@@ -130,3 +138,4 @@ const RecentActivityList = ({ activities, isLoading }: RecentActivityListProps) 
 };
 
 export default RecentActivityList;
+

@@ -1,4 +1,4 @@
-import { randomInt } from "crypto";
+﻿import { randomInt } from "crypto";
 import { db } from "../db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -57,7 +57,7 @@ export async function sendTwoFactorCode(user: any): Promise<void> {
   
   const emailContent = {
     to: user.email,
-    from: "noreply@moderateai.com", // This will be overridden by SENDGRID_SENDER_EMAIL
+    from: "noreply@ModerateAI.com", // This will be overridden by SENDGRID_SENDER_EMAIL
     subject: "Your ModerateAI 2FA Code",
     text: `Your two-factor authentication code is: ${code}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.`,
     html: `

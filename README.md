@@ -1,4 +1,4 @@
-ModerateAI
+﻿ModerateAI
 A multi-platform AI-powered customer support and content moderation SaaS application that provides automated moderation, AI-driven customer support, and conversation management across Discord and Telegram platforms.
 
 🚀 Features
@@ -74,7 +74,7 @@ git clone https://github.com/IronSyd/ModerateAI.git
 cd ModerateAI
 npm install
 
-3. Environment Setup
+2. Environment Setup
 Create a .env file with the following variables:
 # Database
 DATABASE_URL=postgresql://username:password@host:port/database
@@ -82,6 +82,10 @@ DATABASE_URL=postgresql://username:password@host:port/database
 SESSION_SECRET=your-secure-session-secret-here
 # AI Integration
 OPENAI_API_KEY=your-openai-api-key
+OPENAI_REQUEST_TIMEOUT_MS=15000
+# Performance
+DASHBOARD_OVERVIEW_CACHE_TTL_MS=10000
+UI_PERF_PROFILE=balanced
 # Platform Integration (Optional)
 DISCORD_CLIENT_ID=your-discord-client-id
 DISCORD_CLIENT_SECRET=your-discord-client-secret
@@ -91,16 +95,36 @@ SENDGRID_API_KEY=your-sendgrid-api-key
 # Production
 NODE_ENV=production
 FRONTEND_URL=https://your-app-domain.com
+# Documentation (Optional but recommended for in-app Help links)
+VITE_DOCS_BASE_URL=https://docs.moderate.ai
 
 3. Database Setup
 npm run db:push
 
-5. Start the Application
+4. Start the Application
 # Development
 npm run dev
-# Production
+# Production (recommended for real performance/load behavior)
+npm run start:prod
+# Or start only (when already built)
 npm start
 The application will be available at http://localhost:5000
+
+For performance hardening:
+- Apply hot-path indexes safely: `npm run db:indexes:perf`
+- Run load smoke checks: `npm run perf:smoke`
+
+Script Conventions
+- TypeScript is the default for maintained source and utility scripts.
+- JavaScript files in the repo root are mostly legacy/manual scripts and are not part of normal runtime/build.
+- When a script becomes part of regular workflow, prefer a `.ts` version and wire it through `package.json` scripts.
+- Utility script usage is documented in `scripts/README.md`.
+
+Documentation
+- GitBook is the canonical customer documentation surface.
+- In-app Help routes (`/help`, `/help/article/*`) resolve to GitBook links when `VITE_DOCS_BASE_URL` is configured.
+- Lean v1 GitBook source pages are available in `docs/gitbook`.
+- Internal runbook/script notes are tracked in `docs/internal`.
 
 🔧 Configuration
 AI Configuration
@@ -153,6 +177,12 @@ The application is production-ready and can be deployed to any Node.js hosting p
 - Start: npm start
 - Health Check: Verify bots connect and dashboard loads
 
+Docker (Optional)
+- Build: docker build -t moderateai .
+- Run: docker run --rm -p 5000:5000 --env-file .env moderateai
+- Or with Compose (proxy + app + Postgres): docker compose up --build
+- Compose runs an Nginx reverse proxy with gzip/brotli in front of the app on port `5000` and persists DB data in `postgres_data`.
+
 Recommended Platforms
 - Replit Deployments: Zero-config deployment with automatic scaling
 - Vercel: Serverless deployment with edge functions
@@ -173,4 +203,6 @@ This project is licensed under the MIT License.
 For support, please create an issue in the GitHub repository or contact the development team.
 
 ModerateAI - Intelligent moderation and support across all your platforms 🤖✨
+
+
 

@@ -12,6 +12,7 @@ type WelcomeBannerProps = {
   setupProgress: {
     telegramIntegration: boolean;
     discordIntegration: boolean;
+    websiteIntegration: boolean;
   };
 };
 
@@ -26,7 +27,7 @@ const WelcomeBanner = ({
   const percentage = (completedSteps / totalSteps) * 100;
   
   return (
-    <div className="bg-card rounded-lg shadow-sm border border-border mb-6">
+    <div className="rounded-2xl shadow-sm mb-6 surface-glow glass-surface overflow-hidden">
       <div className="px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -35,7 +36,7 @@ const WelcomeBanner = ({
         <div className="mt-4 md:mt-0 flex-shrink-0">
           <Button 
             variant="ghost" 
-            className="px-3 py-1 h-auto rounded-full bg-yellow-600/20 hover:bg-yellow-600/30 text-sm font-medium text-yellow-500 flex items-center gap-1"
+            className="px-3 py-1 h-auto rounded-full bg-yellow-600/20 hover:bg-yellow-600/30 text-sm font-medium text-yellow-500 flex items-center gap-1 glass-chip"
             onClick={() => setShowSetupSteps(!showSetupSteps)}
           >
             {completedSteps}/{totalSteps} Setup Steps Completed
@@ -49,11 +50,11 @@ const WelcomeBanner = ({
       </div>
       
       {/* Progress Bar */}
-      <Progress value={percentage} className="h-2 rounded-none bg-border border-t-0" />
+      <Progress value={percentage} className="h-2 rounded-none bg-border border-t-0 glass-divider" />
       
       {/* Setup Steps */}
       {showSetupSteps && completedSteps < totalSteps && (
-        <div className="border-t border-border">
+        <div className="border-t glass-divider">
           <SetupSteps completedSteps={setupProgress} />
         </div>
       )}

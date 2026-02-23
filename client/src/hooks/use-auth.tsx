@@ -13,10 +13,12 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
+  signupMutation: UseMutationResult<User, Error, SignupData>;
   logoutMutation: UseMutationResult<void, Error, void>;
 };
 
-type LoginData = Pick<InsertUser, "email">;
+type LoginData = Pick<InsertUser, "email" | "password">;
+type SignupData = Pick<InsertUser, "email" | "fullName" | "password">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -34,11 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      // Send email as both username and password for LocalStrategy compatibility
-      const res = await apiRequest("POST", "/api/login", {
-        email: credentials.email,
-        password: credentials.email
-      });
+      const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
@@ -47,6 +45,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       toast({
         title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const signupMutation = useMutation({
+    mutationFn: async (data: SignupData) => {
+      const res = await apiRequest("POST", "/api/signup", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      // Signup should not establish an authenticated session; keep user logged out.
+      queryClient.setQueryData(["/api/user"], null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Sign up failed",
         description: error.message,
         variant: "destructive",
       });
@@ -83,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         loginMutation,
+        signupMutation,
         logoutMutation,
       }}
     >
