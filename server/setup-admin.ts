@@ -13,8 +13,8 @@ async function setupAdminAccount() {
 
   // Support migrating older default emails that may have been used previously.
   const legacyEmails = new Set([
+    "admin@moderate.ai", // previous default domain before .net
     "admin@moderateai.com", // previous default (case-insensitive)
-    "admin@ModerateAI.com",
   ].map((value) => value.toLowerCase()));
 
   // Check if admin already exists
