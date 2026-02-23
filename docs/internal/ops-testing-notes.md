@@ -1,0 +1,31 @@
+# Internal Ops and Regression Notes
+
+This page contains internal-only script and maintenance references extracted from `scripts/README.md`.
+
+## Core Regression Runs
+
+- `npm run test:all`
+- `npm run test:journey`
+- `npm run test:tier:matrix`
+- `npm run test:widget:regressions`
+- `npm run test:phase1`
+- `npm run test:phase2`
+- `npm run test:phase3`
+- `npm run test:phase4`
+
+## Performance Utilities
+
+- `npm run db:indexes:perf`
+- `npm run perf:smoke`
+
+## Dev Server Utilities
+
+- `npm run dev:bg`
+- `npm run dev:status`
+- `npm run dev:stop`
+
+## Notes
+
+- `test:*` scripts use `.env` automatically with `tsx --env-file=.env`.
+- Auth rate-limit bypass header is available in non-production when `AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN` is set.
+- Use production mode (`npm run start:prod`) for realistic performance checks.

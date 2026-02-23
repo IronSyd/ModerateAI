@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -72,13 +73,35 @@ import {
 } from "lucide-react";
 
 type TeamMember = {
-  id: number;
+  id: string;
+  kind: "user" | "invitation";
+  userId?: number;
+  invitationId?: number;
   name: string;
   email: string;
   role: string;
-  status: "active" | "invited" | "disabled";
+  status: "active" | "invited" | "expired" | "disabled";
   avatar?: string;
   lastActive?: string;
+  expiresAt?: string;
+};
+
+type BillingStatus = {
+  isOwner?: boolean;
+  plan: "free" | "standard" | "pro";
+  planStatus: "active" | "trialing" | "past_due" | "canceled";
+  trialEndsAt: string | null;
+  entitlements: {
+    seatLimit: number | null;
+    integrationLimit: number | null;
+    aiResponsesPerDay: number;
+  };
+  seatUsage: {
+    memberCount: number;
+    pendingInvitationCount: number;
+    usedSeats: number;
+    seatLimit: number | null;
+  };
 };
 
 // Default roles data (static)
@@ -240,8 +263,26 @@ const TeamSettingsContent = () => {
 
   if (isLoadingSettings) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6 py-2">
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-44" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-52" />
+          {[1, 2, 3].map((row) => (
+            <div key={row} className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-52" />
+                <Skeleton className="h-3 w-72 max-w-full" />
+              </div>
+              <Skeleton className="h-6 w-12 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -355,6 +396,21 @@ const Team = () => {
     },
   });
 
+  const { data: billingStatus } = useQuery({
+    queryKey: ["/api/billing/status"],
+    queryFn: async () => {
+      const response = await fetch("/api/billing/status");
+      if (!response.ok) {
+        throw new Error("Failed to fetch billing status");
+      }
+      return (await response.json()) as BillingStatus;
+    },
+  });
+
+  const seatLimit = billingStatus?.entitlements?.seatLimit ?? null;
+  const usedSeats = billingStatus?.seatUsage?.usedSeats ?? 1;
+  const isAtSeatLimit = seatLimit !== null && usedSeats >= seatLimit;
+
   // Get invitation link mutation
   const getInvitationLinkMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -393,6 +449,13 @@ const Team = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
+        if (response.status === 402 && errorData?.code === "SEAT_LIMIT_REACHED") {
+          throw new Error(
+            errorData?.seatLimit
+              ? `Seat limit reached (${errorData.usedSeats}/${errorData.seatLimit}). Upgrade to add more members.`
+              : errorData.message || "Seat limit reached",
+          );
+        }
         throw new Error(errorData.message || 'Failed to create invitation');
       }
       
@@ -417,6 +480,7 @@ const Team = () => {
       setInviteData({ email: "", role: "moderator" });
       // Refresh the team members list to show the pending invitation
       refetchMembers();
+      queryClient.invalidateQueries({ queryKey: ["/api/billing/status"] });
     },
     onError: (error: Error) => {
       toast({
@@ -451,6 +515,7 @@ const Team = () => {
       setSelectedMember(null);
       // Refresh the team members list
       refetchMembers();
+      queryClient.invalidateQueries({ queryKey: ["/api/billing/status"] });
     },
     onError: (error: Error) => {
       toast({
@@ -460,6 +525,40 @@ const Team = () => {
       });
     },
   });
+
+  const cancelInviteMutation = useMutation({
+    mutationFn: async (invitationId: number) => {
+      const response = await fetch(`/api/team/invite/${invitationId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to cancel invitation");
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Invitation cancelled",
+        description: `${selectedMember?.email} can no longer join via that link.`,
+      });
+      setIsDeleteDialogOpen(false);
+      setSelectedMember(null);
+      refetchMembers();
+      queryClient.invalidateQueries({ queryKey: ["/api/billing/status"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel invitation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isRemovingMember = deleteMemberMutation.isPending || cancelInviteMutation.isPending;
 
   // Handle invite form submission
   const handleInvite = () => {
@@ -476,8 +575,17 @@ const Team = () => {
 
   // Handle delete confirmation
   const handleDelete = () => {
-    if (selectedMember) {
-      deleteMemberMutation.mutate(selectedMember.id);
+    if (!selectedMember) return;
+
+    if (selectedMember.kind === "invitation") {
+      if (selectedMember.invitationId) {
+        cancelInviteMutation.mutate(selectedMember.invitationId);
+      }
+      return;
+    }
+
+    if (selectedMember.userId) {
+      deleteMemberMutation.mutate(selectedMember.userId);
     }
   };
 
@@ -533,6 +641,13 @@ const Team = () => {
           <div className="flex items-center">
             <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>
             Invited
+          </div>
+        );
+      case "expired":
+        return (
+          <div className="flex items-center">
+            <span className="h-2 w-2 rounded-full bg-orange-500 mr-2"></span>
+            Expired
           </div>
         );
       case "disabled":
@@ -596,8 +711,22 @@ const Team = () => {
               </div>
 
               {isLoadingMembers ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className="border rounded-md p-4 space-y-3">
+                  {[1, 2, 3, 4].map((row) => (
+                    <div key={row} className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-2 min-w-0 flex-1">
+                          <Skeleton className="h-4 w-40" />
+                          <Skeleton className="h-3 w-56 max-w-full" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full hidden sm:block" />
+                      <Skeleton className="h-6 w-20 rounded-full hidden md:block" />
+                      <Skeleton className="h-4 w-24 hidden lg:block" />
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                    </div>
+                  ))}
                 </div>
               ) : filteredMembers && filteredMembers.length > 0 ? (
                 <div className="border rounded-md">
@@ -640,19 +769,34 @@ const Team = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  // Would open edit dialog in a real app
-                                  toast({
-                                    title: "Edit member",
-                                    description: `Editing ${member.name}`,
-                                  });
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                              {member.kind === "invitation" ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (member.invitationId) {
+                                      getInvitationLinkMutation.mutate(member.invitationId);
+                                    }
+                                  }}
+                                  disabled={!member.invitationId || member.status === "expired" || getInvitationLinkMutation.isPending}
+                                >
+                                  <Link className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    // Would open edit dialog in a real app
+                                    toast({
+                                      title: "Edit member",
+                                      description: `Editing ${member.name}`,
+                                    });
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -696,15 +840,26 @@ const Team = () => {
               )}
             </CardContent>
             <CardFooter className="text-sm text-gray-500 flex justify-between items-center">
-              <div>
-                {filteredMembers?.length || 0} team members
-                {searchQuery
-                  ? ` (filtered from ${teamMembers?.length || 0})`
-                  : ""}
+              <div className="space-y-1">
+                <div>
+                  {filteredMembers?.length || 0} team members
+                  {searchQuery ? ` (filtered from ${teamMembers?.length || 0})` : ""}
+                </div>
+                {billingStatus && (
+                  <div className="text-xs text-gray-500">
+                    Seats: {usedSeats}/{seatLimit === null ? "Unlimited" : seatLimit} ({billingStatus.isOwner ? "Owner" : billingStatus.plan})
+                  </div>
+                )}
+                {isAtSeatLimit && (
+                  <div className="text-xs text-red-400">
+                    Seat limit reached. Upgrade your plan to add more members.
+                  </div>
+                )}
               </div>
               <Button
                 variant="outline"
                 onClick={() => setIsInviteDialogOpen(true)}
+                disabled={isAtSeatLimit}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
                 Whitelist New Account
@@ -903,12 +1058,12 @@ const Team = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {selectedMember?.status === "invited"
+              {selectedMember?.kind === "invitation"
                 ? "Cancel Invitation"
                 : "Remove Team Member"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {selectedMember?.status === "invited"
+              {selectedMember?.kind === "invitation"
                 ? `Are you sure you want to cancel the invitation to ${selectedMember?.email}?`
                 : `Are you sure you want to remove ${selectedMember?.name} from your team? They will no longer have access to your ModerateAI account.`}
             </AlertDialogDescription>
@@ -918,13 +1073,14 @@ const Team = () => {
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-500 hover:bg-red-600"
+              disabled={isRemovingMember}
             >
-              {deleteMemberMutation.isPending ? (
+              {isRemovingMember ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              {selectedMember?.status === "invited"
+              {selectedMember?.kind === "invitation"
                 ? "Cancel Invitation"
                 : "Remove Member"}
             </AlertDialogAction>
@@ -938,3 +1094,4 @@ const Team = () => {
 };
 
 export default Team;
+

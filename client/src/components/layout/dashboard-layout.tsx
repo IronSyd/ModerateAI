@@ -13,10 +13,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <Sidebar />
       
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 md:ml-64 min-w-0">
         <Header />
         
-        <div className="p-4 md:p-6">
+        <div className="px-4 pb-4 pt-20 md:px-6 md:pb-6 md:pt-24">
           {children}
         </div>
       </div>

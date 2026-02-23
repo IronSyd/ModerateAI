@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -223,10 +224,21 @@ export function TrainingManagementDialog({
               </div>
 
               {insightsLoading ? (
-                <div className="text-center py-8">Loading insights...</div>
+                <div className="space-y-3 py-2">
+                  {[1, 2, 3].map((row) => (
+                    <div key={row} className="p-4 border rounded-lg space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-28 rounded-full" />
+                        <Skeleton className="h-5 w-24 rounded-full" />
+                      </div>
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
               ) : !(insights as any)?.insights?.length ? (
                 <div className="text-center py-8 text-gray-500">
-                  No training insights found. Run an analysis to generate insights from admin conversations.
+                  No training insights found. Automatic analysis runs on a schedule when enough new admin messages are available, or you can run a manual analysis now.
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -245,7 +257,7 @@ export function TrainingManagementDialog({
                               {insight.type.replace('_', ' ')}
                             </Badge>
                             <Badge variant="outline">
-                              {Math.round(insight.confidence * 100)}% confidence
+                              {Math.round(insight.confidence || 0)}% confidence
                             </Badge>
                           </div>
                           <p className="text-sm font-medium mb-1">{insight.pattern}</p>
@@ -254,7 +266,7 @@ export function TrainingManagementDialog({
                           </p>
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span>Used {insight.usageCount} times</span>
-                            <span>Success rate: {Math.round((insight.successRate || 0) * 100)}%</span>
+                            <span>Success rate: {Math.round(insight.successRate || 0)}%</span>
                             <span>Created: {new Date(insight.createdAt).toLocaleDateString()}</span>
                           </div>
                         </div>
@@ -289,7 +301,18 @@ export function TrainingManagementDialog({
               </div>
 
               {historyLoading ? (
-                <div className="text-center py-8">Loading chat history...</div>
+                <div className="space-y-2 py-2">
+                  {[1, 2, 3, 4].map((row) => (
+                    <div key={row} className="p-3 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                        <Skeleton className="h-3 w-36" />
+                      </div>
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-5/6" />
+                    </div>
+                  ))}
+                </div>
               ) : !(chatHistory as any)?.history?.length ? (
                 <div className="text-center py-8 text-gray-500">
                   No admin chat history found. Make sure admin learning mode is enabled and admins have participated in conversations.
@@ -334,7 +357,7 @@ export function TrainingManagementDialog({
                 <Brain className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Analyze Admin Conversations</h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Use AI to analyze admin responses and create training insights that will help improve bot responses in similar situations.
+                  Admin history is analyzed automatically on a schedule when enough new admin messages are available. Use manual analysis anytime to refresh insights immediately.
                 </p>
                 
                 <Button

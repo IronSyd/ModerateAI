@@ -26,7 +26,6 @@ interface ChatConfiguration {
   knowledgeBaseId?: number;
   settings?: {
     contentFilteringEnabled?: boolean;
-    spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
     proactiveResponses?: boolean;
     enableHistoryLearning?: boolean;
@@ -83,6 +82,7 @@ export function ChatConfigurationList({
       }).then(res => res.json());
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
       queryClient.invalidateQueries({ queryKey: [`/api/platforms/${platformId}/chat-configurations`] });
     },
     onError: () => {
@@ -155,7 +155,7 @@ export function ChatConfigurationList({
               <TableHead>Type</TableHead>
               <TableHead>AI Config</TableHead>
               <TableHead>Knowledge Base</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Respond</TableHead>
               <TableHead>Features</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -199,7 +199,7 @@ export function ChatConfigurationList({
                     <Badge
                       variant={chat.isActive ? "secondary" : "outline"}
                     >
-                      {chat.isActive ? "Active" : "Inactive"}
+                      {chat.isActive ? "Responding" : "Paused"}
                     </Badge>
                   </div>
                 </TableCell>
@@ -208,11 +208,6 @@ export function ChatConfigurationList({
                     {chat.settings?.contentFilteringEnabled && (
                       <Badge variant="outline" className="text-xs">
                         Filter
-                      </Badge>
-                    )}
-                    {chat.settings?.spamProtectionEnabled && (
-                      <Badge variant="outline" className="text-xs">
-                        Anti-spam
                       </Badge>
                     )}
                     {chat.settings?.mentionOnlyMode && (
@@ -246,9 +241,9 @@ export function ChatConfigurationList({
       <ChatConfigurationDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        chatConfig={selectedChat}
-        aiConfigurations={aiConfigurations}
+        chatConfiguration={selectedChat}
         knowledgeBases={knowledgeBases}
+        platformId={platformId}
       />
     </>
   );

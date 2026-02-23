@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { queryClient } from "@/lib/queryClient";
 import { Loader2, Check, AlertCircle, Activity } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +30,22 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 
+interface PlatformSummary {
+  id: number;
+  name: string;
+  type: string;
+}
+
+interface ConversationTrainingRecord {
+  id: number;
+  status: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalConversations: number;
+  processedConversations: number;
+  errorMessage: string | null;
+}
+
 export default function TrainAIPage() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -39,7 +56,7 @@ export default function TrainAIPage() {
     data: platforms,
     isLoading: isLoadingPlatforms,
     error: platformsError,
-  } = useQuery({
+  } = useQuery<PlatformSummary[]>({
     queryKey: ["/api/platforms"],
     enabled: !!user,
   });
@@ -49,7 +66,7 @@ export default function TrainAIPage() {
     data: trainings,
     isLoading: isLoadingTrainings,
     error: trainingsError,
-  } = useQuery({
+  } = useQuery<ConversationTrainingRecord[]>({
     queryKey: ["/api/conversation-trainings", selectedPlatformId],
     enabled: !!user && !!selectedPlatformId,
   });
@@ -117,8 +134,19 @@ export default function TrainAIPage() {
 
   if (isLoadingPlatforms) {
     return (
-      <div className="container mx-auto py-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto py-8 space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <Card className="p-6 space-y-4">
+          <Skeleton className="h-6 w-44" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </Card>
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-72 w-full rounded-xl" />
       </div>
     );
   }
@@ -200,8 +228,11 @@ export default function TrainAIPage() {
       <h2 className="text-xl font-semibold mb-4">Training History</h2>
       
       {isLoadingTrainings ? (
-        <div className="flex items-center justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="space-y-3 p-2">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
         </div>
       ) : trainingsError ? (
         <Alert variant="destructive" className="mb-4">

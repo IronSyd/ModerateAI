@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Users, MessageCircle, Shield, Bot, Trash2 } from 'lucide-react';
+import { Settings, Users, MessageCircle, Shield, Bot, Trash2, Lock, Unlock } from 'lucide-react';
 import { ChatConfigurationDialog } from './ChatConfigurationDialog';
 import {
   AlertDialog,
@@ -15,8 +15,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChatConfiguration {
@@ -30,9 +39,33 @@ interface ChatConfiguration {
   isActive: boolean;
   settings: {
     contentFilteringEnabled?: boolean;
-    spamProtectionEnabled?: boolean;
     mentionOnlyMode?: boolean;
     welcomeMessage?: string;
+  };
+  lockState?: {
+    isLocked: boolean;
+    source: 'manual_app' | 'manual_chat' | 'auto' | null;
+    startedAt: string | null;
+    endsAt: string | null;
+    remainingSeconds: number;
+    reason: string | null;
+  };
+  lockSettings?: {
+    scheduleEnabled?: boolean;
+    schedulePaused?: boolean;
+    timezone?: string;
+    schedules?: Array<{
+      id: string;
+      recurrence: 'daily' | 'weekly';
+      daysOfWeek: number[];
+      lockAt: string;
+      unlockAt: string;
+      isEnabled: boolean;
+    }>;
+    autoLockEnabled?: boolean;
+    thresholdCount?: number;
+    windowMinutes?: number;
+    lockDurationMinutes?: number;
   };
   aiConfiguration?: {
     name: string;
@@ -73,6 +106,16 @@ export function ChatConfigurationList({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<ChatConfiguration | null>(null);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [chatToLock, setChatToLock] = useState<ChatConfiguration | null>(null);
+  const [lockDurationMinutes, setLockDurationMinutes] = useState<string>('15');
+  const [lockReason, setLockReason] = useState<string>('');
+  const [nowMs, setNowMs] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const quickToggleMutation = useMutation({
     mutationFn: async ({ chatId, isActive }: { chatId: number; isActive: boolean }) => {
@@ -87,6 +130,7 @@ export function ChatConfigurationList({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${platformId}/chat-configurations`] });
     },
     onError: (error: any) => {
       toast({
@@ -130,6 +174,74 @@ export function ChatConfigurationList({
     }
   });
 
+  const lockMutation = useMutation({
+    mutationFn: async (payload: { chatId: number; durationMinutes: number; reason?: string }) => {
+      const response = await fetch(`/api/chat-configurations/${payload.chatId}/lock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          durationMinutes: payload.durationMinutes,
+          reason: payload.reason || undefined,
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body?.message || 'Failed to apply destination lock');
+      }
+      return body;
+    },
+    onSuccess: (body: any) => {
+      toast({
+        title: 'Lock updated',
+        description: body?.message || 'Destination lock applied.',
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${platformId}/chat-configurations`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+      setLockDialogOpen(false);
+      setChatToLock(null);
+      setLockReason('');
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Lock failed',
+        description: error?.message || 'Could not lock this destination.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const unlockMutation = useMutation({
+    mutationFn: async (chatId: number) => {
+      const response = await fetch(`/api/chat-configurations/${chatId}/unlock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reason: 'Unlocked from Telegram integration.' }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body?.message || 'Failed to unlock destination');
+      }
+      return body;
+    },
+    onSuccess: (body: any) => {
+      toast({
+        title: 'Unlocked',
+        description: body?.message || 'Destination unlocked.',
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/platforms/${platformId}/chat-configurations`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/platforms'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Unlock failed',
+        description: error?.message || 'Could not unlock this destination.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleConfigure = (chat: ChatConfiguration) => {
     setSelectedChat(chat);
     setDialogOpen(true);
@@ -142,6 +254,14 @@ export function ChatConfigurationList({
   const handleDelete = (chat: ChatConfiguration) => {
     setChatToDelete(chat);
     setDeleteDialogOpen(true);
+  };
+
+  const handleLockClick = (chat: ChatConfiguration) => {
+    setChatToLock(chat);
+    const defaultDuration = chat.lockSettings?.lockDurationMinutes ?? 15;
+    setLockDurationMinutes(String(defaultDuration));
+    setLockReason('');
+    setLockDialogOpen(true);
   };
 
   const confirmDelete = () => {
@@ -174,6 +294,45 @@ export function ChatConfigurationList({
         {type}
       </Badge>
     );
+  };
+
+  const lockPresets = [5, 15, 30, 60];
+
+  const resolveRemainingSeconds = (chat: ChatConfiguration): number => {
+    if (!chat.lockState?.isLocked) return 0;
+    if (chat.lockState.endsAt) {
+      const endsAtMs = new Date(chat.lockState.endsAt).getTime();
+      if (Number.isFinite(endsAtMs)) {
+        return Math.max(0, Math.ceil((endsAtMs - nowMs) / 1000));
+      }
+    }
+    return Math.max(0, Number(chat.lockState.remainingSeconds ?? 0));
+  };
+
+  const formatRemaining = (totalSeconds: number): string => {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainderSeconds = seconds % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m ${remainderSeconds}s`;
+    return `${remainderSeconds}s`;
+  };
+
+  const lockTargetName = useMemo(
+    () => chatToLock?.chatName || chatToLock?.externalId || 'this destination',
+    [chatToLock],
+  );
+
+  const getKnowledgeBaseName = (chat: ChatConfiguration) => {
+    if (chat.knowledgeBase?.name) {
+      return chat.knowledgeBase.name;
+    }
+    if (!chat.knowledgeBaseId) {
+      return 'Default';
+    }
+    const kb = knowledgeBases.find((entry) => entry.id === chat.knowledgeBaseId);
+    return kb?.name || `KB #${chat.knowledgeBaseId}`;
   };
 
   if (chatConfigurations.length === 0) {
@@ -232,25 +391,16 @@ export function ChatConfigurationList({
                           <span>{chat.aiConfiguration?.name || 'Not configured'}</span>
                         </div>
                         
-                        {chat.knowledgeBase && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">KB:</span>
-                            <span>{chat.knowledgeBase.name}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">Knowledge Base:</span>
+                          <span>{getKnowledgeBaseName(chat)}</span>
+                        </div>
 
                         <div className="flex items-center gap-2">
                           {chat.settings.contentFilteringEnabled && (
                             <Badge variant="outline" className="text-xs">
                               <Shield className="h-3 w-3 mr-1" />
                               Content Filter
-                            </Badge>
-                          )}
-                          
-                          {chat.settings.spamProtectionEnabled && (
-                            <Badge variant="outline" className="text-xs">
-                              <Shield className="h-3 w-3 mr-1" />
-                              Spam Protection
                             </Badge>
                           )}
                           
@@ -265,8 +415,22 @@ export function ChatConfigurationList({
                   </div>
 
                   <div className="flex items-center gap-3">
+                    {chat.lockState?.isLocked ? (
+                      <Badge variant="destructive">
+                        <Lock className="h-3 w-3 mr-1" />
+                        Locked {formatRemaining(resolveRemainingSeconds(chat))}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Unlocked</Badge>
+                    )}
+                    {chat.lockSettings?.scheduleEnabled ? (
+                      <Badge variant={chat.lockSettings?.schedulePaused ? 'outline' : 'secondary'}>
+                        {chat.lockSettings?.schedulePaused ? 'Schedule Paused' : 'Auto Schedule On'}
+                      </Badge>
+                    ) : null}
+
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Active</span>
+                      <span className="text-sm text-muted-foreground">Respond</span>
                       <Switch
                         checked={chat.isActive}
                         onCheckedChange={(checked) => handleQuickToggle(chat, checked)}
@@ -275,6 +439,27 @@ export function ChatConfigurationList({
                     </div>
                     
                     <div className="flex gap-2">
+                      {chat.lockState?.isLocked ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => unlockMutation.mutate(chat.id)}
+                          disabled={unlockMutation.isPending}
+                        >
+                          <Unlock className="h-4 w-4 mr-2" />
+                          Unlock
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLockClick(chat)}
+                        >
+                          <Lock className="h-4 w-4 mr-2" />
+                          Lock
+                        </Button>
+                      )}
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -314,7 +499,7 @@ export function ChatConfigurationList({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Chat Configuration</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the configuration for "{chatToDelete?.chatName || chatToDelete?.chatId}"?
+              Are you sure you want to delete the configuration for "{chatToDelete?.chatName || chatToDelete?.externalId}"?
               <br /><br />
               This action cannot be undone. The bot will stop responding to this chat and all settings will be lost.
             </AlertDialogDescription>
@@ -338,6 +523,87 @@ export function ChatConfigurationList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={lockDialogOpen} onOpenChange={setLockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lock Destination</DialogTitle>
+            <DialogDescription>
+              Temporarily set "{lockTargetName}" to read-only for non-admin members.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Duration presets</Label>
+              <div className="flex flex-wrap gap-2">
+                {lockPresets.map((preset) => (
+                  <Button
+                    key={preset}
+                    type="button"
+                    variant={lockDurationMinutes === String(preset) ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLockDurationMinutes(String(preset))}
+                  >
+                    {preset}m
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lock-duration">Custom duration (minutes)</Label>
+              <Input
+                id="lock-duration"
+                type="number"
+                min={1}
+                max={1440}
+                value={lockDurationMinutes}
+                onChange={(event) => setLockDurationMinutes(event.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lock-reason">Reason (optional)</Label>
+              <Input
+                id="lock-reason"
+                value={lockReason}
+                onChange={(event) => setLockReason(event.target.value)}
+                placeholder="e.g. raid cleanup"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setLockDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={lockMutation.isPending || !chatToLock}
+              onClick={() => {
+                if (!chatToLock) return;
+                const parsedMinutes = Number.parseInt(lockDurationMinutes, 10);
+                if (!Number.isFinite(parsedMinutes) || parsedMinutes < 1 || parsedMinutes > 1440) {
+                  toast({
+                    title: 'Invalid duration',
+                    description: 'Enter a duration between 1 and 1440 minutes.',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                lockMutation.mutate({
+                  chatId: chatToLock.id,
+                  durationMinutes: parsedMinutes,
+                  reason: lockReason.trim() || undefined,
+                });
+              }}
+            >
+              {lockMutation.isPending ? 'Applying...' : 'Apply Lock'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

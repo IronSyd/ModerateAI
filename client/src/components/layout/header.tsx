@@ -18,21 +18,24 @@ const Header = () => {
   const [, setIsSidebarOpen] = useState(!isMobile);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const { isAdminUser, adminUser } = useAdminUser();
+  const { isAdminUser } = useAdminUser();
   const { unreadCount, hasNewNotifications } = useNotifications();
   
   // Get page title based on current route
   const getPageTitle = () => {
     if (location === "/dashboard") return "Dashboard";
+    if (location === "/analytics/deep") return "Deep Analytics";
     if (location === "/conversations") return "Conversations";
     if (location === "/ai-configuration") return "AI Configuration";
     if (location === "/templates") return "Response Templates"; // Show "Response Templates" instead of "Templates"
-    if (location === "/integrations/website") return "Website Chat Widget";
+    if (location === "/integrations/website") return "Website Widget + Lead Capture";
     if (location === "/integrations/telegram") return "Telegram Integration";
     if (location === "/integrations/discord") return "Discord Integration";
     if (location === "/team") return "Team Management"; // Show "Team Management" instead of "Team"
     if (location === "/settings") return "Settings";
     if (location === "/activity") return "Activity Log";
+    if (location === "/admin/users") return "User Management";
+    if (location === "/admin/ops/admin-history-learning") return "Admin-History Learning Ops";
     // Don't show title for help center pages
     if (location === "/help" || location.startsWith("/help/")) return "";
     
@@ -61,8 +64,8 @@ const Header = () => {
   };
   
   return (
-    <div className="bg-background sticky top-0 z-30">
-      <div className="px-4 py-4 flex items-center justify-between">
+    <div className="fixed top-0 left-0 right-0 md:left-64 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="h-[60px] px-4 flex items-center justify-between">
         <div className="flex items-center">
           {isMobile && (
             <button 
@@ -81,7 +84,7 @@ const Header = () => {
             </div>
           )}
           
-          <h1 className="text-xl font-semibold text-foreground">{getPageTitle()}</h1>
+          <h1 className="kinetic-headline text-xl font-semibold text-foreground">{getPageTitle()}</h1>
         </div>
         
         <div className="flex items-center space-x-4">

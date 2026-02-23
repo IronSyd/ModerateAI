@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { chatHistoryManager } from '../lib/chatHistoryManager';
 import { storage } from '../storage';
+import { getWorkspaceOwnerId, hasWorkspaceRole, type WorkspaceRole } from '../workspace';
 
 const router = Router();
 
@@ -12,13 +13,27 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
+const requireWorkspaceRole = (required: WorkspaceRole) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!hasWorkspaceRole(req.user as any, required)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    return next();
+  };
+};
+
 /**
  * Trigger training analysis for a specific chat configuration
  */
-router.post('/analyze-chat-history/:chatConfigId', requireAuth, async (req, res) => {
+router.post('/analyze-chat-history/:chatConfigId', requireAuth, requireWorkspaceRole("moderator"), async (req, res) => {
   try {
     const { chatConfigId } = req.params;
-    const userId = req.user!.id;
+    const workspaceOwnerId = getWorkspaceOwnerId(req.user as any);
     
     const chatConfigIdNum = parseInt(chatConfigId);
     if (isNaN(chatConfigIdNum)) {
@@ -32,7 +47,7 @@ router.post('/analyze-chat-history/:chatConfigId', requireAuth, async (req, res)
     }
 
     const platform = await storage.getPlatform(chatConfig.platformId);
-    if (!platform || platform.userId !== userId) {
+    if (!platform || platform.userId !== workspaceOwnerId) {
       return res.status(403).json({ error: 'Unauthorized access to this chat configuration' });
     }
 
@@ -45,7 +60,7 @@ router.post('/analyze-chat-history/:chatConfigId', requireAuth, async (req, res)
     }
 
     // Perform the analysis
-    const insights = await chatHistoryManager.analyzeAndLearnFromAdminHistory(chatConfigIdNum, userId);
+    const insights = await chatHistoryManager.analyzeAndLearnFromAdminHistory(chatConfigIdNum, workspaceOwnerId);
 
     res.json({
       success: true,
@@ -73,7 +88,7 @@ router.post('/analyze-chat-history/:chatConfigId', requireAuth, async (req, res)
 router.get('/insights/:chatConfigId', requireAuth, async (req, res) => {
   try {
     const { chatConfigId } = req.params;
-    const userId = req.user!.id;
+    const workspaceOwnerId = getWorkspaceOwnerId(req.user as any);
     
     const chatConfigIdNum = parseInt(chatConfigId);
     if (isNaN(chatConfigIdNum)) {
@@ -87,7 +102,7 @@ router.get('/insights/:chatConfigId', requireAuth, async (req, res) => {
     }
 
     const platform = await storage.getPlatform(chatConfig.platformId);
-    if (!platform || platform.userId !== userId) {
+    if (!platform || platform.userId !== workspaceOwnerId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -115,11 +130,11 @@ router.get('/insights/:chatConfigId', requireAuth, async (req, res) => {
 /**
  * Get chat history for a specific chat configuration (admin only)
  */
-router.get('/chat-history/:chatConfigId', requireAuth, async (req, res) => {
+router.get('/chat-history/:chatConfigId', requireAuth, requireWorkspaceRole("moderator"), async (req, res) => {
   try {
     const { chatConfigId } = req.params;
     const { limit = '50', adminOnly = 'false' } = req.query;
-    const userId = req.user!.id;
+    const workspaceOwnerId = getWorkspaceOwnerId(req.user as any);
     
     const chatConfigIdNum = parseInt(chatConfigId);
     const limitNum = parseInt(limit as string);
@@ -135,7 +150,7 @@ router.get('/chat-history/:chatConfigId', requireAuth, async (req, res) => {
     }
 
     const platform = await storage.getPlatform(chatConfig.platformId);
-    if (!platform || platform.userId !== userId) {
+    if (!platform || platform.userId !== workspaceOwnerId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -167,10 +182,10 @@ router.get('/chat-history/:chatConfigId', requireAuth, async (req, res) => {
 /**
  * Toggle insight active status
  */
-router.patch('/insights/:insightId/toggle', requireAuth, async (req, res) => {
+router.patch('/insights/:insightId/toggle', requireAuth, requireWorkspaceRole("moderator"), async (req, res) => {
   try {
     const { insightId } = req.params;
-    const userId = req.user!.id;
+    const workspaceOwnerId = getWorkspaceOwnerId(req.user as any);
     
     const insightIdNum = parseInt(insightId);
     if (isNaN(insightIdNum)) {
@@ -183,7 +198,7 @@ router.patch('/insights/:insightId/toggle', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Training insight not found' });
     }
 
-    if (insight.userId !== userId) {
+    if (insight.userId !== workspaceOwnerId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 

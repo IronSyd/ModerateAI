@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -22,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogIn } from "lucide-react";
 
@@ -32,7 +32,7 @@ interface AuthDialogProps {
 }
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -45,7 +45,7 @@ export function AuthDialog({ open, onOpenChange, onLoginSuccess }: AuthDialogPro
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -79,18 +79,17 @@ export function AuthDialog({ open, onOpenChange, onLoginSuccess }: AuthDialogPro
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your username" {...field} />
+                    <Input type="email" placeholder="Enter your email address" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
+                )}
             />
-
             <FormField
               control={form.control}
               name="password"
@@ -98,11 +97,7 @@ export function AuthDialog({ open, onOpenChange, onLoginSuccess }: AuthDialogPro
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Enter your password"
-                      {...field}
-                    />
+                    <PasswordInput autoComplete="current-password" placeholder="Enter your password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,12 +124,6 @@ export function AuthDialog({ open, onOpenChange, onLoginSuccess }: AuthDialogPro
             </DialogFooter>
           </form>
         </Form>
-
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Demo credentials:</p>
-          <p>Username: demo</p>
-          <p>Password: demo123</p>
-        </div>
       </DialogContent>
     </Dialog>
   );

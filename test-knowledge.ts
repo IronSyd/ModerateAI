@@ -1,4 +1,4 @@
-import { storage } from "./server/storage";
+﻿import { storage } from "./server/storage";
 
 async function testKnowledgeSearch(query: string) {
   console.log(`Testing query: "${query}"`);

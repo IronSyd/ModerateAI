@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: moderateai
+        options: >-
+          --health-cmd="pg_isready -U postgres -d moderateai"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moderateai
+      SESSION_SECRET: ci-session-secret
+      FRONTEND_URL: http://localhost:5000
+      OPENAI_API_KEY: ci-dummy-openai-key
+      AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN: ci-auth-bypass-token
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Push schema
+        run: npm run db:push
+
+      - name: Write .env for regression scripts
+        run: |
+          cat > .env <<EOF
+          NODE_ENV=${NODE_ENV}
+          DATABASE_URL=${DATABASE_URL}
+          SESSION_SECRET=${SESSION_SECRET}
+          FRONTEND_URL=${FRONTEND_URL}
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN=${AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN}
+          EOF
+
+      - name: Start app
+        run: |
+          npm run dev > /tmp/moderateai-dev.log 2>&1 &
+          echo $! > /tmp/moderateai-dev.pid
+
+      - name: Wait for API health
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:5000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed health check"
+          cat /tmp/moderateai-dev.log || true
+          exit 1
+
+      - name: Widget regressions
+        run: npm run test:widget:regressions
+
+      - name: Tier matrix regressions
+        run: npm run test:tier:matrix
+
+      - name: Phase 1 regressions
+        run: npm run test:phase1:regressions
+
+      - name: Phase 2 regressions
+        run: npm run test:phase2:regressions
+
+      - name: Phase 3 regressions
+        run: npm run test:phase3:regressions
+
+      - name: Phase 4 regressions
+        run: npm run test:phase4:regressions
+
+      - name: Auth onboarding journey regression
+        run: npm run test:journey
+
+      - name: Stop app
+        if: always()
+        run: |
+          if [ -f /tmp/moderateai-dev.pid ]; then
+            kill "$(cat /tmp/moderateai-dev.pid)" || true
+          fi
+
+      - name: Print app log on failure
+        if: failure()
+        run: cat /tmp/moderateai-dev.log || true

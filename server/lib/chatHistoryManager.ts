@@ -1,10 +1,71 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray, isNull } from "drizzle-orm";
 import { db } from "../db";
 import { chatHistory, chatConfigurations, trainingInsights } from "@shared/schema";
 import type { InsertChatHistory, InsertTrainingInsights, ChatHistory, TrainingInsights } from "@shared/schema";
 import { analyzeAdminConversations } from "./openai";
 
 export class ChatHistoryManager {
+  private normalizeConfidence(raw: unknown): number {
+    const parsed = typeof raw === "number" ? raw : Number.parseFloat(String(raw ?? ""));
+    if (!Number.isFinite(parsed)) return 50;
+    const scaled = parsed <= 1 ? parsed * 100 : parsed;
+    return Math.max(0, Math.min(100, Math.round(scaled)));
+  }
+
+  private normalizePatternKey(input: string): string {
+    return String(input ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+  }
+
+  async countNewAdminMessagesPendingTraining(chatConfigId: number): Promise<number> {
+    const rows = await db
+      .select({ id: chatHistory.id })
+      .from(chatHistory)
+      .where(and(
+        eq(chatHistory.chatConfigurationId, chatConfigId),
+        eq(chatHistory.isAdmin, true),
+        eq(chatHistory.isUsedForTraining, false),
+      ));
+    return rows.length;
+  }
+
+  private async upsertAdminHistoryInsight(insightData: InsertTrainingInsights): Promise<TrainingInsights> {
+    const existingInsights = await db
+      .select()
+      .from(trainingInsights)
+      .where(and(
+        insightData.chatConfigurationId == null
+          ? isNull(trainingInsights.chatConfigurationId)
+          : eq(trainingInsights.chatConfigurationId, insightData.chatConfigurationId),
+        eq(trainingInsights.learnedFrom, "admin_history"),
+        eq(trainingInsights.insightType, insightData.insightType),
+      ));
+
+    const normalizedIncomingPattern = this.normalizePatternKey(insightData.pattern);
+    const existing = existingInsights.find(
+      (entry) => this.normalizePatternKey(entry.pattern) === normalizedIncomingPattern,
+    );
+
+    if (existing) {
+      const [updated] = await db
+        .update(trainingInsights)
+        .set({
+          pattern: insightData.pattern,
+          context: insightData.context ?? null,
+          confidence: insightData.confidence ?? existing.confidence,
+          isActive: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(trainingInsights.id, existing.id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db.insert(trainingInsights).values(insightData).returning();
+    return created;
+  }
   
   /**
    * Store a chat message for potential training use
@@ -18,9 +79,23 @@ export class ChatHistoryManager {
     isAdmin: boolean = false,
     metadata?: any
   ): Promise<ChatHistory> {
+    const explicitSentAt =
+      metadata?.sentAt instanceof Date
+        ? metadata.sentAt
+        : metadata?.sentAt
+          ? new Date(metadata.sentAt)
+          : null;
+
+    const sentAt =
+      explicitSentAt && Number.isFinite(explicitSentAt.getTime()) ? explicitSentAt : new Date();
+
     const chatHistoryData: InsertChatHistory = {
       chatConfigurationId: chatConfigId,
       platformId: platformId,
+      sourceMessageId:
+        typeof metadata?.sourceMessageId === "number" && Number.isFinite(metadata.sourceMessageId)
+          ? metadata.sourceMessageId
+          : null,
       externalUserId: externalUserId,
       externalUsername: metadata?.username || null,
       messageId: metadata?.messageId || null,
@@ -30,7 +105,7 @@ export class ChatHistoryManager {
       replyToMessageId: metadata?.replyToMessageId || null,
       threadContext: metadata?.threadContext || null,
       metadata: metadata || null,
-      sentAt: new Date(),
+      sentAt,
       isUsedForTraining: false
     };
 
@@ -118,14 +193,14 @@ export class ChatHistoryManager {
         insightType: pattern.type,
         pattern: pattern.description,
         context: pattern.context,
-        confidence: pattern.confidence,
+        confidence: this.normalizeConfidence(pattern.confidence),
         usageCount: 0,
         successRate: 0,
         isActive: true,
         learnedFrom: "admin_history"
       };
 
-      const [insight] = await db.insert(trainingInsights).values(insightData).returning();
+      const insight = await this.upsertAdminHistoryInsight(insightData);
       insights.push(insight);
     }
 
@@ -135,7 +210,7 @@ export class ChatHistoryManager {
       await db
         .update(chatHistory)
         .set({ isUsedForTraining: true })
-        .where(eq(chatHistory.id, messageIds[0])); // This is a simplified approach
+        .where(inArray(chatHistory.id, messageIds));
     }
 
     return insights;

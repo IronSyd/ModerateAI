@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PreferencesPage = () => {
   const [, setLocation] = useLocation();
@@ -11,9 +11,9 @@ const PreferencesPage = () => {
   }, [setLocation]);
   
   return (
-    <div className="flex justify-center items-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="ml-2">Redirecting to preferences settings...</p>
+    <div className="space-y-3 py-10">
+      <Skeleton className="h-5 w-64" />
+      <Skeleton className="h-10 w-full max-w-md" />
     </div>
   );
 };

@@ -3,6 +3,21 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+
+    // If the session is no longer valid (expired, deactivated, billing-suspended, etc.),
+    // force the app back to the sign-in page and clear cached auth state.
+    if (res.status === 401 && typeof window !== "undefined") {
+      try {
+        queryClient.setQueryData(["/api/user"], null);
+      } catch {
+        // ignore - query client may not be initialised yet
+      }
+
+      if (!window.location.pathname.startsWith("/auth")) {
+        window.location.href = "/auth";
+      }
+    }
+
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -12,10 +27,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers: data && !isFormData ? { "Content-Type": "application/json" } : {},
+    body: data ? (isFormData ? data : JSON.stringify(data)) : undefined,
     credentials: "include",
   });
 

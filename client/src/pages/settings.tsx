@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -68,6 +69,9 @@ import {
   Save,
   User,
   Bell,
+  ShieldCheck,
+  Download,
+  FileDown,
   Globe,
   Lock,
   Trash2,
@@ -77,6 +81,41 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+
+type WorkspaceFeatures = {
+  historyDays: number | null;
+  sentimentAnalysis: boolean;
+  analyticsTier: "none" | "standard" | "deep";
+  dataExport: boolean;
+  auditLog: boolean;
+};
+
+type WorkspaceSettingsResponse = {
+  moderationPreset: "basic" | "custom" | "advanced";
+  moderationRules: {
+    blockedKeywords: string[];
+    allowedKeywords: string[];
+    strictness: number;
+  };
+  allowedModerationPresets: Array<"basic" | "custom" | "advanced">;
+  defaultModerationPreset: "basic" | "custom" | "advanced";
+  features: WorkspaceFeatures;
+};
+
+function parseApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message || "";
+  const colonIndex = raw.indexOf(":");
+  if (colonIndex === -1) return raw || fallback;
+  const payload = raw.slice(colonIndex + 1).trim();
+  try {
+    const parsed = JSON.parse(payload) as { message?: string };
+    if (parsed?.message) return parsed.message;
+  } catch {
+    // ignore JSON parse errors and fallback to raw text
+  }
+  return payload || raw || fallback;
+}
 
 // Password change form schema
 const passwordSchema = z.object({
@@ -99,6 +138,18 @@ const Settings = () => {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("account");
   const [showPassword, setShowPassword] = useState(false);
+  const isWorkspaceAdmin =
+    user?.role === "owner" ||
+    user?.role === "admin" ||
+    !(user as any)?.workspaceOwnerId ||
+    (user as any)?.workspaceRole === "admin";
+
+  const [workspacePreset, setWorkspacePreset] = useState<"basic" | "custom" | "advanced">("basic");
+  const [blockedKeywordsInput, setBlockedKeywordsInput] = useState("");
+  const [allowedKeywordsInput, setAllowedKeywordsInput] = useState("");
+  const [strictness, setStrictness] = useState("50");
+  const [workspaceDirty, setWorkspaceDirty] = useState(false);
+  const [auditActionFilter, setAuditActionFilter] = useState("all");
   
   // Password change form
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
@@ -138,7 +189,7 @@ const Settings = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     
-    if (tabParam && ['account', 'notifications', 'billing'].includes(tabParam)) {
+    if (tabParam && ['account', 'notifications', 'workspace', 'billing'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [location]);
@@ -190,6 +241,25 @@ const Settings = () => {
     const savedSettings = localStorage.getItem('notificationSettings');
     return savedSettings ? JSON.parse(savedSettings) : {...defaultNotificationSettings};
   });
+
+  const {
+    data: workspaceSettings,
+    isLoading: isWorkspaceSettingsLoading,
+    error: workspaceSettingsError,
+  } = useQuery<WorkspaceSettingsResponse>({
+    queryKey: ["/api/workspace/settings"],
+    enabled: !!user && isWorkspaceAdmin,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!workspaceSettings) return;
+    setWorkspacePreset(workspaceSettings.moderationPreset);
+    setBlockedKeywordsInput((workspaceSettings.moderationRules.blockedKeywords || []).join(", "));
+    setAllowedKeywordsInput((workspaceSettings.moderationRules.allowedKeywords || []).join(", "));
+    setStrictness(String(workspaceSettings.moderationRules.strictness ?? 50));
+    setWorkspaceDirty(false);
+  }, [workspaceSettings]);
 
   // Remove API settings state
 
@@ -329,6 +399,124 @@ const Settings = () => {
     saveNotificationsMutation.mutate(notificationSettings);
   };
 
+  const normalizeKeywordInput = (input: string) =>
+    input
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+
+  const saveWorkspaceSettingsMutation = useMutation({
+    mutationFn: async () => {
+      const safeStrictness = Math.max(0, Math.min(100, Number(strictness) || 0));
+      const payload = {
+        moderationPreset: workspacePreset,
+        moderationRules: {
+          blockedKeywords: normalizeKeywordInput(blockedKeywordsInput),
+          allowedKeywords: normalizeKeywordInput(allowedKeywordsInput),
+          strictness: safeStrictness,
+        },
+      };
+      const response = await apiRequest("PATCH", "/api/workspace/settings", payload);
+      return (await response.json()) as WorkspaceSettingsResponse;
+    },
+    onSuccess: () => {
+      setWorkspaceDirty(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/workspace/settings"] });
+      toast({
+        title: "Workspace settings saved",
+        description: "Moderation policy and rules were updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to save workspace settings",
+        description: parseApiErrorMessage(error, "Could not update workspace settings."),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const downloadJsonFile = (filename: string, data: unknown) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadTextFile = (filename: string, content: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const fetchAuditLog = async () => {
+    try {
+      const params = new URLSearchParams({ limit: "500" });
+      if (auditActionFilter !== "all") {
+        params.set("action", auditActionFilter);
+      }
+
+      const response = await fetch(`/api/audit-log?${params.toString()}`, { credentials: "include" });
+      if (!response.ok) {
+        const bodyText = await response.text();
+        throw new Error(`${response.status}: ${bodyText}`);
+      }
+      const payload = await response.json();
+      downloadJsonFile(`moderateai-audit-log-${Date.now()}.json`, payload);
+      const selectedFilterLabel = auditActionFilter === "all" ? "all actions" : auditActionFilter;
+      toast({
+        title: "Audit log downloaded",
+        description: `The audit log export (${selectedFilterLabel}) was saved as JSON.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Audit log unavailable",
+        description: parseApiErrorMessage(error, "This feature is available on Pro."),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportMessages = async (format: "json" | "csv") => {
+    try {
+      const response = await fetch(`/api/export/messages?format=${format}`, { credentials: "include" });
+      if (!response.ok) {
+        const bodyText = await response.text();
+        throw new Error(`${response.status}: ${bodyText}`);
+      }
+
+      if (format === "csv") {
+        const csv = await response.text();
+        downloadTextFile(`moderateai-message-export-${Date.now()}.csv`, csv, "text/csv;charset=utf-8");
+      } else {
+        const payload = await response.json();
+        downloadJsonFile(`moderateai-message-export-${Date.now()}.json`, payload);
+      }
+
+      toast({
+        title: "Export complete",
+        description: `Messages exported as ${format.toUpperCase()}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export unavailable",
+        description: parseApiErrorMessage(error, "This feature is available on Pro."),
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteAccount = () => {
     deleteAccountMutation.mutate();
   };
@@ -369,6 +557,12 @@ const Settings = () => {
             <Bell className="h-4 w-4 mr-2" />
             Notifications
           </TabsTrigger>
+          {isWorkspaceAdmin && (
+            <TabsTrigger value="workspace">
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Workspace
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="account" className="space-y-6">
@@ -596,6 +790,195 @@ const Settings = () => {
             </CardFooter>
           </Card>
         </TabsContent>
+
+        {isWorkspaceAdmin && (
+          <TabsContent value="workspace" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Moderation Controls</CardTitle>
+                <CardDescription>
+                  Configure workspace-wide moderation behavior based on your subscription tier.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {isWorkspaceSettingsLoading ? (
+                  <div className="space-y-3">
+                    <div className="h-9 rounded-md bg-muted animate-pulse" />
+                    <div className="h-24 rounded-md bg-muted animate-pulse" />
+                    <div className="h-24 rounded-md bg-muted animate-pulse" />
+                  </div>
+                ) : workspaceSettingsError ? (
+                  <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {parseApiErrorMessage(workspaceSettingsError, "Failed to load workspace settings.")}
+                  </div>
+                ) : workspaceSettings ? (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">
+                        History: {workspaceSettings.features.historyDays === null ? "Unlimited" : `${workspaceSettings.features.historyDays} days`}
+                      </Badge>
+                      <Badge variant={workspaceSettings.features.sentimentAnalysis ? "secondary" : "outline"}>
+                        Sentiment: {workspaceSettings.features.sentimentAnalysis ? "Enabled" : "Unavailable on current tier"}
+                      </Badge>
+                      <Badge variant="secondary">Analytics: {workspaceSettings.features.analyticsTier}</Badge>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="moderationPreset">Moderation preset</Label>
+                      <Select
+                        value={workspacePreset}
+                        onValueChange={(value: "basic" | "custom" | "advanced") => {
+                          setWorkspacePreset(value);
+                          setWorkspaceDirty(true);
+                        }}
+                      >
+                        <SelectTrigger id="moderationPreset">
+                          <SelectValue placeholder="Select moderation preset" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {workspaceSettings.allowedModerationPresets.includes("basic") && (
+                            <SelectItem value="basic">Basic</SelectItem>
+                          )}
+                          {workspaceSettings.allowedModerationPresets.includes("custom") && (
+                            <SelectItem value="custom">Custom</SelectItem>
+                          )}
+                          {workspaceSettings.allowedModerationPresets.includes("advanced") && (
+                            <SelectItem value="advanced">Advanced</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="blockedKeywords">Blocked keywords (comma-separated)</Label>
+                        <Textarea
+                          id="blockedKeywords"
+                          placeholder="scam link, abusive phrase, harassment term"
+                          value={blockedKeywordsInput}
+                          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+                            setBlockedKeywordsInput(event.target.value);
+                            setWorkspaceDirty(true);
+                          }}
+                          disabled={!workspaceSettings.allowedModerationPresets.includes("custom") && !workspaceSettings.allowedModerationPresets.includes("advanced")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="allowedKeywords">Allowed keywords (comma-separated)</Label>
+                        <Textarea
+                          id="allowedKeywords"
+                          placeholder="support ticket, account reset"
+                          value={allowedKeywordsInput}
+                          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+                            setAllowedKeywordsInput(event.target.value);
+                            setWorkspaceDirty(true);
+                          }}
+                          disabled={!workspaceSettings.allowedModerationPresets.includes("custom") && !workspaceSettings.allowedModerationPresets.includes("advanced")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="strictness">Moderation strictness (0-100)</Label>
+                        <Input
+                          id="strictness"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={strictness}
+                          onChange={(event) => {
+                            setStrictness(event.target.value);
+                            setWorkspaceDirty(true);
+                          }}
+                          disabled={!workspaceSettings.allowedModerationPresets.includes("custom") && !workspaceSettings.allowedModerationPresets.includes("advanced")}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </CardContent>
+              <CardFooter className="border-t px-6 py-4 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Changes apply to Telegram and Discord moderation behavior.
+                </div>
+                <Button
+                  onClick={() => saveWorkspaceSettingsMutation.mutate()}
+                  disabled={!workspaceDirty || saveWorkspaceSettingsMutation.isPending || !workspaceSettings}
+                >
+                  {saveWorkspaceSettingsMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  Save moderation settings
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Pro Tools</CardTitle>
+                <CardDescription>
+                  Audit log and data export are available on Pro. Standard and Free can view analytics only.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="max-w-sm space-y-2">
+                  <Label htmlFor="auditActionFilter">Audit action filter</Label>
+                  <Select value={auditActionFilter} onValueChange={setAuditActionFilter}>
+                    <SelectTrigger id="auditActionFilter">
+                      <SelectValue placeholder="All actions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All actions</SelectItem>
+                      <SelectItem value="workspace.settings_updated">Workspace settings updates</SelectItem>
+                      <SelectItem value="data_export.messages">Data exports</SelectItem>
+                      <SelectItem value="admin.billing_activate_plan">Billing plan activations</SelectItem>
+                      <SelectItem value="admin.billing_allow">Billing allows</SelectItem>
+                      <SelectItem value="admin.billing_downgrade_free">Downgrades to free</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <Button
+                    variant="outline"
+                    onClick={fetchAuditLog}
+                    disabled={!workspaceSettings?.features.auditLog}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Audit Log
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportMessages("json")}
+                    disabled={!workspaceSettings?.features.dataExport}
+                  >
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export JSON
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportMessages("csv")}
+                    disabled={!workspaceSettings?.features.dataExport}
+                  >
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Export CSV
+                  </Button>
+                </div>
+                {!workspaceSettings?.features.auditLog || !workspaceSettings?.features.dataExport ? (
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to Pro to enable audit log and full message export.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Pro tools are active for this workspace.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
 
       </Tabs>

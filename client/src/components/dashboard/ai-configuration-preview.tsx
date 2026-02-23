@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FileBadge } from "lucide-react";
 
 type AIConfigurationPreviewProps = {
@@ -26,17 +27,17 @@ const AIConfigurationPreview = ({
   if (isLoading) {
     return (
       <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-5 bg-muted rounded w-1/3"></div>
+        <div className="space-y-4">
+          <Skeleton className="h-5 w-1/3" />
           <div className="space-y-3">
-            <div className="h-3 bg-muted rounded w-1/4"></div>
-            <div className="h-2 bg-muted rounded"></div>
-            <div className="h-3 bg-muted rounded w-1/4"></div>
-            <div className="h-2 bg-muted rounded"></div>
-            <div className="h-3 bg-muted rounded w-1/4"></div>
-            <div className="h-2 bg-muted rounded"></div>
+            <Skeleton className="h-3 w-1/4" />
+            <Skeleton className="h-2 w-full" />
+            <Skeleton className="h-3 w-1/4" />
+            <Skeleton className="h-2 w-full" />
+            <Skeleton className="h-3 w-1/4" />
+            <Skeleton className="h-2 w-full" />
           </div>
-          <div className="h-10 bg-muted rounded"></div>
+          <Skeleton className="h-10 w-full" />
         </div>
       </div>
     );
