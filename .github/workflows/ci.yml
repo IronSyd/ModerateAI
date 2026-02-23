@@ -28,6 +28,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moderateai
       SESSION_SECRET: ci-session-secret
       FRONTEND_URL: http://localhost:5000
+      OPENAI_API_KEY: ci-dummy-openai-key
       AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN: ci-auth-bypass-token
 
     steps:
@@ -56,6 +57,7 @@ jobs:
           DATABASE_URL=${DATABASE_URL}
           SESSION_SECRET=${SESSION_SECRET}
           FRONTEND_URL=${FRONTEND_URL}
+          OPENAI_API_KEY=${OPENAI_API_KEY}
           AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN=${AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN}
           EOF
 
