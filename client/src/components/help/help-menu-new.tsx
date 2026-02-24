@@ -1,15 +1,14 @@
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { BookOpen, ExternalLink, LifeBuoy, Search } from "lucide-react";
+import { ArrowRight, BookOpen, LifeBuoy, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { docsSections, getDocsBaseUrl, getDocsUrl } from "@/lib/docs";
+import { docsSections, getDocsAppUrl } from "@/lib/docs";
 import { getSupportTelegramUrl } from "@/lib/support";
 
 export function HelpMenu({ onClose }: { onClose: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
-  const docsBaseUrl = getDocsBaseUrl();
   const supportUrl = getSupportTelegramUrl();
 
   const filteredSections = useMemo(() => {
@@ -29,13 +28,7 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
   };
 
   const openDocsPage = (path: string) => {
-    const url = getDocsUrl(path);
-    if (!url) {
-      openHelpHub();
-      return;
-    }
-
-    window.open(url, "_blank", "noopener,noreferrer");
+    navigate(getDocsAppUrl(path));
     onClose();
   };
 
@@ -45,7 +38,7 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
       <div className="absolute right-0 mt-2 w-96 rounded-md border border-border bg-card shadow-lg">
         <div className="border-b p-3">
           <h3 className="text-lg font-semibold text-foreground">Documentation</h3>
-          <p className="mt-1 text-sm text-muted-foreground">GitBook is the canonical ModerateAI docs source.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Browse ModerateAI documentation in-app.</p>
           <div className="relative mt-3">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -59,38 +52,40 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto p-3">
-          {!docsBaseUrl ? (
-            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
-              Docs unavailable in this environment. Configure `VITE_DOCS_BASE_URL` to enable GitBook links.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <button
-                className="flex w-full items-center justify-between rounded-md border border-primary/20 px-3 py-2 text-left hover:bg-accent"
-                onClick={() => openDocsPage("/")}
-              >
-                <span className="flex items-center gap-2 font-medium text-foreground">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  Open Full Documentation
-                </span>
-                <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between rounded-md border border-primary/20 px-3 py-2 text-left hover:bg-accent"
+              onClick={() => openDocsPage("/")}
+            >
+              <span className="flex items-center gap-2 font-medium text-foreground">
+                <BookOpen className="h-4 w-4 text-primary" />
+                Open Full Documentation
+              </span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
 
-              {filteredSections.map((section) => (
+            {filteredSections.length === 0 ? (
+              <div className="rounded-md border border-border px-3 py-3 text-sm text-muted-foreground">
+                No matching sections. Clear search to browse all docs.
+              </div>
+            ) : (
+              filteredSections.map((section) => (
                 <button
                   key={section.id}
+                  type="button"
                   className="w-full rounded-md border border-border px-3 py-2 text-left hover:bg-accent"
                   onClick={() => openDocsPage(section.path)}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-foreground">{section.title}</p>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
                 </button>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
         <div className="border-t bg-muted/30 p-3">
@@ -110,3 +105,4 @@ export function HelpMenu({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+

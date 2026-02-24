@@ -313,6 +313,70 @@ export default function AdminHistoryLearningOpsPage() {
     },
   });
 
+  const normalizedSearchFilter = searchFilter.trim().toLowerCase();
+  const backfillRecentDestinations = data?.backfill.recentDestinations ?? [];
+  const autoAnalysisRecentDestinations = data?.autoAnalysis.recentDestinations ?? [];
+
+  const filteredBackfillDestinations = useMemo(() => {
+    return backfillRecentDestinations.filter((row) => {
+      if (platformFilter !== "all" && row.platformType !== platformFilter) return false;
+      if (normalizedSearchFilter) {
+        const haystack = [
+          row.destinationExternalId,
+          String(row.chatConfigurationId),
+          String(row.platformId),
+          String(row.runId),
+          row.platformType,
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(normalizedSearchFilter)) return false;
+      }
+      return true;
+    });
+  }, [backfillRecentDestinations, normalizedSearchFilter, platformFilter]);
+
+  const filteredAutoAnalysisDestinations = useMemo(() => {
+    return autoAnalysisRecentDestinations.filter((row) => {
+      if (platformFilter !== "all" && row.platformType !== platformFilter) return false;
+      if (autoStatusFilter !== "all" && row.status !== autoStatusFilter) return false;
+      if (normalizedSearchFilter) {
+        const haystack = [
+          row.destinationExternalId,
+          String(row.chatConfigurationId),
+          String(row.platformId),
+          String(row.runId),
+          row.platformType,
+          row.status,
+          row.reason ?? "",
+          row.error ?? "",
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(normalizedSearchFilter)) return false;
+      }
+      return true;
+    });
+  }, [autoAnalysisRecentDestinations, normalizedSearchFilter, platformFilter, autoStatusFilter]);
+
+  const handleManualRefresh = async () => {
+    const result = await refetch();
+
+    if (result.error) {
+      toast({
+        title: "Refresh failed",
+        description: result.error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Refreshed",
+      description: "Learning Ops data updated.",
+    });
+  };
+
   if (isAuthLoading) {
     return <LoadingState />;
   }
@@ -348,50 +412,7 @@ export default function AdminHistoryLearningOpsPage() {
     );
   }
 
-  const normalizedSearchFilter = searchFilter.trim().toLowerCase();
   const isBackfillActionDisabled = data.backfill.running || backfillTriggerMutation.isPending;
-
-  const filteredBackfillDestinations = useMemo(() => {
-    return data.backfill.recentDestinations.filter((row) => {
-      if (platformFilter !== "all" && row.platformType !== platformFilter) return false;
-      if (normalizedSearchFilter) {
-        const haystack = [
-          row.destinationExternalId,
-          String(row.chatConfigurationId),
-          String(row.platformId),
-          String(row.runId),
-          row.platformType,
-        ]
-          .join(" ")
-          .toLowerCase();
-        if (!haystack.includes(normalizedSearchFilter)) return false;
-      }
-      return true;
-    });
-  }, [data.backfill.recentDestinations, normalizedSearchFilter, platformFilter]);
-
-  const filteredAutoAnalysisDestinations = useMemo(() => {
-    return data.autoAnalysis.recentDestinations.filter((row) => {
-      if (platformFilter !== "all" && row.platformType !== platformFilter) return false;
-      if (autoStatusFilter !== "all" && row.status !== autoStatusFilter) return false;
-      if (normalizedSearchFilter) {
-        const haystack = [
-          row.destinationExternalId,
-          String(row.chatConfigurationId),
-          String(row.platformId),
-          String(row.runId),
-          row.platformType,
-          row.status,
-          row.reason ?? "",
-          row.error ?? "",
-        ]
-          .join(" ")
-          .toLowerCase();
-        if (!haystack.includes(normalizedSearchFilter)) return false;
-      }
-      return true;
-    });
-  }, [data.autoAnalysis.recentDestinations, normalizedSearchFilter, platformFilter, autoStatusFilter]);
 
   return (
     <div className="space-y-6">
@@ -424,13 +445,7 @@ export default function AdminHistoryLearningOpsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Admin-History Learning Ops</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Backfill progress and automatic admin-history analysis runs by destination.
-          </p>
-        </div>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-border/60 bg-background/40">
             Auto-refresh {autoRefreshEnabled ? "On (15s)" : "Off"}
@@ -446,7 +461,7 @@ export default function AdminHistoryLearningOpsPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => refetch()}
+            onClick={() => void handleManualRefresh()}
             disabled={isFetching}
             className="gap-2"
           >
