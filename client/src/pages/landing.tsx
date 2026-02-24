@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,9 @@ const LandingPage = () => {
   const [isYearly, setIsYearly] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { toast } = useToast();
   const supportUrl = getSupportTelegramUrl();
+  const contactEmail = "admin@moderateai.net";
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
 
   const onContactSupport = () => {
@@ -42,6 +45,47 @@ const LandingPage = () => {
     }
 
     setSupportDialogOpen(true);
+  };
+
+  const onCopyContactEmail = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(contactEmail);
+      } else {
+        throw new Error("Clipboard API unavailable");
+      }
+
+      toast({ title: "Copied", description: "Contact email copied to clipboard." });
+      return;
+    } catch {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = contactEmail;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        textArea.style.pointerEvents = "none";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        if (copied) {
+          toast({ title: "Copied", description: "Contact email copied to clipboard." });
+          return;
+        }
+      } catch {
+        // Fall through to manual copy toast.
+      }
+    }
+
+    toast({
+      title: "Copy failed",
+      description: `Copy manually: ${contactEmail}`,
+      variant: "destructive",
+    });
   };
 
   const fadeInUp = {
@@ -634,7 +678,11 @@ const LandingPage = () => {
             <div>
               <h3 className="kinetic-headline font-semibold mb-4">Resources</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</a></li>
+                  <li>
+                    <Link href="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      Documentation
+                    </Link>
+                  </li>
                 <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</a></li>
                 <li>
                   <a
@@ -654,7 +702,16 @@ const LandingPage = () => {
               <ul className="space-y-2">
                 <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</a></li>
                 <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Careers</a></li>
-                <li><a href="mailto:admin@moderateai.net" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+                <li>
+                  <button
+                    type="button"
+                    aria-label="Copy contact email"
+                    onClick={onCopyContactEmail}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 p-0 text-left"
+                  >
+                    Contact
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
@@ -664,8 +721,12 @@ const LandingPage = () => {
               (c) {new Date().getFullYear()} ModerateAI. All rights reserved.
             </p>
             <div className="flex space-x-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a>
+              <Link href="/privacy-policy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms-of-service" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Terms of Service
+              </Link>
             </div>
           </div>
         </div>

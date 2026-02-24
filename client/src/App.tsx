@@ -38,7 +38,10 @@ const DeepAnalyticsPage = lazy(() => import("@/pages/deep-analytics"));
 const ProfilePage = lazy(() => import("@/pages/profile"));
 const PreferencesPage = lazy(() => import("@/pages/preferences"));
 const BillingPage = lazy(() => import("@/pages/billing"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
+const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
 const HelpCenterPage = lazy(() => import("@/pages/help"));
+const HelpDocsReaderPage = lazy(() => import("@/pages/help/docs-reader"));
 const HelpArticlePage = lazy(() => import("@/pages/help/article"));
 
 type UiPerfProfile = "balanced" | "full_motion";
@@ -98,6 +101,28 @@ function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
       description: "Accept a workspace invitation to join ModerateAI.",
       robots: "noindex,nofollow",
       canonicalPath: "/accept-invitation",
+      ogType: "website",
+    };
+  }
+
+  if (pathname === "/privacy-policy") {
+    return {
+      title: "Privacy Policy | ModerateAI",
+      description:
+        "Learn how ModerateAI collects, uses, stores, and shares data across the website, widget, dashboard, and Telegram/Discord integrations.",
+      robots: "index,follow",
+      canonicalPath: "/privacy-policy",
+      ogType: "website",
+    };
+  }
+
+  if (pathname === "/terms-of-service") {
+    return {
+      title: "Terms of Service | ModerateAI",
+      description:
+        "Read the Terms of Service for ModerateAI, including use of the website, dashboard, widget, AI features, and Telegram/Discord integrations.",
+      robots: "index,follow",
+      canonicalPath: "/terms-of-service",
       ogType: "website",
     };
   }
@@ -476,17 +501,25 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
   }, [location]);
 
   const isPublicPage =
-    location === "/" || location.startsWith("/auth") || location.startsWith("/accept-invitation");
+    location === "/" ||
+    location === "/privacy-policy" ||
+    location === "/terms-of-service" ||
+    location.startsWith("/auth") ||
+    location.startsWith("/accept-invitation");
   const fallback = pageFallback();
 
   if (isPublicPage) {
     return (
-      <Switch>
-        <Route path="/" component={LandingPage} />
-        <Route path="/auth" component={AuthPage} />
-        <Route path="/accept-invitation" component={AcceptInvitationPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <Suspense fallback={fallback}>
+        <Switch>
+          <Route path="/" component={LandingPage} />
+          <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+          <Route path="/terms-of-service" component={TermsOfServicePage} />
+          <Route path="/auth" component={AuthPage} />
+          <Route path="/accept-invitation" component={AcceptInvitationPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     );
   }
 
@@ -601,15 +634,33 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
           </Suspense>
         </ProtectedRoute>
 
-        <ProtectedRoute path="/help">
-          <Suspense fallback={fallback}>
-            <HelpCenterPage />
-          </Suspense>
-        </ProtectedRoute>
-
         <ProtectedRoute path="/help/article/:articleId">
           <Suspense fallback={fallback}>
             <HelpArticlePage />
+          </Suspense>
+        </ProtectedRoute>
+
+        <ProtectedRoute path="/help/docs">
+          <Suspense fallback={fallback}>
+            <HelpDocsReaderPage />
+          </Suspense>
+        </ProtectedRoute>
+
+        <ProtectedRoute path="/help/docs/:slug">
+          <Suspense fallback={fallback}>
+            <HelpDocsReaderPage />
+          </Suspense>
+        </ProtectedRoute>
+
+        <ProtectedRoute path="/help/docs/:section/:slug">
+          <Suspense fallback={fallback}>
+            <HelpDocsReaderPage />
+          </Suspense>
+        </ProtectedRoute>
+
+        <ProtectedRoute path="/help">
+          <Suspense fallback={fallback}>
+            <HelpCenterPage />
           </Suspense>
         </ProtectedRoute>
 
