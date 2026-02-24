@@ -22,17 +22,18 @@ try {
   hostname = "";
 }
 
-const useLocalPgDriver = LOCAL_DB_HOSTS.has(hostname);
+const isNeonHost = hostname.includes("neon.tech");
+const useNeonDriver = isNeonHost;
 
-// Use Neon serverless driver for remote Neon databases, and native pg for local development.
-if (!useLocalPgDriver) {
+// Only enable Neon websocket config when actually using Neon.
+if (useNeonDriver) {
   neonConfig.webSocketConstructor = ws;
 }
 
-export const pool = useLocalPgDriver
-  ? new NodePgPool({ connectionString })
-  : new NeonPool({ connectionString });
+export const pool = useNeonDriver
+  ? new NeonPool({ connectionString })
+  : new NodePgPool({ connectionString });
 
-export const db = useLocalPgDriver
-  ? drizzleNodePg(pool as NodePgPool, { schema })
-  : drizzleNeon({ client: pool as NeonPool, schema });
+export const db = useNeonDriver
+  ? drizzleNeon({ client: pool as NeonPool, schema })
+  : drizzleNodePg(pool as NodePgPool, { schema });
