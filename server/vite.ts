@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
+import { pathToFileURL } from "url";
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -16,9 +17,13 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  const viteConfigUrl = pathToFileURL(
+    path.resolve(import.meta.dirname, "..", "vite.config.ts"),
+  ).href;
+
   const [{ createServer: createViteServer, createLogger }, { default: viteConfig }] = await Promise.all([
     import("vite"),
-    import("../vite.config"),
+    import(viteConfigUrl),
   ]);
   const viteLogger = createLogger();
 
