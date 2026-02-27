@@ -11,3 +11,5 @@ generated-icon.png
 cookies.txt
 logs/
 checkpoints/
+dev-server.out.log
+dev-server.err.log
