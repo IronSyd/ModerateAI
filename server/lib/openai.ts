@@ -4,11 +4,7 @@ import type { ChatHistory } from "@shared/schema";
 import { recordOpsEvent } from "./ops-monitor";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-console.log("OPENAI_API_KEY exists:", !!process.env.OPENAI_API_KEY);
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
-});
+let openaiClient: OpenAI | null = null;
 
 const OPENAI_REQUEST_TIMEOUT_MS = parsePositiveInt(process.env.OPENAI_REQUEST_TIMEOUT_MS, 15_000);
 const OPENAI_MAX_CONCURRENCY = parsePositiveInt(process.env.OPENAI_MAX_CONCURRENCY, 8);
@@ -33,6 +29,25 @@ function createOpenAiError(message: string, code: string): Error & { code: strin
   error.name = code;
   error.code = code;
   return error;
+}
+
+function getOpenAiClient(): OpenAI {
+  if (openaiClient) return openaiClient;
+
+  const apiKey = String(process.env.OPENAI_API_KEY ?? "").trim();
+  if (!apiKey) {
+    throw createOpenAiError(
+      "OPENAI_API_KEY is required to run AI generation and moderation requests.",
+      "OPENAI_MISSING_API_KEY",
+    );
+  }
+
+  openaiClient = new OpenAI({
+    apiKey,
+    dangerouslyAllowBrowser: true,
+  });
+
+  return openaiClient;
 }
 
 async function acquireOpenAiSlot(): Promise<void> {
@@ -169,7 +184,7 @@ export async function generateAIResponse(
     
     // Get response from OpenAI
     const response = await runOpenAiRequest("generate_ai_response", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o",
         messages: messages as any,
         max_tokens: calculateMaxTokens(responseLength),
@@ -288,7 +303,7 @@ export async function generateKnowledgeBasedResponse(
     
     // Get response from OpenAI
     const response = await runOpenAiRequest("generate_knowledge_response", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o",
         messages: messages as any,
         max_tokens: calculateMaxTokens(responseLength),
@@ -323,7 +338,7 @@ export async function moderateContent(
     
     // Use OpenAI's moderation endpoint
     const moderationResponse = await runOpenAiRequest("moderate_content", () =>
-      openai.moderations.create({
+      getOpenAiClient().moderations.create({
         input: content
       }),
     );
@@ -415,7 +430,7 @@ export async function processConversationForTraining(conversationData: {
     
     // Send to OpenAI for analysis
     const response = await runOpenAiRequest("process_conversation_training", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           {
@@ -553,7 +568,7 @@ Return a JSON object with this structure:
 }`;
 
     const response = await runOpenAiRequest("analyze_admin_conversations", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
@@ -597,7 +612,7 @@ export async function generateImprovedSystemPrompt(
     
     // Generate improved prompt
     const response = await runOpenAiRequest("generate_improved_system_prompt", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
@@ -704,7 +719,7 @@ export async function checkMessageRelevance(
 
     // Use AI to make a more sophisticated relevance determination
     const aiRelevanceCheck = await runOpenAiRequest("check_message_relevance", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
@@ -853,7 +868,7 @@ export async function evaluateLeadPromptEligibility(
 
   try {
     const response = await runOpenAiRequest("lead_prompt_eligibility", () =>
-      openai.chat.completions.create({
+      getOpenAiClient().chat.completions.create({
         model: "gpt-4o-mini",
         response_format: { type: "json_object" },
         max_tokens: 220,
@@ -979,3 +994,4 @@ function calculateTemperature(styleValue: number): number {
   // Calculate the adjusted temperature within bounds of 0.5 to 0.9
   return Math.max(0.5, Math.min(0.9, baseTemperature + adjustmentFactor));
 }
+
