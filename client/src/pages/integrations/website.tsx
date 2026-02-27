@@ -309,10 +309,20 @@ export default function WebsiteIntegrationPage() {
   const isBusy = widgetFetching || saveMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <p className="text-muted-foreground">
-        Add ModerateAI chat to your website, capture qualified leads, and follow up directly from this workspace.
-      </p>
+    <div className="space-y-6 wave-v2-page wave-v2-integrations">
+      <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Website Integration</h1>
+            <p className="text-sm text-muted-foreground">
+              Configure the widget, route domains to knowledge bases, and manage captured leads.
+            </p>
+          </div>
+          <Badge variant="outline" className="glass-chip">
+            Leads: {filteredLeads.length}
+          </Badge>
+        </div>
+      </section>
 
       <Card className="glass-surface">
         <CardContent className="space-y-6 pt-6">

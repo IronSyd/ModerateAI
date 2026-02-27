@@ -5,6 +5,7 @@ import { ArrowLeft, LifeBuoy, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageSectionCard } from "@/components/layout/page-shells";
 import { useToast } from "@/hooks/use-toast";
 import { privacyPolicyContent } from "@/lib/legal-content";
 import { getSupportTelegramUrl } from "@/lib/support";
@@ -94,7 +95,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10 md:py-14">
       <div className="mx-auto max-w-5xl space-y-6">
-        <Card className="glass-card border-primary/20">
+        <PageSectionCard className="glass-card border-primary/20">
           <CardHeader>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
@@ -137,9 +138,9 @@ export default function PrivacyPolicyPage() {
               </Button>
             </a>
           </CardContent>
-        </Card>
+        </PageSectionCard>
 
-        <Card className="glass-card border-primary/20">
+        <PageSectionCard className="glass-card border-primary/20">
           <CardContent className="pt-6">
             <div className="prose prose-neutral max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground prose-code:text-foreground prose-pre:border prose-pre:border-primary/20 prose-pre:bg-background/70 dark:prose-invert dark:prose-p:text-muted-foreground dark:prose-li:text-muted-foreground dark:prose-headings:text-foreground dark:prose-strong:text-foreground">
               <ReactMarkdown
@@ -201,7 +202,7 @@ export default function PrivacyPolicyPage() {
               </ReactMarkdown>
             </div>
           </CardContent>
-        </Card>
+        </PageSectionCard>
       </div>
     </div>
   );

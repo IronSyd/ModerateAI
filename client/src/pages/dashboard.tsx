@@ -328,7 +328,26 @@ const Dashboard = () => {
   const setupCompletionPercent = (completedSteps / totalSetupSteps) * 100;
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wave-v2-page wave-v2-dashboard">
+      <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Workspace Overview</h1>
+            <p className="text-sm text-muted-foreground">
+              Track support volume, AI coverage, destination usage, and setup health across channels.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border px-3 py-1 text-xs font-medium text-foreground/90 glass-chip">
+              Connected: {connectedPlatforms}/3
+            </span>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium text-foreground/90 glass-chip">
+              Setup: {Math.round(setupCompletionPercent)}%
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* Welcome Banner with Setup Steps */}
       <motion.div
         initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}

@@ -1,0 +1,129 @@
+@layer base {
+  :root {
+    --radius: 0.8rem;
+    --ui-motion-fast: 180ms;
+    --ui-motion-normal: 260ms;
+    --ui-motion-slow: 420ms;
+    --ui-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --font-heading: "Sora", "Segoe UI", sans-serif;
+    --font-body: "Manrope", "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+
+    --background: 223 48% 8%;
+    --foreground: 215 31% 92%;
+    --card: 223 44% 10%;
+    --card-foreground: 215 28% 92%;
+    --popover: 223 44% 9%;
+    --popover-foreground: 215 28% 92%;
+    --primary: 214 95% 58%;
+    --primary-foreground: 214 100% 97%;
+    --secondary: 218 36% 18%;
+    --secondary-foreground: 214 35% 92%;
+    --muted: 220 30% 15%;
+    --muted-foreground: 216 16% 68%;
+    --accent: 204 94% 42%;
+    --accent-foreground: 204 100% 97%;
+    --destructive: 358 86% 58%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 217 34% 24%;
+    --input: 217 34% 24%;
+    --ring: 214 95% 58%;
+    --chart-1: 214 95% 58%;
+    --chart-2: 191 90% 48%;
+    --chart-3: 165 82% 40%;
+    --chart-4: 42 96% 52%;
+    --chart-5: 15 90% 56%;
+    --sidebar-background: 223 49% 7%;
+    --sidebar-foreground: 215 28% 91%;
+    --sidebar-primary: 214 95% 58%;
+    --sidebar-primary-foreground: 214 100% 97%;
+    --sidebar-accent: 219 34% 15%;
+    --sidebar-accent-foreground: 214 34% 91%;
+    --sidebar-border: 217 34% 24%;
+    --sidebar-ring: 214 95% 58%;
+  }
+
+  .ui-v2 {
+    --radius: 0.92rem;
+    --background: 224 53% 6%;
+    --foreground: 215 34% 95%;
+    --card: 224 51% 9%;
+    --card-foreground: 215 33% 95%;
+    --popover: 224 49% 8%;
+    --popover-foreground: 215 32% 95%;
+    --primary: 212 100% 62%;
+    --primary-foreground: 213 100% 97%;
+    --secondary: 221 38% 16%;
+    --secondary-foreground: 215 30% 93%;
+    --muted: 221 34% 14%;
+    --muted-foreground: 216 16% 70%;
+    --accent: 197 100% 48%;
+    --accent-foreground: 200 100% 96%;
+    --border: 217 40% 28%;
+    --input: 217 38% 27%;
+    --ring: 212 100% 62%;
+    --sidebar-background: 224 55% 5%;
+    --sidebar-foreground: 216 33% 94%;
+    --sidebar-primary: 212 100% 62%;
+    --sidebar-primary-foreground: 213 100% 98%;
+    --sidebar-accent: 222 36% 14%;
+    --sidebar-accent-foreground: 216 30% 92%;
+    --sidebar-border: 217 39% 24%;
+    --sidebar-ring: 212 100% 62%;
+  }
+
+  html {
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(80rem 40rem at 20% -10%, rgba(37, 99, 235, 0.1), transparent 55%),
+      radial-gradient(60rem 30rem at 100% 0%, rgba(56, 189, 248, 0.06), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  :where(code, pre, kbd, samp) {
+    font-family: var(--font-mono);
+  }
+
+  input:-webkit-autofill,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  textarea:-webkit-autofill:hover,
+  select:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    caret-color: hsl(var(--foreground)) !important;
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+    box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+    border-color: hsl(var(--border)) !important;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  input:-moz-autofill,
+  textarea:-moz-autofill,
+  select:-moz-autofill {
+    box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+    -moz-text-fill-color: hsl(var(--foreground)) !important;
+    caret-color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+}

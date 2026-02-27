@@ -1,0 +1,371 @@
+@layer components {
+  .micro-ripple-host {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .micro-ripple-host > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .micro-ripple-node {
+    position: absolute;
+    border-radius: 999px;
+    background: radial-gradient(
+      circle,
+      rgba(148, 197, 255, 0.42) 0%,
+      rgba(148, 197, 255, 0.22) 45%,
+      rgba(148, 197, 255, 0) 72%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.1);
+    animation: microRipple 620ms var(--ui-ease-standard) forwards;
+    z-index: 0;
+  }
+
+  .micro-press {
+    transition:
+      transform var(--ui-motion-fast) var(--ui-ease-standard),
+      filter var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .micro-press:active {
+    transform: translateY(1px) scale(0.985);
+    filter: saturate(1.05);
+  }
+
+  .micro-field {
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .micro-field:focus-visible {
+    animation: fieldPulse 260ms var(--ui-ease-standard);
+  }
+
+  .micro-switch {
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard),
+      transform var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .micro-switch:active {
+    transform: scale(0.96);
+  }
+
+  .micro-switch-thumb {
+    will-change: transform;
+  }
+
+  .micro-switch[data-state="checked"] .micro-switch-thumb {
+    animation: switchSnapOn 260ms cubic-bezier(0.2, 0.9, 0.22, 1);
+  }
+
+  .micro-switch[data-state="unchecked"] .micro-switch-thumb {
+    animation: switchSnapOff 260ms cubic-bezier(0.2, 0.9, 0.22, 1);
+  }
+
+  .tactile-button {
+    position: relative;
+    transform-origin: center;
+    will-change: transform;
+    box-shadow:
+      0 10px 24px -16px rgba(15, 23, 42, 0.85),
+      0 6px 14px -12px rgba(37, 99, 235, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    transition:
+      transform var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard),
+      filter var(--ui-motion-fast) var(--ui-ease-standard);
+    overflow: hidden;
+  }
+
+  .ui-v2.tactile-auto :where(button, [role="button"]):not(.tactile-button):not([data-tactile="false"]) {
+    transform-origin: center;
+    will-change: transform;
+    transition:
+      translate var(--ui-motion-fast) var(--ui-ease-standard),
+      scale var(--ui-motion-fast) var(--ui-ease-standard),
+      filter var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .ui-v2.tactile-auto :where(button, [role="button"]):not(.tactile-button):not([data-tactile="false"]):hover {
+    translate: 0 -1px;
+    scale: 1.01;
+    filter: saturate(1.03);
+  }
+
+  .ui-v2.tactile-auto :where(button, [role="button"]):not(.tactile-button):not([data-tactile="false"]):active {
+    translate: 0 0;
+    scale: 0.985;
+  }
+
+  .tactile-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image:
+      radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.22), transparent 32%),
+      radial-gradient(circle at 80% 78%, rgba(255, 255, 255, 0.12), transparent 28%);
+    opacity: 0.45;
+    transition: opacity var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .tactile-button:hover {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow:
+      0 15px 28px -18px rgba(15, 23, 42, 0.9),
+      0 10px 20px -14px rgba(56, 189, 248, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.26);
+    filter: saturate(1.03);
+  }
+
+  .ui-v2 .tactile-button {
+    box-shadow:
+      0 12px 26px -18px rgba(4, 14, 36, 0.9),
+      0 8px 20px -16px rgba(26, 120, 255, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+
+  .ui-v2 .tactile-button:hover {
+    box-shadow:
+      0 18px 34px -22px rgba(5, 14, 40, 0.92),
+      0 12px 25px -18px rgba(32, 132, 255, 0.76),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .tactile-button:active {
+    animation: tactileSquish 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .tactile-button:active::after {
+    opacity: 0.68;
+  }
+
+  .tactile-icon {
+    transform-origin: center;
+    transition: transform var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .tactile-button:active .tactile-icon {
+    animation: tactileIconJolt 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .kinetic-headline,
+  .ui-v2.kinetic-auto :where(h1, h2, h3) {
+    --kx: 0;
+    --ky: 0;
+    font-family: var(--font-heading);
+    font-variation-settings: "wght" 620;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+    transform:
+      translateX(calc(var(--kx) * 4px))
+      translateY(calc(var(--ky) * 3px))
+      scaleX(calc(1 + (var(--kx) * 0.03)))
+      scaleY(calc(1 - (var(--ky) * 0.015)));
+    text-shadow: 0 0 0 rgba(59, 130, 246, 0);
+    transition:
+      transform var(--ui-motion-fast) var(--ui-ease-standard),
+      text-shadow var(--ui-motion-fast) var(--ui-ease-standard),
+      filter var(--ui-motion-fast) var(--ui-ease-standard);
+    animation: headlineBreathe 4.8s ease-in-out infinite;
+    will-change: transform, font-variation-settings;
+  }
+
+  .kinetic-headline:hover,
+  .ui-v2.kinetic-auto :where(h1, h2, h3):hover {
+    filter: saturate(1.08);
+  }
+
+  .ui-perf-balanced .kinetic-headline,
+  .ui-v2.ui-perf-balanced.kinetic-auto :where(h1, h2, h3) {
+    animation: none;
+    transform: none;
+    text-shadow: none;
+    font-variation-settings: "wght" 680;
+    transition:
+      color var(--ui-motion-fast) var(--ui-ease-standard),
+      filter var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .ui-perf-balanced .landing-kinetic .kinetic-headline,
+  .ui-v2.ui-perf-balanced .landing-kinetic.kinetic-auto :where(h1, h2, h3) {
+    --kx: 0;
+    --ky: 0;
+    animation: headlineBreathe 4.8s ease-in-out infinite;
+    text-shadow: 0 0 0 rgba(37, 99, 235, 0);
+    transform:
+      translateX(calc(var(--kx) * 4px))
+      translateY(calc(var(--ky) * 3px))
+      scaleX(calc(1 + (var(--kx) * 0.03)))
+      scaleY(calc(1 - (var(--ky) * 0.015)));
+  }
+
+  .ui-perf-balanced .glass-surface::before {
+    animation-duration: 12s;
+    opacity: 0.25;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes glassSweep {
+  0% {
+    transform: translateX(-115%);
+  }
+  24% {
+    transform: translateX(130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes tactileSquish {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  36% {
+    transform: translateY(2px) scaleX(1.04) scaleY(0.92);
+  }
+  68% {
+    transform: translateY(-1px) scaleX(0.99) scaleY(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tactileIconJolt {
+  0% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  35% {
+    transform: translateX(1px) scale(0.9) rotate(-6deg);
+  }
+  70% {
+    transform: translateX(2px) scale(1.08) rotate(5deg);
+  }
+  100% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes microRipple {
+  0% {
+    opacity: 0.45;
+    transform: scale(0.08);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes switchSnapOn {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  55% {
+    transform: translateX(20px) scale(0.92, 1.08);
+  }
+  100% {
+    transform: translateX(20px) scale(1);
+  }
+}
+
+@keyframes switchSnapOff {
+  0% {
+    transform: translateX(20px) scale(1);
+  }
+  55% {
+    transform: translateX(0) scale(0.92, 1.08);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes fieldPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes cursorPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.84);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes headlineBreathe {
+  0%,
+  100% {
+    font-variation-settings: "wght" 620;
+    letter-spacing: -0.028em;
+    text-shadow: 0 0 0 rgba(37, 99, 235, 0);
+  }
+  50% {
+    font-variation-settings: "wght" 740;
+    letter-spacing: -0.018em;
+    text-shadow: 0 12px 32px rgba(37, 99, 235, 0.22);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hero-orb {
+    display: none;
+  }
+
+  .app-bubble {
+    animation: none;
+  }
+
+  .glass-surface::before {
+    animation: none;
+  }
+
+  .kinetic-headline,
+  .ui-v2.kinetic-auto :where(h1, h2, h3) {
+    animation: none;
+    transform: none;
+    transition: none;
+    font-variation-settings: "wght" 680;
+  }
+
+  .global-cursor-aura,
+  .global-cursor-dot {
+    display: none !important;
+  }
+}
