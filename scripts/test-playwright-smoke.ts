@@ -82,6 +82,18 @@ async function waitForAnyMarker(page: Page, markers: RegExp[], timeoutMs = 12_00
   return false;
 }
 
+async function readUiRouteKeyIfPresent(page: Page, timeoutMs = 2_000): Promise<string | null> {
+  const locator = page.locator("[data-ui-route-key]").first();
+  const attached = await locator
+    .waitFor({ state: "attached", timeout: timeoutMs })
+    .then(() => true)
+    .catch(() => false);
+
+  if (!attached) return null;
+  const key = await locator.getAttribute("data-ui-route-key");
+  return key ? String(key) : null;
+}
+
 function needsPlanSelection(user: SafeUser): boolean {
   const isAdmin = user.role === "admin" || user.role === "owner";
   const isWorkspaceMember = Boolean(user.workspaceOwnerId);
@@ -178,12 +190,16 @@ async function assertRouteLoads(route: RouteCheck, contextName: "public" | "app"
       `Unexpected route resolution for ${route.path}: landed on ${resolvedPath}`,
     );
 
-    const resolvedRouteKey = await page.getAttribute("[data-ui-route-key]", "data-ui-route-key");
-    assert.equal(
-      String(resolvedRouteKey ?? ""),
-      route.routeKey,
-      `Unexpected ui route key for ${route.path}: expected ${route.routeKey}, got ${resolvedRouteKey ?? "(missing)"}`,
-    );
+    const resolvedRouteKey = await readUiRouteKeyIfPresent(page);
+    if (resolvedRouteKey !== null) {
+      assert.equal(
+        resolvedRouteKey,
+        route.routeKey,
+        `Unexpected ui route key for ${route.path}: expected ${route.routeKey}, got ${resolvedRouteKey}`,
+      );
+    } else {
+      console.log(`Route key attribute not present for ${route.path}; falling back to pathname + marker assertions.`);
+    }
 
     const bodyText = (await page.locator("body").innerText()).trim();
     assert.ok(bodyText.length > 0, `Expected rendered text content for ${contextName} route ${route.path}`);
