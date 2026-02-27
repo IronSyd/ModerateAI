@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chromium, request } from "playwright";
+import { chromium, request, type Page } from "playwright";
 
 type SafeUser = {
   role: string;
@@ -19,29 +19,43 @@ const REQUIRE_ADMIN_ROUTE_CHECKS = String(process.env.PLAYWRIGHT_REQUIRE_ADMIN_R
 
 type RouteCheck = {
   path: string;
+  routeKey: string;
   markers: RegExp[];
   requiresAdmin?: boolean;
 };
 
 const PUBLIC_ROUTE_CHECKS: RouteCheck[] = [
-  { path: "/", markers: [/Powerful Features/i, /Seamless Integrations/i, /Simple, Transparent Pricing/i] },
-  { path: "/auth", markers: [/Sign In/i, /Create account/i, /Password/i] },
-  { path: "/privacy-policy", markers: [/Privacy Policy/i] },
-  { path: "/terms-of-service", markers: [/Terms of Service/i] },
+  {
+    path: "/",
+    routeKey: "landing",
+    markers: [/Powerful Features/i, /Seamless Integrations/i, /Simple, Transparent Pricing/i],
+  },
+  {
+    path: "/auth",
+    routeKey: "auth",
+    markers: [/Sign In/i, /Create account/i, /Password/i, /all in one place/i],
+  },
+  { path: "/privacy-policy", routeKey: "legal", markers: [/Privacy Policy/i] },
+  { path: "/terms-of-service", routeKey: "legal", markers: [/Terms of Service/i] },
 ];
 
 const APP_ROUTE_CHECKS: RouteCheck[] = [
-  { path: "/dashboard", markers: [/Workspace Overview/i] },
-  { path: "/conversations", markers: [/Manage Conversations/i, /Conversations/i] },
-  { path: "/knowledge-base", markers: [/Knowledge Base/i] },
-  { path: "/integrations/telegram", markers: [/Telegram Integration/i] },
-  { path: "/integrations/discord", markers: [/Discord Integration/i] },
-  { path: "/integrations/website", markers: [/Website Integration/i] },
-  { path: "/settings", markers: [/Notification Settings/i, /Moderation Controls/i, /Account Actions/i] },
-  { path: "/help", markers: [/ModerateAI Docs Hub/i] },
-  { path: "/admin/users", markers: [/All Users/i, /Workspace Integrations/i], requiresAdmin: true },
+  {
+    path: "/dashboard",
+    routeKey: "dashboard",
+    markers: [/Workspace Overview/i, /Platform Integrations/i, /Recent Activity/i, /Welcome to ModerateAI/i],
+  },
+  { path: "/conversations", routeKey: "conversations", markers: [/Manage Conversations/i, /Conversations/i] },
+  { path: "/knowledge-base", routeKey: "knowledge-base", markers: [/Knowledge Base/i] },
+  { path: "/integrations/telegram", routeKey: "integrations", markers: [/Telegram Integration/i] },
+  { path: "/integrations/discord", routeKey: "integrations", markers: [/Discord Integration/i] },
+  { path: "/integrations/website", routeKey: "integrations", markers: [/Website Integration/i] },
+  { path: "/settings", routeKey: "settings", markers: [/Notification Settings/i, /Moderation Controls/i, /Account Actions/i] },
+  { path: "/help", routeKey: "help", markers: [/ModerateAI Docs Hub/i] },
+  { path: "/admin/users", routeKey: "admin-users", markers: [/All Users/i, /Workspace Integrations/i], requiresAdmin: true },
   {
     path: "/admin/ops/admin-history-learning",
+    routeKey: "learning-ops",
     markers: [/Backfill/i, /Auto-Analysis/i, /Run Backfill Now/i],
     requiresAdmin: true,
   },
@@ -54,6 +68,18 @@ function isTruthyFlag(value: string): boolean {
 function normalizePathname(pathname: string): string {
   if (!pathname || pathname === "/") return "/";
   return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
+async function waitForAnyMarker(page: Page, markers: RegExp[], timeoutMs = 12_000): Promise<boolean> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    const bodyText = (await page.locator("body").innerText()).trim();
+    if (markers.some((marker) => marker.test(bodyText))) {
+      return true;
+    }
+    await page.waitForTimeout(200);
+  }
+  return false;
 }
 
 function needsPlanSelection(user: SafeUser): boolean {
@@ -152,10 +178,17 @@ async function assertRouteLoads(route: RouteCheck, contextName: "public" | "app"
       `Unexpected route resolution for ${route.path}: landed on ${resolvedPath}`,
     );
 
+    const resolvedRouteKey = await page.getAttribute("[data-ui-route-key]", "data-ui-route-key");
+    assert.equal(
+      String(resolvedRouteKey ?? ""),
+      route.routeKey,
+      `Unexpected ui route key for ${route.path}: expected ${route.routeKey}, got ${resolvedRouteKey ?? "(missing)"}`,
+    );
+
     const bodyText = (await page.locator("body").innerText()).trim();
     assert.ok(bodyText.length > 0, `Expected rendered text content for ${contextName} route ${route.path}`);
 
-    const matchedMarker = route.markers.some((marker) => marker.test(bodyText));
+    const matchedMarker = await waitForAnyMarker(page, route.markers);
     assert.ok(
       matchedMarker,
       `Route marker not found for ${route.path}. Checked markers: ${route.markers
