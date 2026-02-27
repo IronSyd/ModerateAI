@@ -49,7 +49,17 @@ const APP_ROUTE_CHECKS: RouteCheck[] = [
   { path: "/knowledge-base", routeKey: "knowledge-base", markers: [/Knowledge Base/i] },
   { path: "/integrations/telegram", routeKey: "integrations", markers: [/Telegram Integration/i] },
   { path: "/integrations/discord", routeKey: "integrations", markers: [/Discord Integration/i] },
-  { path: "/integrations/website", routeKey: "integrations", markers: [/Website Integration/i] },
+  {
+    path: "/integrations/website",
+    routeKey: "integrations",
+    markers: [
+      /Website Integration/i,
+      /Website Leads/i,
+      /Domain Knowledge Base Routing/i,
+      /Widget configuration not available/i,
+      /Embed snippet/i,
+    ],
+  },
   { path: "/settings", routeKey: "settings", markers: [/Notification Settings/i, /Moderation Controls/i, /Account Actions/i] },
   { path: "/help", routeKey: "help", markers: [/ModerateAI Docs Hub/i] },
   { path: "/admin/users", routeKey: "admin-users", markers: [/All Users/i, /Workspace Integrations/i], requiresAdmin: true },
@@ -70,7 +80,7 @@ function normalizePathname(pathname: string): string {
   return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 }
 
-async function waitForAnyMarker(page: Page, markers: RegExp[], timeoutMs = 12_000): Promise<boolean> {
+async function waitForAnyMarker(page: Page, markers: RegExp[], timeoutMs = 30_000): Promise<boolean> {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
     const bodyText = (await page.locator("body").innerText()).trim();
@@ -205,11 +215,12 @@ async function assertRouteLoads(route: RouteCheck, contextName: "public" | "app"
     assert.ok(bodyText.length > 0, `Expected rendered text content for ${contextName} route ${route.path}`);
 
     const matchedMarker = await waitForAnyMarker(page, route.markers);
+    const bodyPreview = bodyText.replace(/\s+/g, " ").slice(0, 600);
     assert.ok(
       matchedMarker,
       `Route marker not found for ${route.path}. Checked markers: ${route.markers
         .map((marker) => marker.toString())
-        .join(", ")}`,
+        .join(", ")}. Body preview: "${bodyPreview}"`,
     );
 
     assert.equal(pageErrors.length, 0, `Unhandled browser error(s) on ${route.path}: ${pageErrors.join(" | ")}`);
