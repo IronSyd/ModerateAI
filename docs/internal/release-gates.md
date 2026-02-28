@@ -46,6 +46,5 @@
 ## Phase 5 Reliability Reference
 - Use `docs/internal/phase5-reliability-hardening.md` as the source of truth for preflight validation, Render deploy/rollback sequence, dependency risk acceptance, and UI canary controls.
 
-
 ## Phase 6 QA Gates Reference
 - Use `docs/internal/phase6-qa-gates.md` as the source of truth for Playwright smoke coverage and visual regression evidence requirements before broad rollout.
