@@ -1,0 +1,24 @@
+# ModerateAI
+
+ModerateAI is AI customer support and community moderation software for Website, Discord, and Telegram.
+It helps teams automate repetitive support, capture qualified leads, and keep moderation policies consistent.
+
+## Official Site
+- https://www.moderateai.net/
+
+## Core Product Pages
+- https://www.moderateai.net/ai-customer-support-software
+- https://www.moderateai.net/discord-moderation-bot
+- https://www.moderateai.net/telegram-customer-support-bot
+- https://www.moderateai.net/website-ai-lead-capture
+- https://www.moderateai.net/ai-knowledge-base-software
+
+## Legal
+- https://www.moderateai.net/privacy-policy
+- https://www.moderateai.net/terms-of-service
+
+## Docs
+- https://docs.moderateai.net/
+
+## Contact
+- admin@moderateai.net

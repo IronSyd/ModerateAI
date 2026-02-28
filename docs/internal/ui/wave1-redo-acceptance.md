@@ -58,8 +58,8 @@ Each Wave 1 route must pass:
 ## Sign-off
 | Area | Owner | Status | Notes |
 |---|---|---|---|
-| Figma fidelity | `TBD` | `TBD` |  |
-| Functional parity | `TBD` | `TBD` |  |
-| Accessibility | `TBD` | `TBD` |  |
-| Performance sanity | `TBD` | `TBD` |  |
-| Canary monitoring | `TBD` | `TBD` |  |
+| Figma fidelity | Design + Engineering | waived | Code-first waiver accepted via `docs/adr/0004-phase3-design-system-decision.md`. |
+| Functional parity | QA + Engineering | pass | `npm run test:playwright:smoke` passed with admin routes (2026-02-28) and required route captures completed. |
+| Accessibility | QA | pending | Manual keyboard and contrast walkthrough still required for final sign-off. |
+| Performance sanity | Engineering | pending | No blocking regressions observed; route-level comparative perf evidence not yet archived in this doc set. |
+| Canary monitoring | Ops | pending | 24-48h canary window and production monitoring confirmation not yet recorded. |

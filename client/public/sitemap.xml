@@ -1,17 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://moderateai.net/</loc>
+    <loc>https://www.moderateai.net/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://moderateai.net/privacy-policy</loc>
+    <loc>https://www.moderateai.net/ai-customer-support-software</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/discord-moderation-bot</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/telegram-customer-support-bot</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/website-ai-lead-capture</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/ai-knowledge-base-software</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/privacy-policy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://moderateai.net/terms-of-service</loc>
+    <loc>https://www.moderateai.net/terms-of-service</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>

@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Public landing page only (docs are hosted on GitBook)
+# Public marketing/use-case pages are indexable (docs are hosted on GitBook)
 Disallow: /auth
 Disallow: /accept-invitation
 Disallow: /choose-plan
@@ -21,4 +21,4 @@ Disallow: /billing
 Disallow: /help
 Disallow: /api/
 
-Sitemap: https://moderateai.net/sitemap.xml
+Sitemap: https://www.moderateai.net/sitemap.xml

@@ -51,7 +51,9 @@ const StatsCard = ({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</p>
-              <p className="mt-1 text-xl sm:text-2xl font-semibold text-foreground leading-tight break-words">{value}</p>
+              <p className="mt-1 text-lg sm:text-2xl lg:text-xl xl:text-2xl font-semibold text-foreground leading-tight whitespace-normal break-normal">
+                {value}
+              </p>
             </div>
             <div className={`shrink-0 rounded-full p-2.5 sm:p-3 ${iconBgColor} ${iconColor}`}>
               {icon}

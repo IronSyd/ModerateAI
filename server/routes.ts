@@ -2759,6 +2759,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.get("/api/admin/ops/runtime-observability", authMiddleware, async (req, res) => {
+    try {
+      if (!requireAdmin(req, res)) return;
+
+      return res.json({
+        generatedAt: new Date().toISOString(),
+        requestTracing: {
+          header: "X-Request-Id",
+          slowRequestThresholdMs: parsePositiveInt(process.env.API_SLOW_REQUEST_THRESHOLD_MS, 2_000),
+        },
+        securityHeaders: {
+          enabled: parseBooleanEnv(process.env.SECURITY_HEADERS_ENABLED, true),
+          hstsMaxAgeSeconds: parsePositiveInt(process.env.SECURITY_HSTS_MAX_AGE_SECONDS, 31_536_000),
+        },
+        events: getOpsEventSummary([
+          "API_SLOW_REQUEST",
+          "API_5XX_RESPONSE",
+          "AUTH_SESSION_ERROR",
+          "AUTH_RATE_LIMIT_429",
+          "AUTH_RATE_LIMIT_FAILURE",
+          "OPENAI_REQUEST_FAILED",
+        ]),
+      });
+    } catch (error: any) {
+      console.error("Error fetching runtime observability summary:", error);
+      return res.status(500).json({ message: error?.message || "Failed to fetch runtime observability summary" });
+    }
+  });
+
   // Health check
   app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "ok", mode: process.env.NODE_ENV ?? "development" });

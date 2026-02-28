@@ -41,6 +41,7 @@ const PreferencesPage = lazy(() => import("@/pages/preferences"));
 const BillingPage = lazy(() => import("@/pages/billing"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
+const SeoUseCasePage = lazy(() => import("@/pages/seo-use-case"));
 const HelpCenterPage = lazy(() => import("@/pages/help"));
 const HelpDocsReaderPage = lazy(() => import("@/pages/help/docs-reader"));
 const HelpArticlePage = lazy(() => import("@/pages/help/article"));
@@ -142,6 +143,46 @@ const SEO_DEFAULT_DESCRIPTION =
   "ModerateAI helps teams deliver AI support and capture qualified leads across Website, Telegram, and Discord in one workspace.";
 const SEO_APP_DESCRIPTION =
   "ModerateAI workspace dashboard for AI support, lead capture, integrations, analytics, and operations.";
+const SEO_SITE_BASE_FALLBACK = "https://www.moderateai.net";
+
+const SEO_PUBLIC_USE_CASE_PATHS = [
+  "/ai-customer-support-software",
+  "/discord-moderation-bot",
+  "/telegram-customer-support-bot",
+  "/website-ai-lead-capture",
+  "/ai-knowledge-base-software",
+] as const;
+
+const SEO_PUBLIC_USE_CASE_MAP: Record<
+  (typeof SEO_PUBLIC_USE_CASE_PATHS)[number],
+  { title: string; description: string }
+> = {
+  "/ai-customer-support-software": {
+    title: "AI Customer Support Software | Website, Discord, Telegram | ModerateAI",
+    description:
+      "Scale customer support with AI across website chat, Discord, and Telegram. ModerateAI combines support, lead capture, and moderation in one workspace.",
+  },
+  "/discord-moderation-bot": {
+    title: "Discord Moderation Bot with AI Support Workflows | ModerateAI",
+    description:
+      "Automate Discord moderation and support with ModerateAI. Improve community quality, reduce manual triage, and keep responses consistent.",
+  },
+  "/telegram-customer-support-bot": {
+    title: "Telegram Customer Support Bot for Faster Team Response | ModerateAI",
+    description:
+      "Deploy a Telegram AI support bot with moderation and analytics. ModerateAI helps teams respond faster and handle volume with better consistency.",
+  },
+  "/website-ai-lead-capture": {
+    title: "Website AI Lead Capture Software | ModerateAI",
+    description:
+      "Capture qualified leads from website AI chat while answering support questions in real time. ModerateAI connects lead capture with operations and analytics.",
+  },
+  "/ai-knowledge-base-software": {
+    title: "AI Knowledge Base Software for Support and Moderation | ModerateAI",
+    description:
+      "Keep AI responses accurate with a shared knowledge base for website, Discord, and Telegram support workflows in ModerateAI.",
+  },
+};
 
 function normalizeBaseUrl(value: string | null | undefined): string | null {
   const raw = String(value ?? "").trim().replace(/\/+$/, "");
@@ -156,8 +197,9 @@ function normalizeBaseUrl(value: string | null | undefined): string | null {
 
 function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
   const [pathname] = String(rawLocation || "/").split("?");
+  const normalizedPath = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
 
-  if (pathname === "/") {
+  if (normalizedPath === "/") {
     return {
       title: "ModerateAI | AI Support, Lead Capture, and Community Moderation",
       description:
@@ -168,7 +210,7 @@ function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
     };
   }
 
-  if (pathname.startsWith("/auth")) {
+  if (normalizedPath.startsWith("/auth")) {
     return {
       title: "Sign In | ModerateAI",
       description: "Sign in or create a ModerateAI account to access your workspace.",
@@ -178,7 +220,7 @@ function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
     };
   }
 
-  if (pathname.startsWith("/accept-invitation")) {
+  if (normalizedPath.startsWith("/accept-invitation")) {
     return {
       title: "Accept Invitation | ModerateAI",
       description: "Accept a workspace invitation to join ModerateAI.",
@@ -188,7 +230,7 @@ function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
     };
   }
 
-  if (pathname === "/privacy-policy") {
+  if (normalizedPath === "/privacy-policy") {
     return {
       title: "Privacy Policy | ModerateAI",
       description:
@@ -199,13 +241,24 @@ function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
     };
   }
 
-  if (pathname === "/terms-of-service") {
+  if (normalizedPath === "/terms-of-service") {
     return {
       title: "Terms of Service | ModerateAI",
       description:
         "Read the Terms of Service for ModerateAI, including use of the website, dashboard, widget, AI features, and Telegram/Discord integrations.",
       robots: "index,follow",
       canonicalPath: "/terms-of-service",
+      ogType: "website",
+    };
+  }
+
+  if (normalizedPath in SEO_PUBLIC_USE_CASE_MAP) {
+    const page = SEO_PUBLIC_USE_CASE_MAP[normalizedPath as keyof typeof SEO_PUBLIC_USE_CASE_MAP];
+    return {
+      title: page.title,
+      description: page.description,
+      robots: "index,follow",
+      canonicalPath: normalizedPath,
       ogType: "website",
     };
   }
@@ -253,7 +306,7 @@ function RouteSeoManager({ location }: { location: string }) {
     const siteBase =
       normalizeBaseUrl(import.meta.env.VITE_SITE_URL) ??
       normalizeBaseUrl(window.location.origin) ??
-      "https://moderateai.net";
+      SEO_SITE_BASE_FALLBACK;
     const canonicalUrl = new URL(seo.canonicalPath ?? "/", siteBase).toString();
 
     document.title = seo.title;
@@ -410,6 +463,7 @@ function resolveUiV2RouteKey(location: string): string {
   if (pathname === "/") return "landing";
   if (pathname.startsWith("/auth") || pathname.startsWith("/accept-invitation")) return "auth";
   if (pathname === "/privacy-policy" || pathname === "/terms-of-service") return "legal";
+  if (SEO_PUBLIC_USE_CASE_PATHS.includes(pathname as (typeof SEO_PUBLIC_USE_CASE_PATHS)[number])) return "landing";
   if (pathname.startsWith("/dashboard")) return "dashboard";
   if (pathname.startsWith("/choose-plan") || pathname.startsWith("/reset-password")) return "onboarding";
   if (pathname.startsWith("/conversations")) return "conversations";
@@ -681,7 +735,8 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
     location === "/privacy-policy" ||
     location === "/terms-of-service" ||
     location.startsWith("/auth") ||
-    location.startsWith("/accept-invitation");
+    location.startsWith("/accept-invitation") ||
+    SEO_PUBLIC_USE_CASE_PATHS.some((path) => location === path || location.startsWith(`${path}?`));
   const fallback = pageFallback();
 
   if (isPublicPage) {
@@ -691,6 +746,11 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
           <Route path="/" component={LandingPage} />
           <Route path="/privacy-policy" component={PrivacyPolicyPage} />
           <Route path="/terms-of-service" component={TermsOfServicePage} />
+          <Route path="/ai-customer-support-software" component={SeoUseCasePage} />
+          <Route path="/discord-moderation-bot" component={SeoUseCasePage} />
+          <Route path="/telegram-customer-support-bot" component={SeoUseCasePage} />
+          <Route path="/website-ai-lead-capture" component={SeoUseCasePage} />
+          <Route path="/ai-knowledge-base-software" component={SeoUseCasePage} />
           <Route path="/auth" component={AuthPage} />
           <Route path="/accept-invitation" component={AcceptInvitationPage} />
           <Route component={NotFound} />

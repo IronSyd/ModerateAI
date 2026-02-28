@@ -421,6 +421,70 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Use Cases Section */}
+      <section className="py-20 px-6 md:px-8 bg-accent/20">
+        <div className="max-w-7xl mx-auto">
+          <motion.div className="text-center mb-12" {...fadeInUp}>
+            <h2 className="kinetic-headline text-3xl md:text-4xl font-bold mb-4">Popular AI Support Use Cases</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Explore practical ways teams use ModerateAI for customer support, lead capture, and community operations.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">AI Customer Support Software</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Unify website, Discord, and Telegram support workflows in one AI workspace.
+              </p>
+              <Link href="/ai-customer-support-software">
+                <Button variant="outline" className="glass-chip tactile-button">Read Use Case</Button>
+              </Link>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">Discord Moderation Bot</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Improve community safety and support quality with AI-assisted Discord operations.
+              </p>
+              <Link href="/discord-moderation-bot">
+                <Button variant="outline" className="glass-chip tactile-button">Read Use Case</Button>
+              </Link>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">Telegram Support Bot</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Handle Telegram support volume faster with AI-backed replies and moderation controls.
+              </p>
+              <Link href="/telegram-customer-support-bot">
+                <Button variant="outline" className="glass-chip tactile-button">Read Use Case</Button>
+              </Link>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">Website AI Lead Capture</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Convert support conversations into qualified leads directly from your website.
+              </p>
+              <Link href="/website-ai-lead-capture">
+                <Button variant="outline" className="glass-chip tactile-button">Read Use Case</Button>
+              </Link>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface md:col-span-2 lg:col-span-2" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">AI Knowledge Base Software</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Keep answers accurate with a centralized knowledge base shared across every channel.
+              </p>
+              <Link href="/ai-knowledge-base-software">
+                <Button variant="outline" className="glass-chip tactile-button">Read Use Case</Button>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="pricing" className="scroll-mt-28 py-20 px-6 md:px-8 bg-accent/30">
         <div className="max-w-7xl mx-auto">
@@ -683,7 +747,11 @@ const LandingPage = () => {
                       Documentation
                     </Link>
                   </li>
-                <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</a></li>
+                <li>
+                  <Link href="/ai-customer-support-software" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Use Cases
+                  </Link>
+                </li>
                 <li>
                   <a
                     href={supportUrl}
@@ -700,8 +768,16 @@ const LandingPage = () => {
             <div>
               <h3 className="kinetic-headline font-semibold mb-4">Company</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</a></li>
-                <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Careers</a></li>
+                <li>
+                  <Link href="/ai-knowledge-base-software" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Knowledge Workflows
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/website-ai-lead-capture" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Website Lead Capture
+                  </Link>
+                </li>
                 <li>
                   <button
                     type="button"

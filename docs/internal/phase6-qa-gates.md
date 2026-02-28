@@ -106,6 +106,27 @@ Phase 6 gate is considered passing only when all are true:
 
 ---
 
+## 5) Execution Evidence (2026-02-28)
+
+## Command Results
+| Gate Item | Command / Evidence | Result |
+| --- | --- | --- |
+| Typecheck | `npm run check` | Pass |
+| Production build | `npm run build` | Pass |
+| Playwright smoke (admin required) | `npm run test:playwright:smoke` | Pass; admin coverage bootstrap succeeded via owner account |
+| Visual snapshot capture | Local Playwright capture run against required routes and breakpoints | Pass; 24 screenshots generated (`8 routes x 3 breakpoints`) |
+
+## Visual Artifact Location (Local)
+- Directory: `checkpoints/phase6-visuals/2026-02-28/2026-02-28T12-17-30-294Z`
+- Manifest: `checkpoints/phase6-visuals/2026-02-28/2026-02-28T12-17-30-294Z/manifest.json`
+- File count: 24 PNG snapshots (desktop/tablet/mobile for all required routes)
+
+## Current Gate Status
+- Local Phase 6 gate status: `PASS`
+- Release-candidate/deployed status: `PENDING` until the same checklist is executed against deployed service URL and evidence is attached to release notes.
+
+---
+
 ## Exit Criteria
 - Smoke tests and snapshot evidence are consistently produced per release candidate.
 - Operators can identify regressions before canary expansion.

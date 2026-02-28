@@ -275,6 +275,248 @@ export default function AdminUsersPage() {
     });
   }, [query, workspaceIntegrations]);
 
+  const getUserStatusMeta = (u: AdminUserRow) => {
+    if (u.isBanned) {
+      return {
+        label: "Banned",
+        title: u.banReason || "Banned",
+        className: "glass-chip border-red-500/30 text-red-300",
+      };
+    }
+
+    if (!u.isActive) {
+      return {
+        label: "Deactivated",
+        title: "Deactivated",
+        className: "glass-chip border-yellow-500/30 text-yellow-200",
+      };
+    }
+
+    if (u.billingSuspendedAt) {
+      return {
+        label: "Suspended",
+        title: `Billing suspended${u.billingSuspendedReason ? `: ${u.billingSuspendedReason}` : ""}`,
+        className: "glass-chip border-orange-500/30 text-orange-200",
+      };
+    }
+
+    return {
+      label: "Active",
+      title: "Active",
+      className: "glass-chip",
+    };
+  };
+
+  const renderUserActions = (u: AdminUserRow, mode: "icon" | "button" = "icon") => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={mode === "button" ? "glass-chip w-full justify-between" : "glass-chip"}
+        >
+          {mode === "button" ? (
+            <>
+              Actions
+              <MoreHorizontal className="h-4 w-4" />
+            </>
+          ) : (
+            <MoreHorizontal className="h-4 w-4" />
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="glass-surface">
+        <DropdownMenuItem
+          disabled={userActionMutation.isPending || !canManageTarget(u) || u.isBanned}
+          onClick={() => userActionMutation.mutate({ type: u.isActive ? "deactivate" : "activate", userId: u.id })}
+        >
+          {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+          {u.isActive ? "Deactivate" : "Activate"}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={userActionMutation.isPending || !canManageTarget(u)}
+          onClick={() => {
+            if (u.isBanned) {
+              userActionMutation.mutate({ type: "unban", userId: u.id });
+              return;
+            }
+
+            const confirmed = window.confirm(`Ban ${u.email}? They will be signed out and blocked from logging in.`);
+            if (!confirmed) return;
+            const reason = window.prompt("Ban reason (optional):") || undefined;
+            userActionMutation.mutate({ type: "ban", userId: u.id, reason });
+          }}
+        >
+          <Ban className="h-4 w-4" />
+          {u.isBanned ? "Unban" : "Ban"}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={userActionMutation.isPending || !canManageTarget(u)}
+          onClick={() => {
+            const confirmed = window.confirm(
+              `Issue a temporary password for ${u.email}? This will invalidate existing sessions and require immediate password change on next login.`,
+            );
+            if (!confirmed) return;
+            userActionMutation.mutate({ type: "resetTempPassword", userId: u.id });
+          }}
+        >
+          <KeyRound className="h-4 w-4" />
+          Reset Password (Temp)
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          disabled={userActionMutation.isPending || !canManageBillingTarget(u) || u.isBanned || !u.isActive}
+          onClick={() => {
+            const raw = window.prompt(
+              "Activate Standard for how many days? (Extends from now or the current paid-through date.)",
+              "30",
+            );
+            if (!raw) return;
+            const days = Number(raw);
+            if (!Number.isFinite(days) || days <= 0) {
+              toast({
+                title: "Invalid duration",
+                description: "Enter a positive number of days (e.g. 30).",
+                variant: "destructive",
+              });
+              return;
+            }
+            userActionMutation.mutate({
+              type: "activatePlan",
+              userId: u.id,
+              plan: "standard",
+              durationDays: Math.floor(days),
+            });
+          }}
+        >
+          <ArrowUpCircle className="h-4 w-4" />
+          Activate Standard (Mark Paid)
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={userActionMutation.isPending || !canManageBillingTarget(u) || u.isBanned || !u.isActive}
+          onClick={() => {
+            const raw = window.prompt(
+              "Activate Pro for how many days? (Extends from now or the current paid-through date.)",
+              "30",
+            );
+            if (!raw) return;
+            const days = Number(raw);
+            if (!Number.isFinite(days) || days <= 0) {
+              toast({
+                title: "Invalid duration",
+                description: "Enter a positive number of days (e.g. 30).",
+                variant: "destructive",
+              });
+              return;
+            }
+            userActionMutation.mutate({
+              type: "activatePlan",
+              userId: u.id,
+              plan: "pro",
+              durationDays: Math.floor(days),
+            });
+          }}
+        >
+          <ArrowUpCircle className="h-4 w-4" />
+          Activate Pro (Mark Paid)
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={userActionMutation.isPending || !canManageBillingTarget(u) || u.isBanned || u.plan === "free"}
+          onClick={() => {
+            const confirmed = window.confirm(
+              `Downgrade ${u.email} to Free? This clears paid-through access and removes billing suspension.`,
+            );
+            if (!confirmed) return;
+            userActionMutation.mutate({ type: "downgradeToFree", userId: u.id });
+          }}
+        >
+          <ArrowDownCircle className="h-4 w-4" />
+          Downgrade to Free
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          disabled={
+            userActionMutation.isPending ||
+            !canManageBillingTarget(u) ||
+            u.isBanned ||
+            !u.isActive ||
+            Boolean(u.billingSuspendedAt)
+          }
+          onClick={() => {
+            const confirmed = window.confirm(
+              `Suspend billing for ${u.email}? They will be blocked from logging in until you allow billing again.`,
+            );
+            if (!confirmed) return;
+            const reason = window.prompt("Reason (optional):") || undefined;
+            userActionMutation.mutate({ type: "suspendBilling", userId: u.id, reason });
+          }}
+        >
+          <PauseCircle className="h-4 w-4" />
+          Suspend (Non-payment)
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={
+            userActionMutation.isPending ||
+            !canManageBillingTarget(u) ||
+            u.isBanned ||
+            !u.isActive ||
+            u.plan === "free"
+          }
+          onClick={() => {
+            const raw = window.prompt(
+              "How many days should this subscription remain active? (Extends from now or the current paid-through date.)",
+              "30",
+            );
+            if (!raw) return;
+            const days = Number(raw);
+            if (!Number.isFinite(days) || days <= 0) {
+              toast({
+                title: "Invalid duration",
+                description: "Enter a positive number of days (e.g. 30).",
+                variant: "destructive",
+              });
+              return;
+            }
+            userActionMutation.mutate({
+              type: "allowBilling",
+              userId: u.id,
+              durationDays: Math.floor(days),
+            });
+          }}
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          Allow (Mark Paid)
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          disabled={userActionMutation.isPending || !canManageTarget(u)}
+          onClick={() => {
+            const confirmed = window.confirm(
+              `Delete ${u.email}? This permanently removes the user and their data. This cannot be undone.`,
+            );
+            if (!confirmed) return;
+            userActionMutation.mutate({ type: "delete", userId: u.id });
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   if (!isAdmin) {
     return (
       <StateBlock
@@ -415,7 +657,59 @@ export default function AdminUsersPage() {
           ) : error ? (
             <div className="text-sm text-red-400">{error.message}</div>
           ) : (
-            <TableShell>
+            <>
+              <div className="grid gap-3 xl:hidden">
+                {filtered.map((u) => (
+                  <div key={u.id} className="rounded-xl border border-border/70 bg-card/55 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">{u.fullName}</p>
+                          <Badge variant="outline" className="glass-chip">
+                            {u.role}
+                          </Badge>
+                        </div>
+                        <p className="break-all text-xs text-muted-foreground">{u.email}</p>
+                        <p className="font-mono text-[11px] text-muted-foreground">ID {u.id}</p>
+                      </div>
+                      <div className="w-[124px] shrink-0">{renderUserActions(u, "button")}</div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Badge variant="outline" title={getUserStatusMeta(u).title} className={getUserStatusMeta(u).className}>
+                        {getUserStatusMeta(u).label}
+                      </Badge>
+                      <Badge variant="outline" className="glass-chip">
+                        {u.plan}
+                      </Badge>
+                      <Badge variant="outline" className="glass-chip">
+                        {u.planStatus}
+                      </Badge>
+                    </div>
+
+                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                      <div>
+                        <dt className="text-muted-foreground">Created</dt>
+                        <dd className="text-foreground">{formatDate(u.createdAt)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Paid Through</dt>
+                        <dd className="text-foreground">{formatDate(u.paidThroughAt)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Trial Ends</dt>
+                        <dd className="text-foreground">{formatDate(u.trialEndsAt)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Plan Selected</dt>
+                        <dd className="text-foreground">{formatDate(u.planSelectedAt)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                ))}
+              </div>
+
+              <TableShell className="hidden xl:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -448,26 +742,10 @@ export default function AdminUsersPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          title={
-                            u.isBanned
-                              ? u.banReason || "Banned"
-                              : !u.isActive
-                                ? "Deactivated"
-                                : u.billingSuspendedAt
-                                  ? `Billing suspended${u.billingSuspendedReason ? `: ${u.billingSuspendedReason}` : ""}`
-                                  : "Active"
-                          }
-                          className={
-                            u.isBanned
-                              ? "glass-chip border-red-500/30 text-red-300"
-                              : !u.isActive
-                                ? "glass-chip border-yellow-500/30 text-yellow-200"
-                                : u.billingSuspendedAt
-                                  ? "glass-chip border-orange-500/30 text-orange-200"
-                                  : "glass-chip"
-                          }
+                          title={getUserStatusMeta(u).title}
+                          className={getUserStatusMeta(u).className}
                         >
-                          {u.isBanned ? "Banned" : !u.isActive ? "Deactivated" : u.billingSuspendedAt ? "Suspended" : "Active"}
+                          {getUserStatusMeta(u).label}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -485,228 +763,13 @@ export default function AdminUsersPage() {
                       <TableCell className="text-xs">{formatDate(u.paidThroughAt)}</TableCell>
                       <TableCell className="text-xs">{formatDate(u.planSelectedAt)}</TableCell>
                       <TableCell className="text-xs">{formatDate(u.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="glass-chip">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="glass-surface">
-                            <DropdownMenuItem
-                              disabled={
-                                userActionMutation.isPending ||
-                                !canManageTarget(u) ||
-                                u.isBanned
-                              }
-                              onClick={() => userActionMutation.mutate({ type: u.isActive ? "deactivate" : "activate", userId: u.id })}
-                            >
-                              {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                              {u.isActive ? "Deactivate" : "Activate"}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              disabled={userActionMutation.isPending || !canManageTarget(u)}
-                              onClick={() => {
-                                if (u.isBanned) {
-                                  userActionMutation.mutate({ type: "unban", userId: u.id });
-                                  return;
-                                }
-
-                                const confirmed = window.confirm(`Ban ${u.email}? They will be signed out and blocked from logging in.`);
-                                if (!confirmed) return;
-                                const reason = window.prompt("Ban reason (optional):") || undefined;
-                                userActionMutation.mutate({ type: "ban", userId: u.id, reason });
-                              }}
-                            >
-                              <Ban className="h-4 w-4" />
-                              {u.isBanned ? "Unban" : "Ban"}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              disabled={userActionMutation.isPending || !canManageTarget(u)}
-                              onClick={() => {
-                                const confirmed = window.confirm(
-                                  `Issue a temporary password for ${u.email}? This will invalidate existing sessions and require immediate password change on next login.`,
-                                );
-                                if (!confirmed) return;
-                                userActionMutation.mutate({ type: "resetTempPassword", userId: u.id });
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4" />
-                              Reset Password (Temp)
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem
-                              disabled={
-                                userActionMutation.isPending ||
-                                !canManageBillingTarget(u) ||
-                                u.isBanned ||
-                                !u.isActive
-                              }
-                              onClick={() => {
-                                const raw = window.prompt(
-                                  "Activate Standard for how many days? (Extends from now or the current paid-through date.)",
-                                  "30",
-                                );
-                                if (!raw) return;
-                                const days = Number(raw);
-                                if (!Number.isFinite(days) || days <= 0) {
-                                  toast({
-                                    title: "Invalid duration",
-                                    description: "Enter a positive number of days (e.g. 30).",
-                                    variant: "destructive",
-                                  });
-                                  return;
-                                }
-                                userActionMutation.mutate({
-                                  type: "activatePlan",
-                                  userId: u.id,
-                                  plan: "standard",
-                                  durationDays: Math.floor(days),
-                                });
-                              }}
-                            >
-                              <ArrowUpCircle className="h-4 w-4" />
-                              Activate Standard (Mark Paid)
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              disabled={
-                                userActionMutation.isPending ||
-                                !canManageBillingTarget(u) ||
-                                u.isBanned ||
-                                !u.isActive
-                              }
-                              onClick={() => {
-                                const raw = window.prompt(
-                                  "Activate Pro for how many days? (Extends from now or the current paid-through date.)",
-                                  "30",
-                                );
-                                if (!raw) return;
-                                const days = Number(raw);
-                                if (!Number.isFinite(days) || days <= 0) {
-                                  toast({
-                                    title: "Invalid duration",
-                                    description: "Enter a positive number of days (e.g. 30).",
-                                    variant: "destructive",
-                                  });
-                                  return;
-                                }
-                                userActionMutation.mutate({
-                                  type: "activatePlan",
-                                  userId: u.id,
-                                  plan: "pro",
-                                  durationDays: Math.floor(days),
-                                });
-                              }}
-                            >
-                              <ArrowUpCircle className="h-4 w-4" />
-                              Activate Pro (Mark Paid)
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              disabled={
-                                userActionMutation.isPending ||
-                                !canManageBillingTarget(u) ||
-                                u.isBanned ||
-                                u.plan === "free"
-                              }
-                              onClick={() => {
-                                const confirmed = window.confirm(
-                                  `Downgrade ${u.email} to Free? This clears paid-through access and removes billing suspension.`,
-                                );
-                                if (!confirmed) return;
-                                userActionMutation.mutate({ type: "downgradeToFree", userId: u.id });
-                              }}
-                            >
-                              <ArrowDownCircle className="h-4 w-4" />
-                              Downgrade to Free
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem
-                              disabled={
-                                userActionMutation.isPending ||
-                                !canManageBillingTarget(u) ||
-                                u.isBanned ||
-                                !u.isActive ||
-                                Boolean(u.billingSuspendedAt)
-                              }
-                              onClick={() => {
-                                const confirmed = window.confirm(
-                                  `Suspend billing for ${u.email}? They will be blocked from logging in until you allow billing again.`,
-                                );
-                                if (!confirmed) return;
-                                const reason = window.prompt("Reason (optional):") || undefined;
-                                userActionMutation.mutate({ type: "suspendBilling", userId: u.id, reason });
-                              }}
-                            >
-                              <PauseCircle className="h-4 w-4" />
-                              Suspend (Non-payment)
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              disabled={
-                                userActionMutation.isPending ||
-                                !canManageBillingTarget(u) ||
-                                u.isBanned ||
-                                !u.isActive ||
-                                u.plan === "free"
-                              }
-                              onClick={() => {
-                                const raw = window.prompt(
-                                  "How many days should this subscription remain active? (Extends from now or the current paid-through date.)",
-                                  "30",
-                                );
-                                if (!raw) return;
-                                const days = Number(raw);
-                                if (!Number.isFinite(days) || days <= 0) {
-                                  toast({
-                                    title: "Invalid duration",
-                                    description: "Enter a positive number of days (e.g. 30).",
-                                    variant: "destructive",
-                                  });
-                                  return;
-                                }
-                                userActionMutation.mutate({
-                                  type: "allowBilling",
-                                  userId: u.id,
-                                  durationDays: Math.floor(days),
-                                });
-                              }}
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                              Allow (Mark Paid)
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              disabled={userActionMutation.isPending || !canManageTarget(u)}
-                              onClick={() => {
-                                const confirmed = window.confirm(
-                                  `Delete ${u.email}? This permanently removes the user and their data. This cannot be undone.`,
-                                );
-                                if (!confirmed) return;
-                                userActionMutation.mutate({ type: "delete", userId: u.id });
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      <TableCell className="text-right">{renderUserActions(u)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableShell>
+            </>
           )}
         </CardContent>
       </PageSectionCard>

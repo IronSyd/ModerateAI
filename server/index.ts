@@ -6,6 +6,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
 import { authRateLimits } from "@shared/schema";
 import { lt, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import {
   initializeAllBots as initializeAllTelegramBots,
   startAppOwnedBot as startTelegramAppOwnedBot,
@@ -61,8 +62,13 @@ const AUTH_RATE_LIMIT_REDIS_FALLBACK_TO_POSTGRES = parseBooleanEnv(
   true,
 );
 const TRUST_PROXY_SETTING = parseTrustProxySetting(process.env.TRUST_PROXY);
+const SECURITY_HEADERS_ENABLED = parseBooleanEnv(process.env.SECURITY_HEADERS_ENABLED, true);
+const SECURITY_HSTS_MAX_AGE_SECONDS = parsePositiveInt(process.env.SECURITY_HSTS_MAX_AGE_SECONDS, 31_536_000);
+const API_SLOW_REQUEST_THRESHOLD_MS = parsePositiveInt(process.env.API_SLOW_REQUEST_THRESHOLD_MS, 2_000);
+const REQUEST_ID_HEADER = "x-request-id";
 
 app.set("trust proxy", TRUST_PROXY_SETTING);
+app.disable("x-powered-by");
 
 let authRateLimitTableReady = false;
 let authRateLimitTableInitInFlight: Promise<void> | null = null;
@@ -115,6 +121,30 @@ function getClientIp(req: Request): string {
   const candidate = forwarded.split(",")[0]?.trim();
   const realIp = String(req.headers["x-real-ip"] ?? "").trim();
   return candidate || realIp || req.ip || "unknown";
+}
+
+function normalizeRequestId(raw: string | null | undefined): string | null {
+  const value = String(raw ?? "").trim();
+  if (!value) return null;
+  if (value.length > 120) return null;
+  if (!/^[a-zA-Z0-9\-_.:/]+$/.test(value)) return null;
+  return value;
+}
+
+function isSecureRequest(req: Request): boolean {
+  if (req.secure) return true;
+  const forwardedProto = String(req.get("x-forwarded-proto") ?? "")
+    .split(",")[0]
+    ?.trim()
+    .toLowerCase();
+  return forwardedProto === "https";
+}
+
+function toOpsRouteKey(pathname: string): string {
+  return pathname
+    .replace(/[0-9a-f]{8,}/gi, ":token")
+    .replace(/\b\d+\b/g, ":id")
+    .toLowerCase();
 }
 
 async function ensureAuthRateLimitTable(): Promise<void> {
@@ -364,6 +394,30 @@ function authLimiter(scope: AuthRateLimitScope) {
   };
 }
 
+app.use((req, res, next) => {
+  const incoming = normalizeRequestId(req.get(REQUEST_ID_HEADER));
+  const requestId = incoming ?? randomUUID();
+  (req as any).requestId = requestId;
+  res.setHeader("X-Request-Id", requestId);
+  next();
+});
+
+if (SECURITY_HEADERS_ENABLED) {
+  app.use((req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+
+    if (process.env.NODE_ENV === "production" && isSecureRequest(req)) {
+      res.setHeader("Strict-Transport-Security", `max-age=${SECURITY_HSTS_MAX_AGE_SECONDS}; includeSubDomains`);
+    }
+
+    next();
+  });
+}
+
 // Security middleware - CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
@@ -371,7 +425,7 @@ app.use(cors({
     : ["http://localhost:5000", "http://127.0.0.1:5000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"]
 }));
 
 app.use(
@@ -404,6 +458,8 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  const requestId = String((req as any).requestId ?? "");
+  const opsRouteKey = toOpsRouteKey(path);
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -415,7 +471,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      let logLine = `[${requestId}] ${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse && process.env.NODE_ENV === "development") {
         // Only log response data in development for security
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
@@ -426,6 +482,34 @@ app.use((req, res, next) => {
       }
 
       log(logLine);
+
+      if (duration >= API_SLOW_REQUEST_THRESHOLD_MS) {
+        recordOpsEvent(
+          "API_SLOW_REQUEST",
+          {
+            requestId,
+            method: req.method,
+            path: opsRouteKey,
+            statusCode: res.statusCode,
+            durationMs: duration,
+          },
+          { bucketKey: `API_SLOW_REQUEST:${req.method}:${opsRouteKey}` },
+        );
+      }
+
+      if (res.statusCode >= 500) {
+        recordOpsEvent(
+          "API_5XX_RESPONSE",
+          {
+            requestId,
+            method: req.method,
+            path: opsRouteKey,
+            statusCode: res.statusCode,
+            durationMs: duration,
+          },
+          { bucketKey: `API_5XX_RESPONSE:${req.method}:${opsRouteKey}:${res.statusCode}` },
+        );
+      }
     }
   });
 
@@ -440,12 +524,13 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
+    const requestId = String((_req as any).requestId ?? "");
     const message = process.env.NODE_ENV === "production" 
       ? "Internal Server Error" 
       : err.message || "Internal Server Error";
 
-    console.error('Application error:', err.message);
-    res.status(status).json({ message });
+    console.error("Application error:", err.message, requestId ? `(requestId: ${requestId})` : "");
+    res.status(status).json({ message, requestId: requestId || undefined });
   });
 
   // importantly only setup vite in development and after
