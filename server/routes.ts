@@ -36,6 +36,14 @@ import {
   adminHistoryAutoAnalysisEnabled,
   adminHistoryAutoAnalysisIntervalMs,
   adminHistoryAutoAnalysisMinNewAdminMessages,
+  uiWave1RedoAllowlistEmails,
+  uiWave1RedoEnabled,
+  uiWave1RedoForceRoles,
+  uiWave1RedoRouteScope,
+  uiV2AllowlistEmails,
+  uiV2Enabled,
+  uiV2ForceRoles,
+  uiV2RouteScope,
   adminHistoryBackfillMaxDays,
   adminHistoryBackfillMaxMessagesPerDestination,
   adminHistoryBackfillOnStartupEnabled,
@@ -176,6 +184,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const uiPerfProfile = String(process.env.UI_PERF_PROFILE ?? "balanced").trim().toLowerCase() === "full_motion"
     ? "full_motion"
     : "balanced";
+  const uiV2AllowlistEmailSet = new Set(uiV2AllowlistEmails);
+  const uiV2ForceRoleSet = new Set(uiV2ForceRoles);
+  const hasUiV2AudienceFilters = uiV2AllowlistEmailSet.size > 0 || uiV2ForceRoleSet.size > 0;
+  const uiWave1RedoAllowlistEmailSet = new Set(uiWave1RedoAllowlistEmails);
+  const uiWave1RedoForceRoleSet = new Set(uiWave1RedoForceRoles);
+  const hasUiWave1RedoAudienceFilters =
+    uiWave1RedoAllowlistEmailSet.size > 0 || uiWave1RedoForceRoleSet.size > 0;
   const INTEGRATION_CLAIM_CODE_TTL_MINUTES = parsePositiveInt(
     process.env.INTEGRATION_CLAIM_CODE_TTL_MINUTES,
     10,
@@ -233,6 +248,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const day = startOfLocalDay(now);
     day.setDate(day.getDate() + 1);
     return day;
+  };
+
+  const isUiV2PreviewEnabledForRequest = (req: Request) => {
+    if (!uiV2Enabled) return false;
+    if (!hasUiV2AudienceFilters) return true;
+
+    const user = req.user as { email?: string | null; role?: string | null } | undefined;
+    if (!user) return false;
+
+    const email = String(user.email ?? "").trim().toLowerCase();
+    const role = String(user.role ?? "").trim().toLowerCase();
+
+    if (email && uiV2AllowlistEmailSet.has(email)) return true;
+    if (role && uiV2ForceRoleSet.has(role)) return true;
+    return false;
+  };
+
+  const isUiWave1RedoPreviewEnabledForRequest = (
+    req: Request,
+    isUiV2EnabledForRequest: boolean,
+  ) => {
+    if (!uiWave1RedoEnabled) return false;
+    if (!isUiV2EnabledForRequest) return false;
+    if (!hasUiWave1RedoAudienceFilters) return true;
+
+    const user = req.user as { email?: string | null; role?: string | null } | undefined;
+    if (!user) return false;
+
+    const email = String(user.email ?? "").trim().toLowerCase();
+    const role = String(user.role ?? "").trim().toLowerCase();
+
+    if (email && uiWave1RedoAllowlistEmailSet.has(email)) return true;
+    if (role && uiWave1RedoForceRoleSet.has(role)) return true;
+    return false;
   };
 
   const ensureWorkspacePlatforms = async (workspaceOwnerId: number) => {
@@ -2693,9 +2742,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/runtime-config", (_req, res) => {
+  app.get("/api/runtime-config", (req, res) => {
+    const isUiV2EnabledForRequest = isUiV2PreviewEnabledForRequest(req);
+    const isUiWave1RedoEnabledForRequest = isUiWave1RedoPreviewEnabledForRequest(
+      req,
+      isUiV2EnabledForRequest,
+    );
     res.status(200).json({
       uiPerfProfile,
+      uiVersion: isUiV2EnabledForRequest ? "v2" : "v1",
+      uiV2Enabled: isUiV2EnabledForRequest,
+      uiV2RouteScope: uiV2RouteScope.length ? uiV2RouteScope : ["all"],
+      uiWave1RedoEnabled: isUiWave1RedoEnabledForRequest,
+      uiWave1RedoRouteScope: uiWave1RedoRouteScope,
+      uiWave1RedoPreview: isUiWave1RedoEnabledForRequest,
     });
   });
 

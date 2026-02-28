@@ -316,7 +316,13 @@ export default function KnowledgeBasePage() {
 
   if (isLoadingBases) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 wave-v2-page wave-v2-knowledge-base">
+        <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
+            <p className="text-sm text-muted-foreground">Manage grounded content, URL sync sources, and document quality.</p>
+          </div>
+        </section>
         <div className="flex justify-between items-center">
           <div>
             <p className="text-muted-foreground">Manage your AI's knowledge and information</p>
@@ -340,7 +346,26 @@ export default function KnowledgeBasePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wave-v2-page wave-v2-knowledge-base">
+      <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage source documents and URL sync crawlers used to ground assistant responses.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="glass-chip">
+              Bases: {knowledgeBases.length}
+            </Badge>
+            <Badge variant="outline" className="glass-chip">
+              Selected: {selectedBase ? selectedBase.name : "None"}
+            </Badge>
+          </div>
+        </div>
+      </section>
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -365,7 +390,7 @@ export default function KnowledgeBasePage() {
 
       {/* Knowledge Bases Grid */}
       {filteredBases.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-12 glass-surface lift-card">
           <CardContent>
             <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Knowledge Bases Found</h3>
@@ -386,7 +411,7 @@ export default function KnowledgeBasePage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredBases.map((base) => (
-            <Card key={base.id} className="relative">
+            <Card key={base.id} className="relative glass-surface lift-card">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -475,7 +500,7 @@ export default function KnowledgeBasePage() {
       {/* Documents Preview */}
       {selectedKnowledgeBase && (
         isLoadingDocs ? (
-          <Card>
+          <Card className="glass-surface lift-card">
             <CardHeader>
               <Skeleton className="h-6 w-72 max-w-full" />
             </CardHeader>
@@ -497,7 +522,7 @@ export default function KnowledgeBasePage() {
             </CardContent>
           </Card>
         ) : documents.length > 0 ? (
-          <Card>
+          <Card className="glass-surface lift-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
@@ -575,7 +600,7 @@ export default function KnowledgeBasePage() {
 
       {/* URL Sync Sources */}
       {selectedKnowledgeBase && (
-        <Card>
+        <Card className="glass-surface lift-card">
           <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
             <div className="min-w-0">
               <CardTitle className="flex items-center gap-2">

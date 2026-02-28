@@ -45,6 +45,88 @@ const HelpDocsReaderPage = lazy(() => import("@/pages/help/docs-reader"));
 const HelpArticlePage = lazy(() => import("@/pages/help/article"));
 
 type UiPerfProfile = "balanced" | "full_motion";
+type UiVersion = "v1" | "v2";
+
+const UI_V2_SCOPE_ALL = "all";
+const UI_V2_SCOPE_KEYS = new Set([
+  UI_V2_SCOPE_ALL,
+  "landing",
+  "auth",
+  "legal",
+  "dashboard",
+  "onboarding",
+  "conversations",
+  "knowledge-base",
+  "integrations",
+  "admin-users",
+  "learning-ops",
+  "team",
+  "settings",
+  "activity",
+  "analytics",
+  "profile",
+  "preferences",
+  "billing",
+  "help",
+  "app",
+]);
+
+const UI_V2_SCOPE_ALIASES: Record<string, string> = {
+  "*": UI_V2_SCOPE_ALL,
+  onboarding: "onboarding",
+  conversation: "conversations",
+  conversations: "conversations",
+  kb: "knowledge-base",
+  knowledge: "knowledge-base",
+  "knowledge-base": "knowledge-base",
+  integration: "integrations",
+  integrations: "integrations",
+  admin: "admin-users",
+  adminusers: "admin-users",
+  "admin-users": "admin-users",
+  adminops: "learning-ops",
+  "admin-ops": "learning-ops",
+  "learning-ops": "learning-ops",
+  learningops: "learning-ops",
+  analytics: "analytics",
+  setting: "settings",
+  settings: "settings",
+  team: "team",
+  activity: "activity",
+  profile: "profile",
+  preferences: "preferences",
+  billing: "billing",
+  help: "help",
+  landing: "landing",
+  auth: "auth",
+  legal: "legal",
+  dashboard: "dashboard",
+  app: "app",
+};
+
+const UI_WAVE1_REDO_SCOPE_ALL = "all";
+const UI_WAVE1_REDO_ROUTE_KEYS = new Set([
+  UI_WAVE1_REDO_SCOPE_ALL,
+  "dashboard",
+  "conversations",
+  "knowledge-base",
+  "integrations",
+]);
+
+const UI_WAVE1_REDO_SCOPE_ALIASES: Record<string, string> = {
+  "*": UI_WAVE1_REDO_SCOPE_ALL,
+  wave1: UI_WAVE1_REDO_SCOPE_ALL,
+  "wave-1": UI_WAVE1_REDO_SCOPE_ALL,
+  dash: "dashboard",
+  dashboard: "dashboard",
+  conversation: "conversations",
+  conversations: "conversations",
+  kb: "knowledge-base",
+  knowledge: "knowledge-base",
+  "knowledge-base": "knowledge-base",
+  integration: "integrations",
+  integrations: "integrations",
+};
 
 type RouteSeoConfig = {
   title: string;
@@ -283,6 +365,82 @@ function resolveUiPerfProfile(value: unknown): UiPerfProfile {
   return String(value ?? "") === "full_motion" ? "full_motion" : "balanced";
 }
 
+function resolveUiVersion(value: unknown): UiVersion {
+  return String(value ?? "").toLowerCase() === "v2" ? "v2" : "v1";
+}
+
+function normalizeUiV2RouteScope(value: unknown): string[] {
+  const entries = (Array.isArray(value) ? value : [value])
+    .flatMap((entry) => String(entry ?? "").split(","))
+    .map((entry) => entry.trim().toLowerCase().replace(/_/g, "-"))
+    .filter((entry) => entry.length > 0);
+
+  if (entries.length === 0) return [UI_V2_SCOPE_ALL];
+
+  const normalized = entries
+    .map((entry) => UI_V2_SCOPE_ALIASES[entry] ?? entry)
+    .filter((entry) => UI_V2_SCOPE_KEYS.has(entry));
+
+  if (normalized.length === 0) return [UI_V2_SCOPE_ALL];
+  if (normalized.includes(UI_V2_SCOPE_ALL)) return [UI_V2_SCOPE_ALL];
+  return Array.from(new Set(normalized));
+}
+
+function normalizeUiWave1RedoRouteScope(value: unknown): string[] {
+  const entries = (Array.isArray(value) ? value : [value])
+    .flatMap((entry) => String(entry ?? "").split(","))
+    .map((entry) => entry.trim().toLowerCase().replace(/_/g, "-"))
+    .filter((entry) => entry.length > 0);
+
+  if (entries.length === 0) return [];
+
+  const normalized = entries
+    .map((entry) => UI_WAVE1_REDO_SCOPE_ALIASES[entry] ?? entry)
+    .filter((entry) => UI_WAVE1_REDO_ROUTE_KEYS.has(entry));
+
+  if (normalized.length === 0) return [];
+  if (normalized.includes(UI_WAVE1_REDO_SCOPE_ALL)) return [UI_WAVE1_REDO_SCOPE_ALL];
+  return Array.from(new Set(normalized));
+}
+
+function resolveUiV2RouteKey(location: string): string {
+  const [pathname] = String(location || "/").split("?");
+
+  if (pathname === "/") return "landing";
+  if (pathname.startsWith("/auth") || pathname.startsWith("/accept-invitation")) return "auth";
+  if (pathname === "/privacy-policy" || pathname === "/terms-of-service") return "legal";
+  if (pathname.startsWith("/dashboard")) return "dashboard";
+  if (pathname.startsWith("/choose-plan") || pathname.startsWith("/reset-password")) return "onboarding";
+  if (pathname.startsWith("/conversations")) return "conversations";
+  if (pathname.startsWith("/knowledge-base")) return "knowledge-base";
+  if (pathname.startsWith("/integrations")) return "integrations";
+  if (pathname.startsWith("/admin/users")) return "admin-users";
+  if (pathname.startsWith("/admin/ops/admin-history-learning")) return "learning-ops";
+  if (pathname.startsWith("/team")) return "team";
+  if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/activity")) return "activity";
+  if (pathname.startsWith("/analytics")) return "analytics";
+  if (pathname.startsWith("/profile")) return "profile";
+  if (pathname.startsWith("/preferences")) return "preferences";
+  if (pathname.startsWith("/billing")) return "billing";
+  if (pathname.startsWith("/help")) return "help";
+
+  return "app";
+}
+
+function isUiV2RouteEnabled(location: string, scope: string[]): boolean {
+  if (scope.includes(UI_V2_SCOPE_ALL)) return true;
+  return scope.includes(resolveUiV2RouteKey(location));
+}
+
+function isUiWave1RedoRouteEnabled(location: string, scope: string[]): boolean {
+  if (scope.length === 0) return false;
+  const routeKey = resolveUiV2RouteKey(location);
+  if (!UI_WAVE1_REDO_ROUTE_KEYS.has(routeKey)) return false;
+  if (scope.includes(UI_WAVE1_REDO_SCOPE_ALL)) return true;
+  return scope.includes(routeKey);
+}
+
 function pageFallback() {
   return (
     <div className="space-y-4 py-2">
@@ -468,10 +626,10 @@ function DashboardLayout({ children, showAtmosphere }: { children: ReactNode; sh
   }, []);
 
   return (
-    <div className="min-h-screen bg-background font-sans relative overflow-x-clip">
+    <div className="ui-app-shell min-h-screen bg-background font-sans relative overflow-x-clip">
       {showAtmosphere ? <AtmosphereOrbs className="z-0" /> : null}
 
-      <div className="relative z-10 min-h-screen flex">
+      <div className="ui-app-content relative z-10 min-h-screen flex">
         <Sidebar />
 
         <div className="flex-1 min-w-0 md:ml-64">
@@ -673,6 +831,12 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
 function AppShell() {
   const [location] = useLocation();
   const [uiPerfProfile, setUiPerfProfile] = useState<UiPerfProfile>("balanced");
+  const [uiVersionHint, setUiVersionHint] = useState<UiVersion>("v1");
+  const [uiV2Enabled, setUiV2Enabled] = useState(false);
+  const [uiV2RouteScope, setUiV2RouteScope] = useState<string[]>([UI_V2_SCOPE_ALL]);
+  const [uiWave1RedoEnabled, setUiWave1RedoEnabled] = useState(false);
+  const [uiWave1RedoRouteScope, setUiWave1RedoRouteScope] = useState<string[]>([]);
+  const [uiWave1RedoPreview, setUiWave1RedoPreview] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -684,10 +848,25 @@ function AppShell() {
         const payload = await response.json();
         if (!isCancelled) {
           setUiPerfProfile(resolveUiPerfProfile(payload?.uiPerfProfile));
+          const resolvedUiVersion = resolveUiVersion(payload?.uiVersion);
+          const resolvedUiV2Enabled = Boolean(payload?.uiV2Enabled) || resolvedUiVersion === "v2";
+
+          setUiVersionHint(resolvedUiVersion);
+          setUiV2Enabled(resolvedUiV2Enabled);
+          setUiV2RouteScope(normalizeUiV2RouteScope(payload?.uiV2RouteScope));
+          setUiWave1RedoEnabled(Boolean(payload?.uiWave1RedoEnabled));
+          setUiWave1RedoPreview(Boolean(payload?.uiWave1RedoPreview));
+          setUiWave1RedoRouteScope(normalizeUiWave1RedoRouteScope(payload?.uiWave1RedoRouteScope));
         }
       } catch {
         if (!isCancelled) {
           setUiPerfProfile("balanced");
+          setUiVersionHint("v1");
+          setUiV2Enabled(false);
+          setUiV2RouteScope([UI_V2_SCOPE_ALL]);
+          setUiWave1RedoEnabled(false);
+          setUiWave1RedoPreview(false);
+          setUiWave1RedoRouteScope([]);
         }
       }
     };
@@ -701,15 +880,36 @@ function AppShell() {
   const isLanding = location === "/";
   const kineticEnabled = uiPerfProfile === "full_motion" || isLanding;
   const showBackgroundBubbles = kineticEnabled;
+  const uiRouteKey = useMemo(() => resolveUiV2RouteKey(location), [location]);
+
+  const activeUiVersion = useMemo<UiVersion>(() => {
+    if (!uiV2Enabled && uiVersionHint !== "v2") return "v1";
+    return isUiV2RouteEnabled(location, uiV2RouteScope) ? "v2" : "v1";
+  }, [location, uiV2Enabled, uiVersionHint, uiV2RouteScope]);
+
+  const uiWave1RedoRouteActive = useMemo(() => {
+    if (activeUiVersion !== "v2") return false;
+    if (!uiWave1RedoEnabled || !uiWave1RedoPreview) return false;
+    return isUiWave1RedoRouteEnabled(location, uiWave1RedoRouteScope);
+  }, [activeUiVersion, location, uiWave1RedoEnabled, uiWave1RedoPreview, uiWave1RedoRouteScope]);
 
   const shellClassName = useMemo(() => {
     const classes = ["relative", "isolate", "min-h-screen", "tactile-auto"];
+    classes.push(activeUiVersion === "v2" ? "ui-v2 ui-version-v2" : "ui-v1 ui-version-v1");
+    if (activeUiVersion === "v2") {
+      classes.push(uiWave1RedoRouteActive ? "ui-wave1-redo-v21" : "ui-wave1-legacy-v2");
+    }
     classes.push(uiPerfProfile === "full_motion" ? "kinetic-auto ui-perf-full" : "ui-perf-balanced");
     return classes.join(" ");
-  }, [uiPerfProfile]);
+  }, [activeUiVersion, uiPerfProfile, uiWave1RedoRouteActive]);
 
   return (
-    <div className={shellClassName}>
+    <div
+      className={shellClassName}
+      data-ui-version={activeUiVersion}
+      data-ui-route-key={uiRouteKey}
+      data-ui-wave1-redo-route-active={uiWave1RedoRouteActive ? "true" : "false"}
+    >
       {showBackgroundBubbles ? <GlobalBackgroundBubbles /> : null}
       <div className="relative z-10">
         <RouteSeoManager location={location} />

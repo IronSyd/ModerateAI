@@ -35,7 +35,7 @@ const Header = () => {
     if (location === "/settings") return "Settings";
     if (location === "/activity") return "Activity Log";
     if (location === "/admin/users") return "User Management";
-    if (location === "/admin/ops/admin-history-learning") return "Admin-History Learning Ops";
+    if (location === "/admin/ops/admin-history-learning") return "Learning Ops";
     // Don't show title for help center pages
     if (location === "/help" || location.startsWith("/help/")) return "";
     
@@ -64,13 +64,13 @@ const Header = () => {
   };
   
   return (
-    <div className="fixed top-0 left-0 right-0 md:left-64 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+    <div className="ui-top-header fixed top-0 left-0 right-0 md:left-64 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md">
       <div className="h-[60px] px-4 flex items-center justify-between">
         <div className="flex items-center">
           {isMobile && (
             <button 
               onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="md:hidden mr-4 text-muted-foreground hover:text-foreground"
+              className="md:hidden mr-4 rounded-md p-1 text-muted-foreground hover:bg-accent/35 hover:text-foreground"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-6 w-6" />
@@ -84,7 +84,7 @@ const Header = () => {
             </div>
           )}
           
-          <h1 className="kinetic-headline text-xl font-semibold text-foreground">{getPageTitle()}</h1>
+          <h1 className="kinetic-headline text-xl font-semibold tracking-tight text-foreground">{getPageTitle()}</h1>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -110,7 +110,7 @@ const Header = () => {
           <div className="relative">
             <button 
               className={cn(
-                "text-muted-foreground hover:text-foreground relative",
+                "relative rounded-md p-1 text-muted-foreground hover:bg-accent/35 hover:text-foreground",
                 hasNewNotifications && "animate-pulse text-primary"
               )}
               aria-label="Notifications"
@@ -131,7 +131,7 @@ const Header = () => {
           </div>
           <div className="relative">
             <button 
-              className="text-muted-foreground hover:text-foreground" 
+              className="rounded-md p-1 text-muted-foreground hover:bg-accent/35 hover:text-foreground" 
               aria-label="Help"
               onClick={handleOpenHelp}
             >

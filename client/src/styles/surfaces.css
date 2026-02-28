@@ -1,0 +1,198 @@
+@layer components {
+  .lift-card {
+    transition:
+      transform var(--ui-motion-normal) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-normal) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .lift-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 22px 45px -28px rgba(37, 99, 235, 0.55),
+      0 14px 30px -24px rgba(14, 165, 233, 0.25);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+
+  .surface-glow {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 16px 45px -36px rgba(37, 99, 235, 0.5);
+  }
+
+  .glass-surface,
+  .glass-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.56)),
+      radial-gradient(80% 120% at 5% 0%, rgba(59, 130, 246, 0.16), transparent 60%);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    backdrop-filter: blur(16px) saturate(130%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 20px 46px -34px rgba(2, 6, 23, 0.95),
+      0 14px 30px -26px rgba(59, 130, 246, 0.48);
+  }
+
+  .glass-surface::before,
+  .glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      120deg,
+      transparent 5%,
+      rgba(255, 255, 255, 0.14) 22%,
+      transparent 42%
+    );
+    transform: translateX(-100%);
+    animation: glassSweep 7.5s linear infinite;
+    opacity: 0.45;
+    z-index: 0;
+  }
+
+  .glass-surface > *,
+  .glass-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-chip {
+    background: rgba(15, 23, 42, 0.56);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-divider {
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+
+  .ui-v2 .glass-surface,
+  .ui-v2 .glass-card {
+    background:
+      linear-gradient(150deg, rgba(8, 16, 38, 0.86), rgba(7, 15, 32, 0.7)),
+      radial-gradient(95% 125% at 4% 0%, rgba(30, 126, 255, 0.22), transparent 62%);
+    border-color: rgba(83, 150, 255, 0.33);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 24px 52px -38px rgba(3, 12, 35, 0.96),
+      0 16px 38px -30px rgba(30, 126, 255, 0.44);
+  }
+
+  .ui-v2 .glass-chip {
+    background: rgba(10, 20, 47, 0.62);
+    border-color: rgba(80, 147, 255, 0.3);
+  }
+
+  .ui-v2 .glass-divider {
+    border-color: rgba(73, 136, 244, 0.28);
+  }
+
+  .ui-v2 .lift-card:hover {
+    box-shadow:
+      0 24px 48px -30px rgba(16, 86, 215, 0.48),
+      0 16px 34px -26px rgba(16, 78, 190, 0.35);
+    border-color: rgba(76, 145, 255, 0.54);
+  }
+
+  .ui-v2 .wave-v2-hero,
+  .ui-v2 .ui-page-hero-shell {
+    background:
+      linear-gradient(148deg, rgba(9, 18, 44, 0.78), rgba(8, 15, 34, 0.62)),
+      radial-gradient(90% 140% at 0% 0%, rgba(42, 133, 255, 0.2), transparent 62%);
+    border-color: rgba(75, 144, 255, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 20px 44px -34px rgba(6, 18, 49, 0.9);
+  }
+
+  .ui-v2 .wave-v2-page :where(.rounded-lg.border.bg-card):not(.glass-surface):not(.glass-chip),
+  .ui-v2 .ui-section-card {
+    background:
+      linear-gradient(152deg, rgba(11, 22, 52, 0.74), rgba(8, 16, 38, 0.58)),
+      radial-gradient(90% 120% at 4% 0%, rgba(33, 125, 250, 0.18), transparent 64%);
+    border-color: rgba(74, 139, 247, 0.32);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 18px 42px -34px rgba(3, 12, 35, 0.92);
+  }
+
+  .ui-v2 .ui-card-surface {
+    background:
+      linear-gradient(152deg, rgba(11, 22, 52, 0.76), rgba(8, 16, 38, 0.62)),
+      radial-gradient(96% 120% at 4% 0%, rgba(39, 126, 246, 0.16), transparent 66%);
+    border-color: rgba(77, 145, 255, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 16px 38px -32px rgba(5, 18, 52, 0.9);
+  }
+
+  .ui-v2 .wave-v2-page :where(.rounded-lg.border.bg-card):not(.glass-surface):not(.glass-chip) :where(h1, h2, h3) {
+    letter-spacing: -0.02em;
+  }
+
+  .ui-v2 .wave-v2-page :where([role="tablist"]),
+  .ui-v2 .ui-filter-shell {
+    border-color: rgba(74, 139, 247, 0.3);
+  }
+
+  .ui-v2 .wave-v2-page :where([role="tab"]) {
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  .ui-v2 .wave-v2-page :where([role="tab"][data-state="active"]) {
+    background: linear-gradient(145deg, rgba(40, 128, 255, 0.28), rgba(33, 112, 232, 0.24));
+    border-color: rgba(86, 156, 255, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 10px 22px -16px rgba(24, 94, 208, 0.72);
+  }
+
+  .ui-v2 .ui-v2-table-shell,
+  .ui-v2 .ui-table-shell {
+    border-color: rgba(71, 136, 244, 0.35);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 36px -30px rgba(8, 26, 68, 0.82);
+  }
+
+  .ui-v2 .ui-state-block {
+    border-color: rgba(79, 146, 255, 0.34);
+    background:
+      linear-gradient(150deg, rgba(10, 22, 50, 0.78), rgba(8, 16, 36, 0.6)),
+      radial-gradient(95% 120% at 4% 0%, rgba(47, 134, 248, 0.16), transparent 70%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 18px 32px -28px rgba(4, 16, 44, 0.88);
+  }
+
+  .ui-v2 .ui-app-shell {
+    background-image:
+      radial-gradient(86rem 44rem at 18% -12%, rgba(25, 113, 255, 0.18), transparent 58%),
+      radial-gradient(64rem 36rem at 100% -4%, rgba(42, 166, 250, 0.1), transparent 56%);
+  }
+
+  .ui-v2 .ui-app-content {
+    background: linear-gradient(180deg, rgba(8, 17, 40, 0.44), rgba(7, 15, 34, 0.2));
+  }
+
+  .ui-v2 .ui-top-header {
+    border-color: rgba(69, 132, 239, 0.36);
+    background: rgba(5, 12, 31, 0.74);
+  }
+
+  .ui-v2 .ui-side-shell {
+    border-color: rgba(65, 126, 232, 0.32);
+    background: rgba(4, 12, 30, 0.84);
+  }
+}

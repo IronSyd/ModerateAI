@@ -316,8 +316,27 @@ const Conversations = () => {
   });
   
   return (
-    <div>
-      <Card>
+    <div className="space-y-6 wave-v2-page wave-v2-conversations">
+      <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Conversations</h1>
+            <p className="text-sm text-muted-foreground">
+              Review recent customer threads, inspect AI replies, and approve corrections for learning.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="glass-chip">
+              Total: {filteredConversations.length}
+            </Badge>
+            <Badge variant="outline" className="glass-chip capitalize">
+              Platform: {platformFilter === "all" ? "All" : platformFilter}
+            </Badge>
+          </div>
+        </div>
+      </section>
+
+      <Card className="glass-surface lift-card">
         <CardHeader>
           <CardTitle>Manage Conversations</CardTitle>
           <CardDescription>
@@ -328,7 +347,7 @@ const Conversations = () => {
         <CardContent>
           <Tabs defaultValue="all" className="w-full" onValueChange={setPlatformFilter}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <TabsList>
+              <TabsList className="glass-chip">
                 <TabsTrigger value="all">All Platforms</TabsTrigger>
                 <TabsTrigger value="website">Website</TabsTrigger>
                 <TabsTrigger value="telegram">Telegram</TabsTrigger>
@@ -348,7 +367,7 @@ const Conversations = () => {
                 </div>
                 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[180px] glass-chip">
                     <Filter className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -392,7 +411,7 @@ const Conversations = () => {
           }
         }}
       >
-        <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-hidden p-0">
+        <DialogContent className="max-h-[90vh] w-[95vw] max-w-5xl overflow-hidden p-0 glass-surface">
           {renderThreadDialog()}
         </DialogContent>
       </Dialog>
@@ -615,7 +634,7 @@ const Conversations = () => {
     }
     
     return (
-      <div className="rounded-md border">
+      <div className="ui-v2-table-shell rounded-xl border glass-divider bg-background/55">
         <Table>
           <TableHeader>
             <TableRow>

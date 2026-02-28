@@ -969,7 +969,7 @@ const TelegramIntegration = () => {
   };
 
   return (
-    <div>
+    <div className="space-y-6 wave-v2-page wave-v2-integrations">
       {/* Authentication dialog */}
       <AuthDialog 
         open={showAuthDialog} 
@@ -1008,9 +1008,10 @@ const TelegramIntegration = () => {
         </Card>
       )}
       
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-muted-foreground">Connect your AI assistant to Telegram groups and chats</p>
+      <div className="wave-v2-hero rounded-2xl border p-5 md:p-6 flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">Telegram Integration</h1>
+          <p className="text-sm text-muted-foreground">Connect your AI assistant to Telegram groups and chats.</p>
         </div>
         <Badge 
           variant={
@@ -1029,7 +1030,7 @@ const TelegramIntegration = () => {
       </div>
 
       <Tabs defaultValue="setup" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 glass-chip">
           <TabsTrigger value="setup">
             <Bot className="h-4 w-4 mr-2" />
             Setup

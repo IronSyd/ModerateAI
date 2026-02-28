@@ -126,7 +126,7 @@ const Sidebar = () => {
         href={item.path}
         className={`flex items-center px-4 py-3 hover:bg-accent ${
           isActive 
-            ? "text-foreground bg-accent/60 border-r-4 border-primary" 
+            ? "text-foreground bg-accent/55 border-r-4 border-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" 
             : "text-muted-foreground"
         }`}
       >
@@ -153,7 +153,7 @@ const Sidebar = () => {
     );
   };
   
-  const sidebarClasses = `fixed inset-y-0 left-0 z-50 w-64 bg-background shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
+  const sidebarClasses = `ui-side-shell fixed inset-y-0 left-0 z-50 w-64 bg-background/95 border-r border-border/70 shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col ${
     isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
   }`;
   
@@ -170,7 +170,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div className={sidebarClasses}>
         {/* Logo - Clickable and links to homepage */}
-        <div className="h-[60px] px-4 border-b border-border flex items-center">
+        <div className="h-[60px] px-4 border-b border-border/70 flex items-center">
           <Logo size="md" className="hover:opacity-90 transition-opacity" />
         </div>
         
