@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw } from "lucide-react";
+import { FilterBarShell, PageHeroShell, PageSectionCard, StateBlock, TableShell } from "@/components/layout/page-shells";
 
 type AdminHistoryOpsEventSummary = {
   code: string;
@@ -221,7 +222,13 @@ function AutoAnalysisStatusBadge({ status }: { status: AutoAnalysisDestinationRu
 
 function LoadingState() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 wave-v2-page wave-v2-learning-ops">
+      <PageHeroShell>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">Learning Ops</h1>
+          <p className="text-sm text-muted-foreground">Monitoring admin-history backfill and auto-analysis jobs.</p>
+        </div>
+      </PageHeroShell>
       <Skeleton className="h-10 w-80" />
       <div className="grid gap-4 md:grid-cols-2">
         <Skeleton className="h-40 rounded-xl" />
@@ -383,12 +390,7 @@ export default function AdminHistoryLearningOpsPage() {
 
   if (!isAdmin) {
     return (
-      <Card className="glass-surface border-border/70">
-        <CardHeader>
-          <CardTitle>Admin Access Required</CardTitle>
-          <CardDescription>This page is available to owner/admin accounts only.</CardDescription>
-        </CardHeader>
-      </Card>
+      <StateBlock title="Admin Access Required" description="This page is available to owner/admin accounts only." />
     );
   }
 
@@ -398,24 +400,22 @@ export default function AdminHistoryLearningOpsPage() {
 
   if (error || !data) {
     return (
-      <Card className="glass-surface border-red-500/30">
-        <CardHeader>
-          <CardTitle>Failed to load admin-history learning ops</CardTitle>
-          <CardDescription>{error?.message ?? "Unknown error"}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <StateBlock
+        title="Failed to load admin-history learning ops"
+        description={error?.message ?? "Unknown error"}
+        actions={
           <Button onClick={() => refetch()} variant="outline">
             Retry
           </Button>
-        </CardContent>
-      </Card>
+        }
+      />
     );
   }
 
   const isBackfillActionDisabled = data.backfill.running || backfillTriggerMutation.isPending;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wave-v2-page wave-v2-learning-ops">
       <AlertDialog open={forceRerunConfirmOpen} onOpenChange={setForceRerunConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -445,6 +445,15 @@ export default function AdminHistoryLearningOpsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <PageHeroShell>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">Learning Ops</h1>
+          <p className="text-sm text-muted-foreground">
+            Monitor startup backfill and scheduled admin-history analysis runs by destination.
+          </p>
+        </div>
+      </PageHeroShell>
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-border/60 bg-background/40">
@@ -471,95 +480,97 @@ export default function AdminHistoryLearningOpsPage() {
         </div>
       </div>
 
-      <Card className="glass-surface border-border/70">
+      <PageSectionCard className="glass-surface">
         <CardHeader>
           <CardTitle>Filters</CardTitle>
           <CardDescription>Client-side filters for recent destination rows.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <div className="text-sm text-muted-foreground">Search destinations / IDs</div>
-            <Input
-              value={searchFilter}
-              onChange={(event) => setSearchFilter(event.target.value)}
-              placeholder="Search by destination ID, chat config ID, platform ID, status..."
-              className="max-w-2xl"
-            />
-          </div>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <div className="text-sm text-muted-foreground">Platform</div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant={platformFilter === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPlatformFilter("all")}
-                >
-                  All
-                </Button>
-                <Button
-                  type="button"
-                  variant={platformFilter === "telegram" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPlatformFilter("telegram")}
-                >
-                  Telegram
-                </Button>
-                <Button
-                  type="button"
-                  variant={platformFilter === "discord" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPlatformFilter("discord")}
-                >
-                  Discord
-                </Button>
-              </div>
+          <FilterBarShell>
+            <div className="grid gap-2">
+              <div className="text-sm text-muted-foreground">Search destinations / IDs</div>
+              <Input
+                value={searchFilter}
+                onChange={(event) => setSearchFilter(event.target.value)}
+                placeholder="Search by destination ID, chat config ID, platform ID, status..."
+                className="max-w-2xl"
+              />
             </div>
+            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <div className="text-sm text-muted-foreground">Platform</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={platformFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPlatformFilter("all")}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={platformFilter === "telegram" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPlatformFilter("telegram")}
+                  >
+                    Telegram
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={platformFilter === "discord" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPlatformFilter("discord")}
+                  >
+                    Discord
+                  </Button>
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <div className="text-sm text-muted-foreground">Auto-analysis status</div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant={autoStatusFilter === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAutoStatusFilter("all")}
-                >
-                  All
-                </Button>
-                <Button
-                  type="button"
-                  variant={autoStatusFilter === "analyzed" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAutoStatusFilter("analyzed")}
-                >
-                  Analyzed
-                </Button>
-                <Button
-                  type="button"
-                  variant={autoStatusFilter === "skipped_threshold" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAutoStatusFilter("skipped_threshold")}
-                >
-                  Skipped
-                </Button>
-                <Button
-                  type="button"
-                  variant={autoStatusFilter === "failed" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAutoStatusFilter("failed")}
-                >
-                  Failed
-                </Button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <div className="text-sm text-muted-foreground">Auto-analysis status</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={autoStatusFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAutoStatusFilter("all")}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={autoStatusFilter === "analyzed" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAutoStatusFilter("analyzed")}
+                  >
+                    Analyzed
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={autoStatusFilter === "skipped_threshold" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAutoStatusFilter("skipped_threshold")}
+                  >
+                    Skipped
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={autoStatusFilter === "failed" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAutoStatusFilter("failed")}
+                  >
+                    Failed
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </FilterBarShell>
         </CardContent>
-      </Card>
+      </PageSectionCard>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="glass-surface border-border/70">
+        <PageSectionCard className="glass-surface">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Backfill
@@ -663,9 +674,9 @@ export default function AdminHistoryLearningOpsPage() {
               </div>
             ) : null}
           </CardContent>
-        </Card>
+        </PageSectionCard>
 
-        <Card className="glass-surface border-border/70">
+        <PageSectionCard className="glass-surface">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Auto-Analysis
@@ -746,10 +757,10 @@ export default function AdminHistoryLearningOpsPage() {
               </div>
             ) : null}
           </CardContent>
-        </Card>
+        </PageSectionCard>
       </div>
 
-      <Card className="glass-surface border-border/70">
+      <PageSectionCard className="glass-surface">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Backfill Destinations
@@ -762,7 +773,8 @@ export default function AdminHistoryLearningOpsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <TableShell>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -807,11 +819,12 @@ export default function AdminHistoryLearningOpsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </TableShell>
         </CardContent>
-      </Card>
+      </PageSectionCard>
 
-      <Card className="glass-surface border-border/70">
+      <PageSectionCard className="glass-surface">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Auto-Analysis Destinations
@@ -824,7 +837,8 @@ export default function AdminHistoryLearningOpsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <TableShell>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -867,17 +881,19 @@ export default function AdminHistoryLearningOpsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </TableShell>
         </CardContent>
-      </Card>
+      </PageSectionCard>
 
-      <Card className="glass-surface border-border/70">
+      <PageSectionCard className="glass-surface">
         <CardHeader>
           <CardTitle>Ops Event Summary</CardTitle>
           <CardDescription>Recent counters for backfill/auto-analysis ops events.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <TableShell>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -910,9 +926,10 @@ export default function AdminHistoryLearningOpsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </TableShell>
         </CardContent>
-      </Card>
+      </PageSectionCard>
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { Search } from "lucide-react";
+import { FilterBarShell, PageHeroShell, PageSectionCard, TableShell } from "@/components/layout/page-shells";
 
 type ActivityItem = {
   id: string;
@@ -126,12 +127,20 @@ const ActivityPage = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="space-y-3 -mt-2">
+      <div className="space-y-6 wave-v2-page wave-v2-activity">
+        <PageHeroShell>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Activity Log</h1>
+            <p className="text-sm text-muted-foreground">
+              Review message and moderation activity across website, Telegram, and Discord.
+            </p>
+          </div>
+        </PageHeroShell>
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <Skeleton className="w-full sm:w-64 h-10 rounded-md" />
           <Skeleton className="w-full sm:w-48 h-10 rounded-md" />
         </div>
-        <div className="bg-card rounded-lg shadow-sm p-6 border border-border">
+        <PageSectionCard className="p-6">
           <div className="space-y-6">
             {Array(10).fill(0).map((_, i) => (
               <div key={i} className="flex items-start space-x-3">
@@ -144,80 +153,96 @@ const ActivityPage = () => {
               </div>
             ))}
           </div>
-        </div>
+        </PageSectionCard>
       </div>
     );
   }
   
   return (
-    <div className="space-y-3 -mt-2">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search activity..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+    <div className="space-y-6 wave-v2-page wave-v2-activity">
+      <PageHeroShell>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Activity Log</h1>
+            <p className="text-sm text-muted-foreground">
+              Review platform activity with quick filtering and pagination controls.
+            </p>
+          </div>
+          <Link href="/dashboard">
+            <Button variant="outline">Back to Dashboard</Button>
+          </Link>
         </div>
-        <Select value={platformFilter} onValueChange={setPlatformFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="All platforms" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All platforms</SelectItem>
-            <SelectItem value="website">Website</SelectItem>
-            <SelectItem value="discord">Discord</SelectItem>
-            <SelectItem value="telegram">Telegram</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* Activity List */}
-      <div className="bg-card rounded-lg shadow-sm p-6 border border-border">
+      </PageHeroShell>
+
+      <FilterBarShell>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search activity..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="All platforms" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All platforms</SelectItem>
+              <SelectItem value="website">Website</SelectItem>
+              <SelectItem value="discord">Discord</SelectItem>
+              <SelectItem value="telegram">Telegram</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </FilterBarShell>
+
+      <PageSectionCard className="p-6">
         {paginatedActivities.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No activity found</p>
           </div>
         ) : (
-          <ul className="divide-y divide-border">
-            {paginatedActivities.map((activity, index) => (
-              <li key={activity.id} className="py-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <Avatar>
-                      <AvatarImage
-                        src={activity.user.avatar || getAvatarForUser(activity.user.name)}
-                        alt={activity.user.name}
-                      />
-                      <AvatarFallback className={activity.user.name === 'ai' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'}>
-                        {activity.user.name === 'ai' ? 'AI' : activity.user.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="ml-3 min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground">{activity.user.name}</p>
-                    <p className="text-sm text-muted-foreground">{activity.action}</p>
-                    <div className="mt-1 flex items-center">
-                      <span className={`inline-flex items-center text-xs font-medium ${getPlatformBadgeClass(activity.platform)}`}>
-                        <svg className={`mr-1.5 h-3 w-3 ${getPlatformDotClass(activity.platform)}`} fill="currentColor" viewBox="0 0 8 8">
-                          <circle cx="4" cy="4" r="3" />
-                        </svg>
-                        {activity.platform.charAt(0).toUpperCase() + activity.platform.slice(1)}
-                      </span>
-                      <span className="text-xs text-muted-foreground mx-2">&middot;</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(activity.time, { addSuffix: true })}
-                      </span>
+          <TableShell>
+            <ul className="divide-y divide-border/70">
+              {paginatedActivities.map((activity, index) => (
+                <li key={activity.id} className="px-4 py-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <Avatar>
+                        <AvatarImage
+                          src={activity.user.avatar || getAvatarForUser(activity.user.name)}
+                          alt={activity.user.name}
+                        />
+                        <AvatarFallback className={activity.user.name === 'ai' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'}>
+                          {activity.user.name === 'ai' ? 'AI' : activity.user.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="ml-3 min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">{activity.user.name}</p>
+                      <p className="text-sm text-muted-foreground">{activity.action}</p>
+                      <div className="mt-1 flex items-center">
+                        <span className={`inline-flex items-center text-xs font-medium ${getPlatformBadgeClass(activity.platform)}`}>
+                          <svg className={`mr-1.5 h-3 w-3 ${getPlatformDotClass(activity.platform)}`} fill="currentColor" viewBox="0 0 8 8">
+                            <circle cx="4" cy="4" r="3" />
+                          </svg>
+                          {activity.platform.charAt(0).toUpperCase() + activity.platform.slice(1)}
+                        </span>
+                        <span className="text-xs text-muted-foreground mx-2">&middot;</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(activity.time, { addSuffix: true })}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </TableShell>
         )}
         
         {/* Pagination */}
@@ -279,16 +304,7 @@ const ActivityPage = () => {
             </Pagination>
           </div>
         )}
-      </div>
-      
-      {/* Back button */}
-      <div className="mt-6">
-        <Link href="/dashboard">
-          <Button variant="outline">
-            Back to Dashboard
-          </Button>
-        </Link>
-      </div>
+      </PageSectionCard>
     </div>
   );
 };

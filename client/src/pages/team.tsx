@@ -71,6 +71,7 @@ import {
   Copy,
   AlertTriangle,
 } from "lucide-react";
+import { FilterBarShell, PageHeroShell, PageSectionCard, StateBlock, TableShell } from "@/components/layout/page-shells";
 
 type TeamMember = {
   id: string;
@@ -668,20 +669,25 @@ const Team = () => {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div></div> {/* Empty div to maintain the flex layout */}
-      </div>
+    <div className="space-y-6 wave-v2-page wave-v2-team">
+      <PageHeroShell>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">Team Management</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage workspace members, roles, invitations, and team-level settings.
+          </p>
+        </div>
+      </PageHeroShell>
 
       <Tabs defaultValue="members" className="space-y-6">
-        <TabsList>
+        <TabsList className="glass-chip h-auto flex-wrap gap-2 p-2">
           <TabsTrigger value="members">Team Members</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
           <TabsTrigger value="settings">Team Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="space-y-6">
-          <Card>
+          <PageSectionCard>
             <CardHeader>
               <CardTitle>Manage Team</CardTitle>
               <CardDescription>
@@ -689,26 +695,28 @@ const Team = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between mb-6">
-                <div className="relative w-full max-w-sm">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    type="search"
-                    placeholder="Search by name or email..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+              <FilterBarShell className="mb-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      type="search"
+                      placeholder="Search by name or email..."
+                      className="pl-8"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="ml-4" 
+                    onClick={() => refetchMembers()}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  className="ml-4" 
-                  onClick={() => refetchMembers()}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh
-                </Button>
-              </div>
+              </FilterBarShell>
 
               {isLoadingMembers ? (
                 <div className="border rounded-md p-4 space-y-3">
@@ -729,7 +737,7 @@ const Team = () => {
                   ))}
                 </div>
               ) : filteredMembers && filteredMembers.length > 0 ? (
-                <div className="border rounded-md">
+                <TableShell>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -815,28 +823,24 @@ const Team = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
+                </TableShell>
               ) : (
-                <div className="text-center py-12 border rounded-lg">
-                  <AlertCircle className="mx-auto h-12 w-12 text-gray-300" />
-                  <h3 className="mt-4 text-lg font-medium">
-                    No team members found
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {searchQuery
+                <StateBlock
+                  title="No team members found"
+                  description={
+                    searchQuery
                       ? "Try adjusting your search query"
-                      : "Whitelist your first team member to get started"}
-                  </p>
-                  {searchQuery && (
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => setSearchQuery("")}
-                    >
-                      Clear search
-                    </Button>
-                  )}
-                </div>
+                      : "Whitelist your first team member to get started"
+                  }
+                  icon={<AlertCircle className="h-5 w-5 text-muted-foreground" />}
+                  actions={
+                    searchQuery ? (
+                      <Button variant="outline" onClick={() => setSearchQuery("")}>
+                        Clear search
+                      </Button>
+                    ) : undefined
+                  }
+                />
               )}
             </CardContent>
             <CardFooter className="text-sm text-gray-500 flex justify-between items-center">
@@ -865,13 +869,13 @@ const Team = () => {
                 Whitelist New Account
               </Button>
             </CardFooter>
-          </Card>
+          </PageSectionCard>
 
 
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-6">
-          <Card>
+          <PageSectionCard>
             <CardHeader>
               <CardTitle>Roles & Permissions</CardTitle>
               <CardDescription>
@@ -882,11 +886,11 @@ const Team = () => {
               <RolesAndPermissionsContent />
             </CardContent>
             {/* Removed Customize Roles button */}
-          </Card>
+          </PageSectionCard>
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
-          <Card>
+          <PageSectionCard>
             <CardHeader>
               <CardTitle>Team Settings</CardTitle>
               <CardDescription>
@@ -907,7 +911,7 @@ const Team = () => {
                 Save Settings
               </Button>
             </CardFooter>
-          </Card>
+          </PageSectionCard>
         </TabsContent>
       </Tabs>
 

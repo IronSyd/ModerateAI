@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { FilterBarShell, PageHeroShell, PageSectionCard, StateBlock, TableShell } from "@/components/layout/page-shells";
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -276,20 +277,35 @@ export default function AdminUsersPage() {
 
   if (!isAdmin) {
     return (
-      <Card className="glass-surface">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 text-red-500" />
-            Admin Only
-          </CardTitle>
-          <CardDescription>You do not have permission to view this page.</CardDescription>
-        </CardHeader>
-      </Card>
+      <StateBlock
+        title="Admin Only"
+        description="You do not have permission to view this page."
+        icon={<ShieldAlert className="h-5 w-5 text-red-500" />}
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wave-v2-page wave-v2-admin-users">
+      <PageHeroShell>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">User Management</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage account access, billing state, plans, and workspace destination usage.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="glass-chip">
+              {filtered.length} users
+            </Badge>
+            <Badge variant="outline" className="glass-chip">
+              {filteredWorkspaceIntegrations.length} workspaces
+            </Badge>
+          </div>
+        </div>
+      </PageHeroShell>
+
       <Dialog
         open={Boolean(tempPasswordData)}
         onOpenChange={(open) => {
@@ -349,47 +365,46 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Card className="glass-surface">
+      <PageSectionCard className="glass-surface">
         <CardHeader>
           <CardTitle>All Users</CardTitle>
           <CardDescription>View every signed-up user account (admin only).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name, email, or ID..."
-                className="pl-8"
-              />
+          <FilterBarShell>
+            <div className="flex items-center gap-3">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by name, email, or ID..."
+                  className="pl-8"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="glass-chip"
+                disabled={isFetching}
+                onClick={async () => {
+                  const result = await refetch();
+                  if (result.isError) {
+                    toast({
+                      title: "Refresh failed",
+                      description: result.error?.message || "Could not refresh users",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  toast({ title: "Refreshed", description: "User list updated." });
+                }}
+              >
+                {isFetching ? "Refreshing..." : "Refresh"}
+              </Button>
             </div>
-            <Badge variant="outline" className="glass-chip">
-              {filtered.length} users
-            </Badge>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="glass-chip"
-              disabled={isFetching}
-              onClick={async () => {
-                const result = await refetch();
-                if (result.isError) {
-                  toast({
-                    title: "Refresh failed",
-                    description: result.error?.message || "Could not refresh users",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                toast({ title: "Refreshed", description: "User list updated." });
-              }}
-            >
-              {isFetching ? "Refreshing..." : "Refresh"}
-            </Button>
-          </div>
+          </FilterBarShell>
 
           {isLoading ? (
             <div className="space-y-3">
@@ -400,7 +415,7 @@ export default function AdminUsersPage() {
           ) : error ? (
             <div className="text-sm text-red-400">{error.message}</div>
           ) : (
-            <div className="border rounded-md overflow-hidden">
+            <TableShell>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -691,12 +706,12 @@ export default function AdminUsersPage() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </TableShell>
           )}
         </CardContent>
-      </Card>
+      </PageSectionCard>
 
-      <Card className="glass-surface">
+      <PageSectionCard className="glass-surface">
         <CardHeader>
           <CardTitle>Workspace Integrations</CardTitle>
           <CardDescription>
@@ -704,32 +719,31 @@ export default function AdminUsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="glass-chip">
-              {filteredWorkspaceIntegrations.length} workspaces
-            </Badge>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="glass-chip"
-              disabled={isFetchingWorkspaceIntegrations}
-              onClick={async () => {
-                const result = await refetchWorkspaceIntegrations();
-                if (result.isError) {
-                  toast({
-                    title: "Refresh failed",
-                    description: result.error?.message || "Could not refresh workspace integrations",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                toast({ title: "Refreshed", description: "Workspace integrations updated." });
-              }}
-            >
-              {isFetchingWorkspaceIntegrations ? "Refreshing..." : "Refresh"}
-            </Button>
-          </div>
+          <FilterBarShell>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="glass-chip"
+                disabled={isFetchingWorkspaceIntegrations}
+                onClick={async () => {
+                  const result = await refetchWorkspaceIntegrations();
+                  if (result.isError) {
+                    toast({
+                      title: "Refresh failed",
+                      description: result.error?.message || "Could not refresh workspace integrations",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  toast({ title: "Refreshed", description: "Workspace integrations updated." });
+                }}
+              >
+                {isFetchingWorkspaceIntegrations ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
+          </FilterBarShell>
 
           {isLoadingWorkspaceIntegrations ? (
             <div className="space-y-3">
@@ -740,7 +754,7 @@ export default function AdminUsersPage() {
           ) : workspaceIntegrationsError ? (
             <div className="text-sm text-red-400">{workspaceIntegrationsError.message}</div>
           ) : (
-            <div className="border rounded-md overflow-hidden">
+            <TableShell>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -783,10 +797,10 @@ export default function AdminUsersPage() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </TableShell>
           )}
         </CardContent>
-      </Card>
+      </PageSectionCard>
     </div>
   );
 }

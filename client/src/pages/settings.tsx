@@ -81,6 +81,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { PageHeroShell, PageSectionCard } from "@/components/layout/page-shells";
 
 type WorkspaceFeatures = {
   historyDays: number | null;
@@ -546,9 +547,18 @@ const Settings = () => {
 
 
   return (
-    <div>
+    <div className="space-y-6 wave-v2-page wave-v2-settings">
+      <PageHeroShell>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage account, notifications, moderation controls, and workspace tooling.
+          </p>
+        </div>
+      </PageHeroShell>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2 space-y-6">
-        <TabsList>
+        <TabsList className="glass-chip h-auto flex-wrap gap-2 p-2">
           <TabsTrigger value="account">
             <User className="h-4 w-4 mr-2" />
             Account
@@ -566,7 +576,7 @@ const Settings = () => {
         </TabsList>
 
         <TabsContent value="account" className="space-y-6">
-          <Card>
+          <PageSectionCard>
             <CardContent className="space-y-6">
 
               <div className="space-y-4">
@@ -633,9 +643,9 @@ const Settings = () => {
                 {isModified ? "Save Changes" : "No Changes"}
               </Button>
             </CardFooter>
-          </Card>
+          </PageSectionCard>
 
-          <Card className="space-y-6">
+          <PageSectionCard className="space-y-6">
             <CardHeader>
               <CardTitle>Account Actions</CardTitle>
               <CardDescription>
@@ -680,11 +690,11 @@ const Settings = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </PageSectionCard>
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
-          <Card>
+          <PageSectionCard>
             <CardHeader>
               <CardTitle>Notification Settings</CardTitle>
               <CardDescription>
@@ -788,12 +798,12 @@ const Settings = () => {
                 Save Preferences
               </Button>
             </CardFooter>
-          </Card>
+          </PageSectionCard>
         </TabsContent>
 
         {isWorkspaceAdmin && (
           <TabsContent value="workspace" className="space-y-6">
-            <Card>
+            <PageSectionCard>
               <CardHeader>
                 <CardTitle>Moderation Controls</CardTitle>
                 <CardDescription>
@@ -914,9 +924,9 @@ const Settings = () => {
                   Save moderation settings
                 </Button>
               </CardFooter>
-            </Card>
+            </PageSectionCard>
 
-            <Card>
+            <PageSectionCard>
               <CardHeader>
                 <CardTitle>Pro Tools</CardTitle>
                 <CardDescription>
@@ -976,7 +986,7 @@ const Settings = () => {
                   </p>
                 )}
               </CardContent>
-            </Card>
+            </PageSectionCard>
           </TabsContent>
         )}
 
