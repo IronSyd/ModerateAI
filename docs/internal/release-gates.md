@@ -41,3 +41,6 @@
 3. Validate `/api/health` and admin login.
 4. Re-run focused smoke checks.
 5. Publish incident note and follow-up RCA task.
+
+## Phase 5 Reliability Reference
+- Use `docs/internal/phase5-reliability-hardening.md` as the source of truth for preflight validation, Render deploy/rollback sequence, dependency risk acceptance, and UI canary controls.
