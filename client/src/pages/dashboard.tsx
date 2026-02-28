@@ -402,7 +402,7 @@ const Dashboard = () => {
           />
         </div>
         {usageStatsForDisplay.map((card, index) => (
-          <div key={card.title} className="lg:col-span-3">
+          <div key={card.title} className="lg:col-span-6 xl:col-span-3">
             <StatsCard
               title={card.title}
               value={card.value}

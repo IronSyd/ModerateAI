@@ -68,7 +68,7 @@ Standardize release execution, rollback triggers, and post-deploy smoke checks.
    - `/privacy-policy`
    - `/terms-of-service`
 5. Optional scripted smoke:
-   - `npm run test:playwright:smoke` (if credentials/test env are available)
+   - `npm run test:playwright:smoke` (admin route checks enforced; owner bootstrap fallback enabled for owner/admin auth)
 
 ## Rollback Triggers
 Trigger rollback immediately if any occur:
@@ -136,5 +136,30 @@ Wave 1 redo overlay flags:
 
 ---
 
+## 5) Execution Evidence (2026-02-28)
+
+## Local Validation Run
+| Area | Command / Check | Result |
+| --- | --- | --- |
+| Preflight missing `DATABASE_URL` | `npx tsx server/runtime-preflight.ts` with `DATABASE_URL` unset | Exit `1`; `[startup-preflight] Missing required environment variable: DATABASE_URL` |
+| Preflight missing `SESSION_SECRET` | `npx tsx server/runtime-preflight.ts` with `SESSION_SECRET` unset | Exit `1`; `[startup-preflight] Missing required environment variable: SESSION_SECRET` |
+| Preflight missing `OPENAI_API_KEY` | `npx tsx server/runtime-preflight.ts` with `OPENAI_API_KEY` unset | Exit `1`; `[startup-preflight] Missing required environment variable: OPENAI_API_KEY` |
+| Preflight invalid `PORT` | `npx tsx server/runtime-preflight.ts` with `PORT=abc` | Exit `1`; invalid-port message emitted |
+| Preflight production warning path | `npx tsx server/runtime-preflight.ts` with `NODE_ENV=production`, short `SESSION_SECRET`, no `FRONTEND_URL` | Exit `0`; both warnings emitted (short secret + missing `FRONTEND_URL`) |
+| Preflight healthy path | `npx tsx server/runtime-preflight.ts` with valid required vars | Exit `0`; startup summary emitted |
+| App health | `GET http://127.0.0.1:5000/api/health` | `200` with `{"status":"ok","mode":"development"}` |
+| Runtime flags snapshot | `GET http://127.0.0.1:5000/api/runtime-config` | `200`; `uiVersion=v1`, `uiV2Enabled=false`, `uiWave1RedoEnabled=false` |
+| Scripted smoke | `npm run test:playwright:smoke` | Pass; admin coverage executed with owner bootstrap fallback |
+| Typecheck gate | `npm run check` | Pass |
+| Build gate | `npm run build` | Pass |
+
+## Deploy-Environment Pending Checks
+1. Render deploy health check: `curl -fsS https://<service-url>/api/health`
+2. Post-deploy admin login and core route verification on deployed service URL.
+3. Canary rollback confirmation in deployed environment (flag flip + re-validate health and auth).
+
+---
+
 ## Phase 5 Completion Gate
-All four sections above must be completed before moving to Phase 6 expanded QA gates.
+Phase 5 is complete for local gating when sections 1-4 are implemented and section 5 evidence is recorded.  
+For release-candidate/deployed gating, all deploy-environment pending checks above must be completed before broad rollout.

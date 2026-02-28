@@ -13,7 +13,7 @@ const BASE_URL = String(
 const PASSWORD = String(process.env.E2E_SMOKE_PASSWORD || "SmokePass123!");
 const AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN = String(process.env.AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN ?? "").trim();
 const AUTH_RATE_LIMIT_TEST_BYPASS_HEADER = "x-auth-rate-limit-test-bypass";
-const REQUIRE_ADMIN_ROUTE_CHECKS = String(process.env.PLAYWRIGHT_REQUIRE_ADMIN_ROUTES ?? "0")
+const REQUIRE_ADMIN_ROUTE_CHECKS = String(process.env.PLAYWRIGHT_REQUIRE_ADMIN_ROUTES ?? "1")
   .trim()
   .toLowerCase();
 
@@ -172,6 +172,66 @@ async function ensureAuthenticatedStorageState() {
   return { storageState, user };
 }
 
+async function ensureOwnerAuthenticatedStorageState(): Promise<{ storageState: any; user: SafeUser; ownerEmail: string }> {
+  const extraHeaders: Record<string, string> = {};
+  if (AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN) {
+    extraHeaders[AUTH_RATE_LIMIT_TEST_BYPASS_HEADER] = AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN;
+  }
+
+  const api = await request.newContext({
+    baseURL: BASE_URL,
+    extraHTTPHeaders: extraHeaders,
+  });
+
+  const ownerEmail = String(process.env.E2E_SMOKE_OWNER_EMAIL || process.env.OWNER_EMAIL || "admin@moderateai.net")
+    .trim()
+    .toLowerCase();
+  const ownerPassword = String(process.env.E2E_SMOKE_OWNER_PASSWORD || process.env.OWNER_PASSWORD || PASSWORD).trim();
+
+  let login = await api.post("/api/login", {
+    data: { email: ownerEmail, password: ownerPassword },
+  });
+
+  if (login.status() === 401) {
+    const signup = await api.post("/api/signup", {
+      data: { email: ownerEmail, password: ownerPassword, fullName: "Playwright Smoke Owner" },
+    });
+    assert.ok(
+      signup.status() === 201 || signup.status() === 409,
+      `Expected owner signup 201/409, got ${signup.status()} (${await signup.text()})`,
+    );
+
+    login = await api.post("/api/login", {
+      data: { email: ownerEmail, password: ownerPassword },
+    });
+  }
+
+  assert.equal(
+    login.status(),
+    200,
+    `Expected owner login 200, got ${login.status()} (${await login.text()}). ` +
+      "Set E2E_SMOKE_OWNER_EMAIL/E2E_SMOKE_OWNER_PASSWORD (or OWNER_EMAIL/OWNER_PASSWORD) to valid admin credentials.",
+  );
+
+  const meResponse = await api.get("/api/user");
+  assert.equal(
+    meResponse.status(),
+    200,
+    `Expected owner /api/user 200, got ${meResponse.status()} (${await meResponse.text()})`,
+  );
+
+  const user = (await meResponse.json()) as SafeUser;
+  const isAdmin = user.role === "admin" || user.role === "owner";
+  assert.ok(
+    isAdmin,
+    `Expected owner/admin role after owner bootstrap login, got role=${String(user.role)} for email=${ownerEmail}`,
+  );
+
+  const storageState = await api.storageState();
+  await api.dispose();
+  return { storageState, user, ownerEmail };
+}
+
 async function assertRouteLoads(route: RouteCheck, contextName: "public" | "app", storageState?: any) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext(storageState ? { storageState } : undefined);
@@ -238,15 +298,16 @@ async function main() {
     await assertRouteLoads(route, "public");
   }
 
-  const { storageState, user } = await ensureAuthenticatedStorageState();
-  const isAdminUser = user.role === "admin" || user.role === "owner";
+  let { storageState, user } = await ensureAuthenticatedStorageState();
   const requireAdminRouteChecks = isTruthyFlag(REQUIRE_ADMIN_ROUTE_CHECKS);
+  let isAdminUser = user.role === "admin" || user.role === "owner";
 
   if (!isAdminUser && requireAdminRouteChecks) {
-    assert.fail(
-      "PLAYWRIGHT_REQUIRE_ADMIN_ROUTES is enabled but authenticated user is not admin/owner. " +
-        "Provide E2E_SMOKE_OWNER_EMAIL and E2E_SMOKE_OWNER_PASSWORD.",
-    );
+    const ownerBootstrap = await ensureOwnerAuthenticatedStorageState();
+    storageState = ownerBootstrap.storageState;
+    user = ownerBootstrap.user;
+    isAdminUser = true;
+    console.log(`Admin coverage bootstrap succeeded via owner account: ${ownerBootstrap.ownerEmail}`);
   }
 
   const selectedAppRoutes = APP_ROUTE_CHECKS.filter((route) => {
@@ -260,7 +321,7 @@ async function main() {
   if (skippedAdminRoutes.length > 0) {
     console.log(
       `Skipping admin-only routes for non-admin user (${user.role}): ${skippedAdminRoutes.join(", ")}. ` +
-        "Set E2E_SMOKE_OWNER_EMAIL/E2E_SMOKE_OWNER_PASSWORD to enforce admin smoke coverage.",
+        "Set E2E_SMOKE_OWNER_EMAIL/E2E_SMOKE_OWNER_PASSWORD (or OWNER_EMAIL/OWNER_PASSWORD) to satisfy admin smoke coverage. Set PLAYWRIGHT_REQUIRE_ADMIN_ROUTES=0 only for local non-gating runs.",
     );
   }
 

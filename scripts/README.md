@@ -96,6 +96,8 @@ These npm scripts keep the dev server detached from your terminal on Windows:
   Regression checks for Phase 3 feature behavior: analytics tier enforcement by plan (`free` blocked, `standard` analytics, `pro` deep analytics) and advanced moderation automation policy helper behavior.
 - `test-phase4-regressions.ts`  
   Regression checks for Phase 4 moderation event persistence: `moderation_actions` API filtering, deep-analytics Pro gating/aggregation, and analytics moderation counts sourced from the dedicated table.
+- `test-phase7-regressions.ts`  
+  Regression checks for Phase 7 runtime hardening: security headers on `/api/health`, `x-request-id` propagation, and admin ops summary availability via `/api/admin/ops/runtime-observability`.
 
 ## Notes
 - These scripts are manual tools, not part of normal app runtime or CI.

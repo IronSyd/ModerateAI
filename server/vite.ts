@@ -1,9 +1,10 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request } from "express";
 import fs from "fs";
 import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import { pathToFileURL } from "url";
+import { renderSeoDocument, SEO_SITE_BASE_FALLBACK } from "./lib/seo";
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -65,7 +66,9 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
-      const page = await vite.transformIndexHtml(url, template);
+      const siteBaseUrl = resolveSiteBaseUrl(req);
+      const seoTemplate = renderSeoDocument(template, url, { siteBaseUrl });
+      const page = await vite.transformIndexHtml(url, seoTemplate);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
@@ -76,6 +79,7 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "public");
+  const indexPath = path.resolve(distPath, "index.html");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
@@ -106,8 +110,44 @@ export function serveStatic(app: Express) {
   );
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.setHeader("Cache-Control", "no-cache");
-    res.sendFile(path.resolve(distPath, "index.html"));
+  app.use("*", async (req, res, next) => {
+    try {
+      const template = await fs.promises.readFile(indexPath, "utf-8");
+      const siteBaseUrl = resolveSiteBaseUrl(req);
+      const page = renderSeoDocument(template, req.originalUrl, { siteBaseUrl });
+      res.setHeader("Cache-Control", "no-cache");
+      res.status(200).set({ "Content-Type": "text/html" }).send(page);
+    } catch (error) {
+      next(error);
+    }
   });
+}
+
+function normalizeBaseUrl(value: string | null | undefined): string | null {
+  const raw = String(value ?? "").trim().replace(/\/+$/, "");
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+function resolveSiteBaseUrl(req: Request): string {
+  const configured =
+    normalizeBaseUrl(process.env.VITE_SITE_URL) ??
+    normalizeBaseUrl(process.env.FRONTEND_URL);
+  if (configured) return configured;
+
+  const host = String(req.get("host") ?? "").trim();
+  if (!host) return SEO_SITE_BASE_FALLBACK;
+
+  const forwardedProto = String(req.get("x-forwarded-proto") ?? "")
+    .split(",")[0]
+    ?.trim()
+    .toLowerCase();
+  const protocol = forwardedProto === "https" ? "https" : req.secure ? "https" : "http";
+
+  return `${protocol}://${host}`;
 }
