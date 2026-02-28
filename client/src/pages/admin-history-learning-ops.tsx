@@ -225,7 +225,7 @@ function LoadingState() {
     <div className="space-y-4 wave-v2-page wave-v2-learning-ops">
       <PageHeroShell>
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground">Learning Ops</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Learning Ops</h1>
           <p className="text-sm text-muted-foreground">Monitoring admin-history backfill and auto-analysis jobs.</p>
         </div>
       </PageHeroShell>
@@ -447,32 +447,35 @@ export default function AdminHistoryLearningOpsPage() {
 
       <PageHeroShell>
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground">Learning Ops</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Learning Ops</h1>
           <p className="text-sm text-muted-foreground">
             Monitor startup backfill and scheduled admin-history analysis runs by destination.
           </p>
         </div>
       </PageHeroShell>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="border-border/60 bg-background/40">
             Auto-refresh {autoRefreshEnabled ? "On (15s)" : "Off"}
           </Badge>
           <Badge variant="outline" className="border-border/60 bg-background/40">
             Generated {formatDate(data.generatedAt)}
           </Badge>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             variant="outline"
+            className="w-full sm:w-auto"
             onClick={() => setAutoRefreshEnabled((prev) => !prev)}
           >
             {autoRefreshEnabled ? "Pause Auto-Refresh" : "Resume Auto-Refresh"}
           </Button>
           <Button
             variant="outline"
+            className="w-full gap-2 sm:w-auto"
             onClick={() => void handleManualRefresh()}
             disabled={isFetching}
-            className="gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             Refresh

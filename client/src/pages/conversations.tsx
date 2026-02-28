@@ -320,7 +320,7 @@ const Conversations = () => {
       <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">Conversations</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Conversations</h1>
             <p className="text-sm text-muted-foreground">
               Review recent customer threads, inspect AI replies, and approve corrections for learning.
             </p>
@@ -346,28 +346,30 @@ const Conversations = () => {
         
         <CardContent>
           <Tabs defaultValue="all" className="w-full" onValueChange={setPlatformFilter}>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <TabsList className="glass-chip">
-                <TabsTrigger value="all">All Platforms</TabsTrigger>
-                <TabsTrigger value="website">Website</TabsTrigger>
-                <TabsTrigger value="telegram">Telegram</TabsTrigger>
-                <TabsTrigger value="discord">Discord</TabsTrigger>
-              </TabsList>
+            <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="overflow-x-auto pb-1">
+                <TabsList className="glass-chip w-max min-w-full sm:min-w-0">
+                  <TabsTrigger value="all" className="whitespace-nowrap">All Platforms</TabsTrigger>
+                  <TabsTrigger value="website" className="whitespace-nowrap">Website</TabsTrigger>
+                  <TabsTrigger value="telegram" className="whitespace-nowrap">Telegram</TabsTrigger>
+                  <TabsTrigger value="discord" className="whitespace-nowrap">Discord</TabsTrigger>
+                </TabsList>
+              </div>
               
-              <div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0">
-                <div className="relative">
+              <div className="mt-1 flex w-full flex-col gap-2 md:mt-0 md:w-auto md:flex-row">
+                <div className="relative w-full md:w-auto">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Search by name..."
-                    className="pl-8 max-w-xs"
+                    className="w-full pl-8 md:max-w-xs"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                   />
                 </div>
                 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px] glass-chip">
+                  <SelectTrigger className="w-full glass-chip md:w-[180px]">
                     <Filter className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -438,7 +440,7 @@ const Conversations = () => {
             <div className="min-w-0">
               <DialogTitle className="truncate">Conversation Thread</DialogTitle>
               <DialogDescription className="mt-2">
-                {selectedConversation.externalUsername || "Anonymous User"} · {resolvePlatformName(selectedConversation)} ·{" "}
+                {selectedConversation.externalUsername || "Anonymous User"} | {resolvePlatformName(selectedConversation)} |{" "}
                 {selectedConversation.externalId || selectedConversation.externalUserId}
               </DialogDescription>
             </div>

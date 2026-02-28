@@ -293,7 +293,7 @@ export default function KnowledgeBasePage() {
   const formatSyncMode = (source: KnowledgeUrlSource) => {
     if (source.syncMode !== "scheduled") return "Manual";
     const recur = source.scheduleRecurrence === "weekly" ? "Weekly" : "Daily";
-    return `${recur}${source.scheduleTime ? ` • ${source.scheduleTime}` : ""}`;
+    return `${recur}${source.scheduleTime ? ` - ${source.scheduleTime}` : ""}`;
   };
 
   const handleToggleSourcePaused = (source: KnowledgeUrlSource) => {
@@ -319,7 +319,7 @@ export default function KnowledgeBasePage() {
       <div className="space-y-6 wave-v2-page wave-v2-knowledge-base">
         <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Knowledge Base</h1>
             <p className="text-sm text-muted-foreground">Manage grounded content, URL sync sources, and document quality.</p>
           </div>
         </section>
@@ -350,7 +350,7 @@ export default function KnowledgeBasePage() {
       <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Knowledge Base</h1>
             <p className="text-sm text-muted-foreground">
               Manage source documents and URL sync crawlers used to ground assistant responses.
             </p>
@@ -367,11 +367,11 @@ export default function KnowledgeBasePage() {
       </section>
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-muted-foreground">Manage your AI's knowledge and information</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Create Knowledge Base
         </Button>
@@ -417,7 +417,7 @@ export default function KnowledgeBasePage() {
                   <div className="flex-1">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Book className="h-5 w-5 text-primary" />
-                      {base.name}
+                      <span className="truncate">{base.name}</span>
                       {!base.isActive && (
                         <Badge variant="secondary">Inactive</Badge>
                       )}
@@ -532,7 +532,7 @@ export default function KnowledgeBasePage() {
             <CardContent>
               <div className="space-y-3">
                 {documents.slice(0, 5).map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div key={doc.id} className="flex flex-col gap-3 p-3 border rounded-lg transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between">
                     <div
                       className="flex-1 cursor-pointer"
                       onClick={() => setViewingDocument(doc)}
@@ -611,7 +611,7 @@ export default function KnowledgeBasePage() {
                 Managed same-host path-prefix crawlers for static HTML pages. Best-effort sync continues on per-page failures and marks removed pages as stale.
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+            <Button variant="outline" onClick={() => setUploadDialogOpen(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add URL Sync Source
             </Button>
@@ -706,6 +706,7 @@ export default function KnowledgeBasePage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => syncUrlSourceMutation.mutate(source.id)}
                           disabled={syncUrlSourceMutation.isPending || patchUrlSourceMutation.isPending || deleteUrlSourceMutation.isPending}
                         >
@@ -719,6 +720,7 @@ export default function KnowledgeBasePage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => handleToggleSourcePaused(source)}
                           disabled={patchUrlSourceMutation.isPending || syncUrlSourceMutation.isPending || deleteUrlSourceMutation.isPending}
                         >
@@ -732,6 +734,7 @@ export default function KnowledgeBasePage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => setRunsDialogSource(source)}
                           disabled={deleteUrlSourceMutation.isPending}
                         >
@@ -741,9 +744,9 @@ export default function KnowledgeBasePage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full text-destructive hover:text-destructive sm:w-auto"
                           onClick={() => handleDeleteSource(source)}
                           disabled={deleteUrlSourceMutation.isPending || patchUrlSourceMutation.isPending || syncUrlSourceMutation.isPending}
-                          className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete

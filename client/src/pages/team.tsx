@@ -672,7 +672,7 @@ const Team = () => {
     <div className="space-y-6 wave-v2-page wave-v2-team">
       <PageHeroShell>
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground">Team Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Team Management</h1>
           <p className="text-sm text-muted-foreground">
             Manage workspace members, roles, invitations, and team-level settings.
           </p>
@@ -680,11 +680,13 @@ const Team = () => {
       </PageHeroShell>
 
       <Tabs defaultValue="members" className="space-y-6">
-        <TabsList className="glass-chip h-auto flex-wrap gap-2 p-2">
-          <TabsTrigger value="members">Team Members</TabsTrigger>
-          <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
-          <TabsTrigger value="settings">Team Settings</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="glass-chip h-auto w-max min-w-full gap-2 p-2 sm:min-w-0">
+            <TabsTrigger value="members" className="whitespace-nowrap text-xs sm:text-sm">Team Members</TabsTrigger>
+            <TabsTrigger value="roles" className="whitespace-nowrap text-xs sm:text-sm">Roles & Permissions</TabsTrigger>
+            <TabsTrigger value="settings" className="whitespace-nowrap text-xs sm:text-sm">Team Settings</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="members" className="space-y-6">
           <PageSectionCard>
@@ -696,8 +698,8 @@ const Team = () => {
             </CardHeader>
             <CardContent>
               <FilterBarShell className="mb-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="relative w-full max-w-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="relative w-full sm:max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       type="search"
@@ -709,7 +711,7 @@ const Team = () => {
                   </div>
                   <Button 
                     variant="outline" 
-                    className="ml-4" 
+                    className="w-full sm:w-auto" 
                     onClick={() => refetchMembers()}
                   >
                     <RefreshCw className="mr-2 h-4 w-4" />

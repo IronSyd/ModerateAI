@@ -47,19 +47,19 @@ const StatsCard = ({
       className="h-full"
     >
       <Card className="surface-glow lift-card h-full glass-surface">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
-              <p className="text-2xl font-semibold text-foreground mt-1">{value}</p>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</p>
+              <p className="mt-1 text-xl sm:text-2xl font-semibold text-foreground leading-tight break-words">{value}</p>
             </div>
-            <div className={`rounded-full p-3 ${iconBgColor} ${iconColor}`}>
+            <div className={`shrink-0 rounded-full p-2.5 sm:p-3 ${iconBgColor} ${iconColor}`}>
               {icon}
             </div>
           </div>
 
           {changeValue !== null && (
-            <div className="flex items-center mt-4">
+            <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
                 {isPositive ? (
                   <ArrowUpRight className="h-4 w-4 mr-1" />
@@ -68,12 +68,12 @@ const StatsCard = ({
                 )}
                 {Math.abs(changeValue)}%
               </span>
-              <span className="text-muted-foreground text-sm ml-2">{changeText}</span>
+              <span className="text-muted-foreground text-xs sm:text-sm">{changeText}</span>
             </div>
           )}
 
           {changeValue === null && statusLabel && (
-            <div className={`mt-4 text-sm font-medium ${statusToneClass}`}>{statusLabel}</div>
+            <div className={`mt-4 text-xs sm:text-sm font-medium break-words ${statusToneClass}`}>{statusLabel}</div>
           )}
         </CardContent>
       </Card>
