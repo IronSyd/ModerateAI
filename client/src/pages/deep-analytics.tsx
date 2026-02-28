@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FilterBarShell, PageHeroShell, PageSectionCard } from "@/components/layout/page-shells";
 
 type DeepAnalyticsResponse = {
   generatedAt: string;
@@ -107,7 +108,15 @@ const DeepAnalyticsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 wave-v2-page wave-v2-analytics">
+        <PageHeroShell>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Deep Analytics</h1>
+            <p className="text-sm text-muted-foreground">
+              Analyze response quality, moderation activity, and channel performance.
+            </p>
+          </div>
+        </PageHeroShell>
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-72" />
           <Skeleton className="h-10 w-32" />
@@ -125,7 +134,15 @@ const DeepAnalyticsPage = () => {
 
   if (error || !data) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 wave-v2-page wave-v2-analytics">
+        <PageHeroShell>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Deep Analytics</h1>
+            <p className="text-sm text-muted-foreground">
+              Analyze response quality, moderation activity, and channel performance.
+            </p>
+          </div>
+        </PageHeroShell>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{isTierGate ? "Deep analytics unavailable" : "Analytics unavailable"}</AlertTitle>
@@ -150,29 +167,36 @@ const DeepAnalyticsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
+    <div className="space-y-6 wave-v2-page wave-v2-analytics">
+      <PageHeroShell>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">Deep Analytics</h1>
           <p className="text-sm text-muted-foreground">
             Pro-level message intelligence and moderation telemetry across your workspace.
           </p>
         </div>
-        <div className="w-full md:w-48">
-          <Select value={windowDays} onValueChange={setWindowDays}>
-            <SelectTrigger>
-              <SelectValue placeholder="Window" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-            </SelectContent>
-          </Select>
+      </PageHeroShell>
+
+      <FilterBarShell>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm text-muted-foreground">Window</div>
+          <div className="w-full md:w-48">
+            <Select value={windowDays} onValueChange={setWindowDays}>
+              <SelectTrigger>
+                <SelectValue placeholder="Window" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
+      </FilterBarShell>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card>
+        <PageSectionCard>
           <CardHeader className="pb-2">
             <CardDescription>Total Messages</CardDescription>
             <CardTitle className="text-3xl">{data.totals.totalMessages.toLocaleString()}</CardTitle>
@@ -181,8 +205,8 @@ const DeepAnalyticsPage = () => {
             <MessageSquare className="h-4 w-4" />
             {data.totals.aiResponses.toLocaleString()} AI responses
           </CardContent>
-        </Card>
-        <Card>
+        </PageSectionCard>
+        <PageSectionCard>
           <CardHeader className="pb-2">
             <CardDescription>Response Rate</CardDescription>
             <CardTitle className="text-3xl">{data.totals.responseRate}%</CardTitle>
@@ -191,8 +215,8 @@ const DeepAnalyticsPage = () => {
             <Sparkles className="h-4 w-4" />
             {data.totals.conversationCount.toLocaleString()} conversations
           </CardContent>
-        </Card>
-        <Card>
+        </PageSectionCard>
+        <PageSectionCard>
           <CardHeader className="pb-2">
             <CardDescription>Moderation Events</CardDescription>
             <CardTitle className="text-3xl">{data.totals.moderationEvents.toLocaleString()}</CardTitle>
@@ -201,8 +225,8 @@ const DeepAnalyticsPage = () => {
             <ShieldAlert className="h-4 w-4" />
             {data.totals.contentFiltered.toLocaleString()} content filtered
           </CardContent>
-        </Card>
-        <Card>
+        </PageSectionCard>
+        <PageSectionCard>
           <CardHeader className="pb-2">
             <CardDescription>Window</CardDescription>
             <CardTitle className="text-3xl">{data.windowDays}d</CardTitle>
@@ -211,11 +235,11 @@ const DeepAnalyticsPage = () => {
             <BarChart3 className="h-4 w-4" />
             Generated {new Date(data.generatedAt).toLocaleString()}
           </CardContent>
-        </Card>
+        </PageSectionCard>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
+        <PageSectionCard>
           <CardHeader>
             <CardTitle>Daily Message Trend</CardTitle>
             <CardDescription>Message and moderation volume over the selected window.</CardDescription>
@@ -242,9 +266,9 @@ const DeepAnalyticsPage = () => {
               );
             })}
           </CardContent>
-        </Card>
+        </PageSectionCard>
 
-        <Card>
+        <PageSectionCard>
           <CardHeader>
             <CardTitle>Platform Breakdown</CardTitle>
             <CardDescription>Performance and moderation by platform type.</CardDescription>
@@ -265,11 +289,11 @@ const DeepAnalyticsPage = () => {
               </div>
             ))}
           </CardContent>
-        </Card>
+        </PageSectionCard>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
+        <PageSectionCard>
           <CardHeader>
             <CardTitle>Action Breakdown</CardTitle>
             <CardDescription>How moderation actions were distributed.</CardDescription>
@@ -285,8 +309,8 @@ const DeepAnalyticsPage = () => {
               ))
             )}
           </CardContent>
-        </Card>
-        <Card>
+        </PageSectionCard>
+        <PageSectionCard>
           <CardHeader>
             <CardTitle>Rule Source Breakdown</CardTitle>
             <CardDescription>Which moderation source triggered actions.</CardDescription>
@@ -302,7 +326,7 @@ const DeepAnalyticsPage = () => {
               ))
             )}
           </CardContent>
-        </Card>
+        </PageSectionCard>
       </div>
     </div>
   );
