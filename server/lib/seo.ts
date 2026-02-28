@@ -4,28 +4,33 @@ export type RouteSeoConfig = {
   robots: string;
   canonicalPath: string;
   ogType: "website";
+  breadcrumbName?: string;
   faqEntries?: Array<{ question: string; answer: string }>;
 };
 
 export const SEO_SITE_NAME = "ModerateAI";
 export const SEO_SITE_BASE_FALLBACK = "https://www.moderateai.net";
 
+const SEO_CONTACT_EMAIL = "admin@moderateai.net";
+const SEO_DOCS_URL = "https://docs.moderateai.net";
 const SEO_DEFAULT_DESCRIPTION =
   "ModerateAI helps teams deliver AI support and capture qualified leads across Website, Telegram, and Discord in one workspace.";
 const SEO_APP_DESCRIPTION =
   "ModerateAI workspace dashboard for AI support, lead capture, integrations, analytics, and operations.";
 
-type UseCaseSeo = {
+type IndexablePageSeo = {
   title: string;
   description: string;
-  faqEntries: Array<{ question: string; answer: string }>;
+  breadcrumbName: string;
+  faqEntries?: Array<{ question: string; answer: string }>;
 };
 
-export const SEO_PUBLIC_USE_CASE_MAP: Record<string, UseCaseSeo> = {
+export const SEO_PUBLIC_USE_CASE_MAP: Record<string, IndexablePageSeo> = {
   "/ai-customer-support-software": {
     title: "AI Customer Support Software | Website, Discord, Telegram | ModerateAI",
     description:
       "Scale customer support with AI across website chat, Discord, and Telegram. ModerateAI combines support, lead capture, and moderation in one workspace.",
+    breadcrumbName: "AI Customer Support Software",
     faqEntries: [
       {
         question: "What channels does ModerateAI support?",
@@ -41,6 +46,7 @@ export const SEO_PUBLIC_USE_CASE_MAP: Record<string, UseCaseSeo> = {
     title: "Discord Moderation Bot with AI Support Workflows | ModerateAI",
     description:
       "Automate Discord moderation and support with ModerateAI. Improve community quality, reduce manual triage, and keep responses consistent.",
+    breadcrumbName: "Discord Moderation Bot",
     faqEntries: [
       {
         question: "Is ModerateAI only for moderation?",
@@ -56,6 +62,7 @@ export const SEO_PUBLIC_USE_CASE_MAP: Record<string, UseCaseSeo> = {
     title: "Telegram Customer Support Bot for Faster Team Response | ModerateAI",
     description:
       "Deploy a Telegram AI support bot with moderation and analytics. ModerateAI helps teams respond faster and handle volume with better consistency.",
+    breadcrumbName: "Telegram Customer Support Bot",
     faqEntries: [
       {
         question: "Can ModerateAI run support workflows in Telegram?",
@@ -71,6 +78,7 @@ export const SEO_PUBLIC_USE_CASE_MAP: Record<string, UseCaseSeo> = {
     title: "Website AI Lead Capture Software | ModerateAI",
     description:
       "Capture qualified leads from website AI chat while answering support questions in real time. ModerateAI connects lead capture with operations and analytics.",
+    breadcrumbName: "Website AI Lead Capture",
     faqEntries: [
       {
         question: "Can website chat capture qualified leads?",
@@ -86,6 +94,7 @@ export const SEO_PUBLIC_USE_CASE_MAP: Record<string, UseCaseSeo> = {
     title: "AI Knowledge Base Software for Support and Moderation | ModerateAI",
     description:
       "Keep AI responses accurate with a shared knowledge base for website, Discord, and Telegram support workflows in ModerateAI.",
+    breadcrumbName: "AI Knowledge Base Software",
     faqEntries: [
       {
         question: "What content can teams add to the knowledge base?",
@@ -94,6 +103,37 @@ export const SEO_PUBLIC_USE_CASE_MAP: Record<string, UseCaseSeo> = {
       {
         question: "Can one knowledge base power multiple channels?",
         answer: "Yes. The same knowledge base can power website, Telegram, and Discord support workflows.",
+      },
+    ],
+  },
+};
+
+const SEO_PUBLIC_TRUST_PAGE_MAP: Record<string, IndexablePageSeo> = {
+  "/about": {
+    title: "About ModerateAI | AI Support and Moderation Platform",
+    description:
+      "Learn what ModerateAI does, who it is built for, and how teams use it to run AI support, lead capture, and moderation workflows.",
+    breadcrumbName: "About",
+  },
+  "/security": {
+    title: "ModerateAI Security | Platform Safeguards and Operations",
+    description:
+      "Review ModerateAI security practices, operational safeguards, and controls for handling support, moderation, and workspace data.",
+    breadcrumbName: "Security",
+  },
+  "/contact": {
+    title: "Contact ModerateAI | Product and Support",
+    description:
+      "Contact ModerateAI for product questions, onboarding help, and support for AI customer support and moderation workflows.",
+    breadcrumbName: "Contact",
+    faqEntries: [
+      {
+        question: "How do I contact ModerateAI?",
+        answer: "Email admin@moderateai.net for onboarding, product, and support requests.",
+      },
+      {
+        question: "Does ModerateAI offer support for paid plans?",
+        answer: "Yes. Standard and Pro plans include support response SLAs described on the pricing section.",
       },
     ],
   },
@@ -133,25 +173,79 @@ function replaceTag(html: string, pattern: RegExp, replacement: string): string 
   return html.replace("</head>", `${replacement}\n  </head>`);
 }
 
+function extractBreadcrumbName(seo: RouteSeoConfig): string {
+  const explicit = String(seo.breadcrumbName ?? "").trim();
+  if (explicit) return explicit;
+
+  const stripped = seo.title.replace(/\s*\|\s*ModerateAI\s*$/i, "").trim();
+  return stripped || "ModerateAI";
+}
+
+function buildBreadcrumbItems(canonicalUrl: string, seo: RouteSeoConfig): Array<Record<string, unknown>> {
+  const items: Array<Record<string, unknown>> = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: SEO_SITE_BASE_FALLBACK,
+    },
+  ];
+
+  if (seo.canonicalPath !== "/") {
+    items.push({
+      "@type": "ListItem",
+      position: 2,
+      name: extractBreadcrumbName(seo),
+      item: canonicalUrl,
+    });
+  }
+
+  return items;
+}
+
 function buildStructuredData(canonicalUrl: string, seo: RouteSeoConfig): Record<string, unknown> {
+  const organizationId = `${SEO_SITE_BASE_FALLBACK}/#organization`;
+  const websiteId = `${SEO_SITE_BASE_FALLBACK}/#website`;
+  const softwareId = `${SEO_SITE_BASE_FALLBACK}/#software`;
+  const webpageId = `${canonicalUrl}#webpage`;
+  const breadcrumbId = `${canonicalUrl}#breadcrumb`;
+  const faqId = `${canonicalUrl}#faq`;
+  const breadcrumbItems = buildBreadcrumbItems(canonicalUrl, seo);
+  const shouldIncludeBreadcrumb = seo.robots.includes("index");
+
   const graph: Record<string, unknown>[] = [
     {
       "@type": "Organization",
+      "@id": organizationId,
       name: SEO_SITE_NAME,
       url: SEO_SITE_BASE_FALLBACK,
+      email: SEO_CONTACT_EMAIL,
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          email: SEO_CONTACT_EMAIL,
+          availableLanguage: "en",
+        },
+      ],
     },
     {
       "@type": "WebSite",
+      "@id": websiteId,
       name: SEO_SITE_NAME,
       url: SEO_SITE_BASE_FALLBACK,
       potentialAction: {
         "@type": "SearchAction",
-        target: "https://docs.moderateai.net/?q={search_term_string}",
+        target: `${SEO_DOCS_URL}/?q={search_term_string}`,
         "query-input": "required name=search_term_string",
+      },
+      publisher: {
+        "@id": organizationId,
       },
     },
     {
       "@type": "SoftwareApplication",
+      "@id": softwareId,
       name: SEO_SITE_NAME,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
@@ -161,18 +255,45 @@ function buildStructuredData(canonicalUrl: string, seo: RouteSeoConfig): Record<
         price: "0",
         priceCurrency: "USD",
       },
+      provider: {
+        "@id": organizationId,
+      },
     },
     {
       "@type": "WebPage",
-      name: seo.title,
+      "@id": webpageId,
+      name: extractBreadcrumbName(seo),
+      headline: seo.title,
       description: seo.description,
       url: canonicalUrl,
+      isPartOf: {
+        "@id": websiteId,
+      },
+      about: {
+        "@id": softwareId,
+      },
+      ...(shouldIncludeBreadcrumb
+        ? {
+            breadcrumb: {
+              "@id": breadcrumbId,
+            },
+          }
+        : {}),
     },
   ];
+
+  if (shouldIncludeBreadcrumb) {
+    graph.push({
+      "@type": "BreadcrumbList",
+      "@id": breadcrumbId,
+      itemListElement: breadcrumbItems,
+    });
+  }
 
   if (seo.faqEntries && seo.faqEntries.length > 0) {
     graph.push({
       "@type": "FAQPage",
+      "@id": faqId,
       mainEntity: seo.faqEntries.map((faq) => ({
         "@type": "Question",
         name: faq.question,
@@ -181,6 +302,9 @@ function buildStructuredData(canonicalUrl: string, seo: RouteSeoConfig): Record<
           text: faq.answer,
         },
       })),
+      isPartOf: {
+        "@id": webpageId,
+      },
     });
   }
 
@@ -201,6 +325,23 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
       robots: "index,follow",
       canonicalPath: "/",
       ogType: "website",
+      breadcrumbName: "Home",
+      faqEntries: [
+        {
+          question: "What does ModerateAI do?",
+          answer:
+            "ModerateAI gives teams AI support, lead capture, and moderation workflows across website, Telegram, and Discord.",
+        },
+        {
+          question: "Can ModerateAI capture leads from support chats?",
+          answer: "Yes. ModerateAI supports lead capture workflows in website chat while handling support questions.",
+        },
+        {
+          question: "Does ModerateAI support shared knowledge across channels?",
+          answer:
+            "Yes. Teams can use one knowledge base across website chat, Discord servers, and Telegram support workflows.",
+        },
+      ],
     };
   }
 
@@ -211,6 +352,7 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
       robots: "noindex,nofollow",
       canonicalPath: "/auth",
       ogType: "website",
+      breadcrumbName: "Sign In",
     };
   }
 
@@ -221,6 +363,7 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
       robots: "noindex,nofollow",
       canonicalPath: "/accept-invitation",
       ogType: "website",
+      breadcrumbName: "Accept Invitation",
     };
   }
 
@@ -232,6 +375,7 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
       robots: "index,follow",
       canonicalPath: "/privacy-policy",
       ogType: "website",
+      breadcrumbName: "Privacy Policy",
     };
   }
 
@@ -243,6 +387,20 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
       robots: "index,follow",
       canonicalPath: "/terms-of-service",
       ogType: "website",
+      breadcrumbName: "Terms of Service",
+    };
+  }
+
+  const trustPage = SEO_PUBLIC_TRUST_PAGE_MAP[normalizedPath];
+  if (trustPage) {
+    return {
+      title: trustPage.title,
+      description: trustPage.description,
+      robots: "index,follow",
+      canonicalPath: normalizedPath,
+      ogType: "website",
+      breadcrumbName: trustPage.breadcrumbName,
+      faqEntries: trustPage.faqEntries,
     };
   }
 
@@ -254,6 +412,7 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
       robots: "index,follow",
       canonicalPath: normalizedPath,
       ogType: "website",
+      breadcrumbName: useCase.breadcrumbName,
       faqEntries: useCase.faqEntries,
     };
   }
@@ -264,6 +423,7 @@ export function resolveSeoRouteConfig(rawPath: string): RouteSeoConfig {
     robots: "noindex,nofollow",
     canonicalPath: normalizedPath || "/",
     ogType: "website",
+    breadcrumbName: "ModerateAI App",
   };
 }
 

@@ -37,6 +37,9 @@ const PUBLIC_ROUTE_CHECKS: RouteCheck[] = [
   },
   { path: "/privacy-policy", routeKey: "legal", markers: [/Privacy Policy/i] },
   { path: "/terms-of-service", routeKey: "legal", markers: [/Terms of Service/i] },
+  { path: "/about", routeKey: "landing", markers: [/What ModerateAI does/i, /Who it is for/i] },
+  { path: "/security", routeKey: "landing", markers: [/Current control categories/i, /Incident reporting/i] },
+  { path: "/contact", routeKey: "landing", markers: [/Contact ModerateAI/i, /Frequently asked contact questions/i] },
 ];
 
 const APP_ROUTE_CHECKS: RouteCheck[] = [

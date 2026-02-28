@@ -41,6 +41,9 @@ const PreferencesPage = lazy(() => import("@/pages/preferences"));
 const BillingPage = lazy(() => import("@/pages/billing"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfServicePage = lazy(() => import("@/pages/terms-of-service"));
+const AboutPage = lazy(() => import("@/pages/about"));
+const SecurityPage = lazy(() => import("@/pages/security"));
+const ContactPage = lazy(() => import("@/pages/contact"));
 const SeoUseCasePage = lazy(() => import("@/pages/seo-use-case"));
 const HelpCenterPage = lazy(() => import("@/pages/help"));
 const HelpDocsReaderPage = lazy(() => import("@/pages/help/docs-reader"));
@@ -153,6 +156,8 @@ const SEO_PUBLIC_USE_CASE_PATHS = [
   "/ai-knowledge-base-software",
 ] as const;
 
+const SEO_PUBLIC_TRUST_PATHS = ["/about", "/security", "/contact"] as const;
+
 const SEO_PUBLIC_USE_CASE_MAP: Record<
   (typeof SEO_PUBLIC_USE_CASE_PATHS)[number],
   { title: string; description: string }
@@ -181,6 +186,27 @@ const SEO_PUBLIC_USE_CASE_MAP: Record<
     title: "AI Knowledge Base Software for Support and Moderation | ModerateAI",
     description:
       "Keep AI responses accurate with a shared knowledge base for website, Discord, and Telegram support workflows in ModerateAI.",
+  },
+};
+
+const SEO_PUBLIC_TRUST_PAGE_MAP: Record<
+  (typeof SEO_PUBLIC_TRUST_PATHS)[number],
+  { title: string; description: string }
+> = {
+  "/about": {
+    title: "About ModerateAI | AI Support and Moderation Platform",
+    description:
+      "Learn what ModerateAI does, who it is built for, and how teams use it to run AI support, lead capture, and moderation workflows.",
+  },
+  "/security": {
+    title: "ModerateAI Security | Platform Safeguards and Operations",
+    description:
+      "Review ModerateAI security practices, operational safeguards, and controls for handling support, moderation, and workspace data.",
+  },
+  "/contact": {
+    title: "Contact ModerateAI | Product and Support",
+    description:
+      "Contact ModerateAI for product questions, onboarding help, and support for AI customer support and moderation workflows.",
   },
 };
 
@@ -248,6 +274,17 @@ function resolveSeoConfig(rawLocation: string): RouteSeoConfig {
         "Read the Terms of Service for ModerateAI, including use of the website, dashboard, widget, AI features, and Telegram/Discord integrations.",
       robots: "index,follow",
       canonicalPath: "/terms-of-service",
+      ogType: "website",
+    };
+  }
+
+  if (normalizedPath in SEO_PUBLIC_TRUST_PAGE_MAP) {
+    const page = SEO_PUBLIC_TRUST_PAGE_MAP[normalizedPath as keyof typeof SEO_PUBLIC_TRUST_PAGE_MAP];
+    return {
+      title: page.title,
+      description: page.description,
+      robots: "index,follow",
+      canonicalPath: normalizedPath,
       ogType: "website",
     };
   }
@@ -463,6 +500,7 @@ function resolveUiV2RouteKey(location: string): string {
   if (pathname === "/") return "landing";
   if (pathname.startsWith("/auth") || pathname.startsWith("/accept-invitation")) return "auth";
   if (pathname === "/privacy-policy" || pathname === "/terms-of-service") return "legal";
+  if (SEO_PUBLIC_TRUST_PATHS.includes(pathname as (typeof SEO_PUBLIC_TRUST_PATHS)[number])) return "landing";
   if (SEO_PUBLIC_USE_CASE_PATHS.includes(pathname as (typeof SEO_PUBLIC_USE_CASE_PATHS)[number])) return "landing";
   if (pathname.startsWith("/dashboard")) return "dashboard";
   if (pathname.startsWith("/choose-plan") || pathname.startsWith("/reset-password")) return "onboarding";
@@ -736,6 +774,7 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
     location === "/terms-of-service" ||
     location.startsWith("/auth") ||
     location.startsWith("/accept-invitation") ||
+    SEO_PUBLIC_TRUST_PATHS.some((path) => location === path || location.startsWith(`${path}?`)) ||
     SEO_PUBLIC_USE_CASE_PATHS.some((path) => location === path || location.startsWith(`${path}?`));
   const fallback = pageFallback();
 
@@ -746,6 +785,9 @@ function Router({ uiPerfProfile }: { uiPerfProfile: UiPerfProfile }) {
           <Route path="/" component={LandingPage} />
           <Route path="/privacy-policy" component={PrivacyPolicyPage} />
           <Route path="/terms-of-service" component={TermsOfServicePage} />
+          <Route path="/about" component={AboutPage} />
+          <Route path="/security" component={SecurityPage} />
+          <Route path="/contact" component={ContactPage} />
           <Route path="/ai-customer-support-software" component={SeoUseCasePage} />
           <Route path="/discord-moderation-bot" component={SeoUseCasePage} />
           <Route path="/telegram-customer-support-bot" component={SeoUseCasePage} />

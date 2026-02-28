@@ -284,6 +284,30 @@ export default function SeoUseCasePage() {
             </div>
           </section>
 
+          <section className="mt-10 rounded-xl border border-border bg-card p-6">
+            <h2 className="kinetic-headline text-xl font-semibold">Trust and Product Details</h2>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Review the public company, security, and contact pages for additional product context and support paths.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href="/about">
+                <Button variant="outline" className="tactile-button">
+                  About ModerateAI
+                </Button>
+              </Link>
+              <Link href="/security">
+                <Button variant="outline" className="tactile-button">
+                  Security
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button variant="outline" className="tactile-button">
+                  Contact
+                </Button>
+              </Link>
+            </div>
+          </section>
+
           <section className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Link href="/auth?mode=signup">
               <Button className="tactile-button">

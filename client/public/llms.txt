@@ -13,6 +13,11 @@ It helps teams automate repetitive support, capture qualified leads, and keep mo
 - https://www.moderateai.net/website-ai-lead-capture
 - https://www.moderateai.net/ai-knowledge-base-software
 
+## Trust Pages
+- https://www.moderateai.net/about
+- https://www.moderateai.net/security
+- https://www.moderateai.net/contact
+
 ## Legal
 - https://www.moderateai.net/privacy-policy
 - https://www.moderateai.net/terms-of-service
@@ -22,3 +27,8 @@ It helps teams automate repetitive support, capture qualified leads, and keep mo
 
 ## Contact
 - admin@moderateai.net
+
+## Quick Facts
+- ModerateAI supports Website, Discord, and Telegram in one workspace.
+- ModerateAI combines AI support, lead capture, and moderation operations.
+- Standard and Pro plans are activated by support after payment verification.

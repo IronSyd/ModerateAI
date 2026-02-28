@@ -31,6 +31,21 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.moderateai.net/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/security</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.moderateai.net/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://www.moderateai.net/privacy-policy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>

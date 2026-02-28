@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -31,9 +30,7 @@ const LandingPage = () => {
   const [isYearly, setIsYearly] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const { toast } = useToast();
   const supportUrl = getSupportTelegramUrl();
-  const contactEmail = "admin@moderateai.net";
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
 
   const onContactSupport = () => {
@@ -45,47 +42,6 @@ const LandingPage = () => {
     }
 
     setSupportDialogOpen(true);
-  };
-
-  const onCopyContactEmail = async () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(contactEmail);
-      } else {
-        throw new Error("Clipboard API unavailable");
-      }
-
-      toast({ title: "Copied", description: "Contact email copied to clipboard." });
-      return;
-    } catch {
-      try {
-        const textArea = document.createElement("textarea");
-        textArea.value = contactEmail;
-        textArea.setAttribute("readonly", "");
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        textArea.style.pointerEvents = "none";
-        textArea.style.left = "-9999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const copied = document.execCommand("copy");
-        document.body.removeChild(textArea);
-
-        if (copied) {
-          toast({ title: "Copied", description: "Contact email copied to clipboard." });
-          return;
-        }
-      } catch {
-        // Fall through to manual copy toast.
-      }
-    }
-
-    toast({
-      title: "Copy failed",
-      description: `Copy manually: ${contactEmail}`,
-      variant: "destructive",
-    });
   };
 
   const fadeInUp = {
@@ -485,6 +441,75 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Answer-First FAQ Section */}
+      <section className="py-20 px-6 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <motion.div className="text-center mb-12" {...fadeInUp}>
+            <h2 className="kinetic-headline text-3xl md:text-4xl font-bold mb-4">
+              Straight Answers About ModerateAI
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Quick facts for teams evaluating AI support, moderation, and lead capture workflows.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">
+                What channels does ModerateAI support?
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                ModerateAI supports website chat, Discord servers, and Telegram groups in one workspace.
+              </p>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">
+                Can ModerateAI capture leads from support chats?
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Yes. Website chat workflows can capture qualified leads while also answering support questions.
+              </p>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">
+                Does one knowledge base work across all channels?
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Yes. Teams can share one knowledge base across website, Telegram, and Discord workflows.
+              </p>
+            </motion.div>
+
+            <motion.div className="rounded-xl p-6 surface-glow lift-card glass-surface" {...fadeInUp}>
+              <h3 className="kinetic-headline text-lg font-semibold mb-2">
+                Where can I review trust and security details?
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Use the public trust pages to review product overview, security notes, and direct contact paths.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/about">
+                  <Button variant="outline" className="glass-chip tactile-button">
+                    About
+                  </Button>
+                </Link>
+                <Link href="/security">
+                  <Button variant="outline" className="glass-chip tactile-button">
+                    Security
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button variant="outline" className="glass-chip tactile-button">
+                    Contact
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="pricing" className="scroll-mt-28 py-20 px-6 md:px-8 bg-accent/30">
         <div className="max-w-7xl mx-auto">
@@ -769,24 +794,19 @@ const LandingPage = () => {
               <h3 className="kinetic-headline font-semibold mb-4">Company</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/ai-knowledge-base-software" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    Knowledge Workflows
+                  <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    About
                   </Link>
                 </li>
                 <li>
-                  <Link href="/website-ai-lead-capture" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    Website Lead Capture
+                  <Link href="/security" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Security
                   </Link>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    aria-label="Copy contact email"
-                    onClick={onCopyContactEmail}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 p-0 text-left"
-                  >
+                  <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Contact
-                  </button>
+                  </Link>
                 </li>
               </ul>
             </div>
