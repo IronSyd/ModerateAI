@@ -26,6 +26,7 @@ import { recordOpsEvent } from './ops-monitor';
 import {
   adminHistoryAdminCheckCacheTtlMs,
   botTimedLocksEnabled,
+  discordBotsEnabled,
   integrationClaimDestinationLockEnabled,
   integrationSafetyHardeningEnabled,
 } from '../config/runtime-flags';
@@ -2151,6 +2152,13 @@ async function handleAppOwnedDiscordMessage(message: Message, platformId: number
 }
 
 export async function startAppOwnedBot(): Promise<{ success: boolean; message: string }> {
+  if (!discordBotsEnabled) {
+    return {
+      success: true,
+      message: 'Discord bots are disabled by DISCORD_BOTS_ENABLED=0.',
+    };
+  }
+
   const token = String(process.env.DISCORD_APP_BOT_TOKEN ?? '').trim();
   if (!token) {
     return {
@@ -2428,6 +2436,13 @@ const isEnvironmentToken = (token: string) => {
  * Initialize Discord bot with token
  */
 export async function initializeBot(platformId: number, token: string): Promise<{ success: boolean; message: string }> {
+  if (!discordBotsEnabled) {
+    return {
+      success: false,
+      message: 'Discord bots are disabled by DISCORD_BOTS_ENABLED=0.',
+    };
+  }
+
   try {
     // Check if there's already a bot for this platform
     if (discordClients.has(platformId)) {
@@ -3292,10 +3307,20 @@ export async function refreshChannels(platformId: number): Promise<boolean> {
  * Initialize all Discord bots from database
  */
 export async function initializeAllBots(): Promise<void> {
+  if (!discordBotsEnabled) {
+    console.log('Skipping Discord bot initialization (DISCORD_BOTS_ENABLED=0).');
+    return;
+  }
+
   try {
     // Get all platforms with type 'discord' and status 'active'
     const discordPlatforms = await storage.getPlatformsByType('discord');
-    const activePlatforms = discordPlatforms.filter(p => p.status === 'active' && p.authToken);
+    const activePlatforms = discordPlatforms.filter(
+      (platform) =>
+        platform.status === 'active' &&
+        platform.botOwnershipMode === 'byob' &&
+        Boolean(platform.authToken),
+    );
     
     console.log(`Initializing ${activePlatforms.length} Discord bots...`);
     

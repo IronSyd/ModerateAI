@@ -23,7 +23,7 @@ import { scheduleDestinationLockSweep, scheduleScheduledAutoLockSweep } from "./
 import { scheduleAdminHistoryBackfillOnStartup } from "./lib/chatHistoryBackfill";
 import { scheduleAdminHistoryAutoAnalysisSweep } from "./lib/adminHistoryAutoAnalysis";
 import { scheduleKnowledgeUrlSyncSweep } from "./lib/kb-url-sync";
-import { telegramBotsEnabled } from "./config/runtime-flags";
+import { discordBotsEnabled, telegramBotsEnabled } from "./config/runtime-flags";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { createClient, type RedisClientType } from "redis";
@@ -573,14 +573,19 @@ app.use((req, res, next) => {
       log('Telegram bot runtime disabled (TELEGRAM_BOTS_ENABLED=0).');
     }
       
-    // Initialize any active Discord bots
-    initializeAllDiscordBots()
-      .then(() => log('Initialized active Discord bots'))
-      .catch(err => log(`Error initializing Discord bots: ${err.message}`));
+    if (discordBotsEnabled) {
+      // Initialize any active Discord BYOB bots.
+      initializeAllDiscordBots()
+        .then(() => log('Initialized active Discord bots'))
+        .catch(err => log(`Error initializing Discord bots: ${err.message}`));
 
-    startDiscordAppOwnedBot()
-      .then((result) => log(result.success ? result.message : `Discord app-owned bot: ${result.message}`))
-      .catch(err => log(`Error starting Discord app-owned bot: ${err.message}`));
+      // Initialize shared app-owned Discord bot (if configured).
+      startDiscordAppOwnedBot()
+        .then((result) => log(result.success ? result.message : `Discord app-owned bot: ${result.message}`))
+        .catch(err => log(`Error starting Discord app-owned bot: ${err.message}`));
+    } else {
+      log('Discord bot runtime disabled (DISCORD_BOTS_ENABLED=0).');
+    }
 
     // Daily cleanup for tier-based conversation history retention.
     scheduleConversationRetentionSweep((line) => log(line));

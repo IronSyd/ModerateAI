@@ -63,6 +63,11 @@ export const telegramBotsEnabled = parseBooleanEnv(
   true,
 );
 
+export const discordBotsEnabled = parseBooleanEnv(
+  "DISCORD_BOTS_ENABLED",
+  true,
+);
+
 export const integrationClaimDestinationLockEnabled = parseBooleanEnv(
   "INTEGRATION_CLAIM_DESTINATION_LOCK_ENABLED",
   true,
