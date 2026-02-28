@@ -13,7 +13,7 @@ const BASE_URL = String(
 const PASSWORD = String(process.env.E2E_SMOKE_PASSWORD || "SmokePass123!");
 const AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN = String(process.env.AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN ?? "").trim();
 const AUTH_RATE_LIMIT_TEST_BYPASS_HEADER = "x-auth-rate-limit-test-bypass";
-const REQUIRE_ADMIN_ROUTE_CHECKS = String(process.env.PLAYWRIGHT_REQUIRE_ADMIN_ROUTES ?? "0")
+const REQUIRE_ADMIN_ROUTE_CHECKS = String(process.env.PLAYWRIGHT_REQUIRE_ADMIN_ROUTES ?? "1")
   .trim()
   .toLowerCase();
 
@@ -260,7 +260,7 @@ async function main() {
   if (skippedAdminRoutes.length > 0) {
     console.log(
       `Skipping admin-only routes for non-admin user (${user.role}): ${skippedAdminRoutes.join(", ")}. ` +
-        "Set E2E_SMOKE_OWNER_EMAIL/E2E_SMOKE_OWNER_PASSWORD to enforce admin smoke coverage.",
+        "Set E2E_SMOKE_OWNER_EMAIL/E2E_SMOKE_OWNER_PASSWORD (or OWNER_EMAIL/OWNER_PASSWORD) to satisfy admin smoke coverage. Set PLAYWRIGHT_REQUIRE_ADMIN_ROUTES=0 only for local non-gating runs.",
     );
   }
 

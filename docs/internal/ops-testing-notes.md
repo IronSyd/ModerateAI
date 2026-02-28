@@ -34,7 +34,7 @@ This page contains internal-only script and maintenance references extracted fro
 
 - `npm run check`
 - `npm run build`
-- `npm run test:playwright:smoke` (optional when env + credentials are available)
+- `npm run test:playwright:smoke` (gating run; requires admin credentials for admin route coverage)
 - Local health check: `curl -fsS http://localhost:5000/api/health` (fails on HTTP 4xx/5xx)
 - Deployed health check: `curl -fsS https://<service-url>/api/health` (fails on HTTP 4xx/5xx)
 
@@ -42,5 +42,6 @@ See also: `docs/internal/phase5-reliability-hardening.md`.
 
 ## Phase 6 QA Commands
 
-- `npm run test:playwright:smoke`
+- `npm run test:playwright:smoke` (admin route coverage enforced by default)
+- `PLAYWRIGHT_REQUIRE_ADMIN_ROUTES=0 npm run test:playwright:smoke` (local non-gating opt-out)
 - Manual visual snapshots for required routes at desktop/tablet/mobile (see `docs/internal/phase6-qa-gates.md`)

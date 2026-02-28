@@ -21,7 +21,7 @@ Out of scope for this phase:
 ## 1) Playwright Smoke Coverage
 
 ## Baseline Command
-- `npm run test:playwright:smoke`
+- `npm run test:playwright:smoke` (admin route coverage enforced by default)
 
 ## Required Smoke Journeys
 1. Authentication and shell load
@@ -41,6 +41,7 @@ Out of scope for this phase:
 - No uncaught browser/page errors.
 - No failing network calls on critical bootstrap APIs.
 - All required routes are reachable and render expected key UI anchors.
+- Admin route checks are required for the Phase 6 gate (override with `PLAYWRIGHT_REQUIRE_ADMIN_ROUTES=0` only for local non-gating runs).
 
 ---
 
@@ -58,8 +59,8 @@ Out of scope for this phase:
 - `/integrations/telegram`
 - `/integrations/discord`
 - `/integrations/website`
-- `/admin-users`
-- `/admin-history-learning-ops`
+- `/admin/users`
+- `/admin/ops/admin-history-learning`
 
 ## Snapshot Process
 1. Set deterministic test data where possible.
@@ -82,7 +83,7 @@ Out of scope for this phase:
 Phase 6 gate is considered passing only when all are true:
 1. `npm run check` passes.
 2. `npm run build` passes.
-3. `npm run test:playwright:smoke` passes for release candidate env.
+3. `npm run test:playwright:smoke` passes for release candidate env with admin credentials available.
 4. Required visual snapshots are captured and reviewed.
 5. Any deferred issues include severity, owner, and target fix date.
 
@@ -93,7 +94,7 @@ Phase 6 gate is considered passing only when all are true:
 1. Run:
    - `npm run check`
    - `npm run build`
-   - `npm run test:playwright:smoke`
+   - `npm run test:playwright:smoke` (admin route coverage enforced by default)
 2. Capture required snapshots at desktop/tablet/mobile.
 3. Validate critical route anchors and absence of overflow/clipping.
 4. Attach evidence links to release/PR notes.

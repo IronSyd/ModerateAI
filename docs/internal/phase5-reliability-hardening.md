@@ -68,7 +68,7 @@ Standardize release execution, rollback triggers, and post-deploy smoke checks.
    - `/privacy-policy`
    - `/terms-of-service`
 5. Optional scripted smoke:
-   - `npm run test:playwright:smoke` (if credentials/test env are available)
+   - `npm run test:playwright:smoke` (requires admin credentials to satisfy admin route checks)
 
 ## Rollback Triggers
 Trigger rollback immediately if any occur:
