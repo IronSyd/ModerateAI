@@ -38,9 +38,6 @@ This page contains internal-only script and maintenance references extracted fro
 - Local health check: `curl -fsS http://localhost:5000/api/health` (fails on HTTP 4xx/5xx)
 - Deployed health check: `curl -fsS https://<service-url>/api/health` (fails on HTTP 4xx/5xx)
 
-Execution notes:
-- This file is the executable command companion to release policy gates.
-
 See also: `docs/internal/phase5-reliability-hardening.md`.
 
 ## Phase 6 QA Commands

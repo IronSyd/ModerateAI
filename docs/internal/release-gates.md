@@ -46,9 +46,6 @@
 ## Phase 5 Reliability Reference
 - Use `docs/internal/phase5-reliability-hardening.md` as the source of truth for preflight validation, Render deploy/rollback sequence, dependency risk acceptance, and UI canary controls.
 
-## Policy boundary
-- This file defines release decision gates (entry/exit/rollback criteria).
-- `docs/internal/ops-testing-notes.md` defines executable command snippets used to satisfy these gates.
 
 ## Phase 6 QA Gates Reference
 - Use `docs/internal/phase6-qa-gates.md` as the source of truth for Playwright smoke coverage and visual regression evidence requirements before broad rollout.
