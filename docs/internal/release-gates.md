@@ -23,11 +23,12 @@
 5. Smoke test matrix completed on release candidate.
 
 ## Release Exit Gate
-1. Deploy healthy (`/api/health` = 200).
+1. Deploy healthy (`curl -fsS https://<service-url>/api/health` returns 200).
 2. Core workflows verified post-deploy.
 3. Scheduler startup logs reviewed for duplicate/loop behavior.
 4. Monitoring and alerts verified.
 5. Rollback command path validated and documented.
+6. Use `docs/internal/ops-testing-notes.md` for executable smoke command checklists.
 
 ## Rollback Triggers
 1. Repeated startup crashes or failed health checks.
@@ -38,6 +39,12 @@
 ## Rollback Actions
 1. Set `UI_V2_ENABLED=0` immediately for UI regressions.
 2. Re-deploy last known stable image/commit.
-3. Validate `/api/health` and admin login.
+3. Validate health endpoint with `curl -fsS https://<service-url>/api/health` and verify admin login.
 4. Re-run focused smoke checks.
 5. Publish incident note and follow-up RCA task.
+
+## Phase 5 Reliability Reference
+- Use `docs/internal/phase5-reliability-hardening.md` as the source of truth for preflight validation, Render deploy/rollback sequence, dependency risk acceptance, and UI canary controls.
+
+## Phase 6 QA Gates Reference
+- Use `docs/internal/phase6-qa-gates.md` as the source of truth for Playwright smoke coverage and visual regression evidence requirements before broad rollout.
