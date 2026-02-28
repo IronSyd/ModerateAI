@@ -43,6 +43,10 @@ Out of scope for this phase:
 - All required routes are reachable and render expected key UI anchors.
 - Admin route checks are required for the Phase 6 gate (override with `PLAYWRIGHT_REQUIRE_ADMIN_ROUTES=0` only for local non-gating runs).
 
+## Admin bootstrap fallback
+- When admin checks are required and initial auth is non-admin, the smoke script attempts owner bootstrap/login using `E2E_SMOKE_OWNER_EMAIL`/`E2E_SMOKE_OWNER_PASSWORD` (fallback: `OWNER_EMAIL`/`OWNER_PASSWORD`, then default owner email + smoke password).
+- If bootstrap cannot authenticate as owner/admin, the smoke gate fails with actionable credential guidance.
+
 ---
 
 ## 2) Visual Regression Snapshot Workflow

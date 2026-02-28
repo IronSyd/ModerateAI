@@ -42,6 +42,6 @@ See also: `docs/internal/phase5-reliability-hardening.md`.
 
 ## Phase 6 QA Commands
 
-- `npm run test:playwright:smoke` (admin route coverage enforced by default)
+- `npm run test:playwright:smoke` (admin route coverage enforced by default; owner bootstrap fallback enabled)
 - `PLAYWRIGHT_REQUIRE_ADMIN_ROUTES=0 npm run test:playwright:smoke` (local non-gating opt-out)
 - Manual visual snapshots for required routes at desktop/tablet/mobile (see `docs/internal/phase6-qa-gates.md`)
