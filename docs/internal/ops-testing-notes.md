@@ -29,3 +29,12 @@ This page contains internal-only script and maintenance references extracted fro
 - `test:*` scripts use `.env` automatically with `tsx --env-file=.env`.
 - Auth rate-limit bypass header is available in non-production when `AUTH_RATE_LIMIT_TEST_BYPASS_TOKEN` is set.
 - Use production mode (`npm run start:prod`) for realistic performance checks.
+
+## Phase 5 Reliability Checks
+
+- `npm run check`
+- `npm run build`
+- `npm run test:playwright:smoke` (optional when env + credentials are available)
+- `curl -sS http://localhost:5000/api/health` (or deployed URL)
+
+See also: `docs/internal/phase5-reliability-hardening.md`.
