@@ -35,7 +35,11 @@ This page contains internal-only script and maintenance references extracted fro
 - `npm run check`
 - `npm run build`
 - `npm run test:playwright:smoke` (optional when env + credentials are available)
-- `curl -fsS http://localhost:5000/api/health` (or deployed URL; fails on HTTP 4xx/5xx)
+- Local health check: `curl -fsS http://localhost:5000/api/health` (fails on HTTP 4xx/5xx)
+- Deployed health check: `curl -fsS https://<service-url>/api/health` (fails on HTTP 4xx/5xx)
+
+Execution notes:
+- This file is the executable command companion to release policy gates.
 
 See also: `docs/internal/phase5-reliability-hardening.md`.
 
