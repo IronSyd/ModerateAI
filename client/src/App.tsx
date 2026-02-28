@@ -17,6 +17,7 @@ import { AtmosphereOrbs } from "@/components/atmosphere-orbs";
 import { AuthProvider } from "@/hooks/use-auth";
 import { AdminUserProvider } from "@/hooks/use-admin-user";
 import { NotificationsProvider } from "@/hooks/use-notifications";
+import { useMobile } from "@/hooks/use-mobile";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { MessagesSquare } from "lucide-react";
 
@@ -603,7 +604,17 @@ function GlobalKineticTypography({ enabled }: { enabled: boolean }) {
 
 function DashboardLayout({ children, showAtmosphere }: { children: ReactNode; showAtmosphere: boolean }) {
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useMobile();
   const [location] = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
+
+  useEffect(() => {
+    setIsSidebarOpen(!isMobile);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) setIsSidebarOpen(false);
+  }, [location, isMobile]);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
@@ -630,10 +641,17 @@ function DashboardLayout({ children, showAtmosphere }: { children: ReactNode; sh
       {showAtmosphere ? <AtmosphereOrbs className="z-0" /> : null}
 
       <div className="ui-app-content relative z-10 min-h-screen flex">
-        <Sidebar />
+        <Sidebar
+          isOpen={isSidebarOpen}
+          isMobile={isMobile}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
         <div className="flex-1 min-w-0 md:ml-64">
-          <Header />
+          <Header
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          />
 
           <div className="px-4 pb-4 pt-20 md:px-6 md:pb-6 md:pt-24">
             <motion.div

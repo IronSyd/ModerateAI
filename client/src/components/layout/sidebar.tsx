@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { SiDiscord, SiTelegram } from "react-icons/si";
 import { Logo } from "@/components/logo";
-import { useMobile } from "@/hooks/use-mobile";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -81,10 +80,14 @@ const settingsItems: SidebarItem[] = [
   }
 ];
 
-const Sidebar = () => {
+type SidebarProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  isMobile: boolean;
+};
+
+const Sidebar = ({ isOpen, onClose, isMobile }: SidebarProps) => {
   const [location] = useLocation();
-  const isMobile = useMobile();
-  const [isOpen, setIsOpen] = useState(!isMobile);
   const { isAdminUser } = useAdminUser();
   const { user } = useAuth();
 
@@ -106,24 +109,15 @@ const Sidebar = () => {
       ]
     : [];
   
-  // Close sidebar on mobile when location changes
-  useEffect(() => {
-    if (isMobile) {
-      setIsOpen(false);
-    }
-  }, [location, isMobile]);
-  
-  // Toggle sidebar visibility when window resizes
-  useEffect(() => {
-    setIsOpen(!isMobile);
-  }, [isMobile]);
-  
   const NavItem = ({ item }: { item: SidebarItem }) => {
     const isActive = location === item.path;
     
     return (
       <Link 
         href={item.path}
+        onClick={() => {
+          if (isMobile) onClose();
+        }}
         className={`flex items-center px-4 py-3 hover:bg-accent ${
           isActive 
             ? "text-foreground bg-accent/55 border-r-4 border-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" 
@@ -163,7 +157,7 @@ const Sidebar = () => {
       {isOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
         />
       )}
       

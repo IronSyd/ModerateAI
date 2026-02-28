@@ -1,21 +1,24 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { Menu, Bell, HelpCircle } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { NotificationMenu } from "../notifications/notification-menu";
 import { HelpMenu } from "../help/help-menu-new";
-import { Logo } from "@/components/logo";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const Header = () => {
+type HeaderProps = {
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+};
+
+const Header = ({ onToggleSidebar, isSidebarOpen = false }: HeaderProps) => {
   const isMobile = useMobile();
   const [location] = useLocation();
-  const [, setIsSidebarOpen] = useState(!isMobile);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const { isAdminUser } = useAdminUser();
@@ -69,36 +72,35 @@ const Header = () => {
         <div className="flex items-center">
           {isMobile && (
             <button 
-              onClick={() => setIsSidebarOpen(prev => !prev)}
+              onClick={onToggleSidebar}
               className="md:hidden mr-4 rounded-md p-1 text-muted-foreground hover:bg-accent/35 hover:text-foreground"
               aria-label="Toggle sidebar"
+              aria-expanded={isSidebarOpen}
             >
               <Menu className="h-6 w-6" />
             </button>
           )}
-          
-          {/* Added logo on mobile */}
-          {isMobile && (
-            <div className="mr-3">
-              <Logo size="sm" className="hover:opacity-90 transition-opacity" />
-            </div>
-          )}
-          
-          <h1 className="kinetic-headline text-xl font-semibold tracking-tight text-foreground">{getPageTitle()}</h1>
+
+          <h1 className="kinetic-headline text-xl font-semibold tracking-tight text-foreground truncate max-w-[46vw] sm:max-w-none">
+            {getPageTitle()}
+          </h1>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 md:space-x-4">
           {isAdminUser && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-0.5 rounded-md text-xs font-medium flex items-center">
-                    <Avatar className="h-6 w-6 mr-2">
+                  <div className={cn(
+                    "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-md text-xs font-medium flex items-center",
+                    isMobile ? "px-2 py-0.5 gap-1" : "px-2 py-0.5"
+                  )}>
+                    <Avatar className={cn("h-6 w-6", isMobile ? "" : "mr-2")}>
                       <AvatarFallback className="text-xs bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-200">
                         A
                       </AvatarFallback>
                     </Avatar>
-                    Admin Mode
+                    {!isMobile ? "Admin Mode" : "Admin"}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
