@@ -35,6 +35,6 @@ This page contains internal-only script and maintenance references extracted fro
 - `npm run check`
 - `npm run build`
 - `npm run test:playwright:smoke` (optional when env + credentials are available)
-- `curl -sS http://localhost:5000/api/health` (or deployed URL)
+- `curl -fsS http://localhost:5000/api/health` (or deployed URL; fails on HTTP 4xx/5xx)
 
 See also: `docs/internal/phase5-reliability-hardening.md`.

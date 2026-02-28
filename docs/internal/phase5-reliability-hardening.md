@@ -53,7 +53,7 @@ Standardize release execution, rollback triggers, and post-deploy smoke checks.
 1. Start Render deploy from approved commit.
 2. Watch startup logs for preflight output and scheduler boot messages.
 3. Confirm health endpoint:
-   - `GET /api/health` returns 200.
+   - `curl -fsS https://<service-url>/api/health` returns 200 (fails on HTTP 4xx/5xx).
 
 ## Post-Deploy Smoke Checklist
 1. Auth: admin login succeeds.
@@ -80,7 +80,7 @@ Trigger rollback immediately if any occur:
 ## Rollback Steps
 1. For UI regressions, set `UI_V2_ENABLED=0` (and `UI_WAVE1_REDO_ENABLED=0` if needed).
 2. Redeploy previous known-good commit/image.
-3. Re-check `/api/health` and admin login.
+3. Re-check health endpoint with `curl -fsS https://<service-url>/api/health` and verify admin login.
 4. Re-run focused smoke on core workflows.
 5. Record incident note and follow-up RCA task.
 
