@@ -58,6 +58,11 @@ export const integrationSafetyHardeningEnabled = parseBooleanEnv(
   !isProduction,
 );
 
+export const telegramBotsEnabled = parseBooleanEnv(
+  "TELEGRAM_BOTS_ENABLED",
+  true,
+);
+
 export const integrationClaimDestinationLockEnabled = parseBooleanEnv(
   "INTEGRATION_CLAIM_DESTINATION_LOCK_ENABLED",
   true,

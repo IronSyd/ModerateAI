@@ -23,6 +23,7 @@ import { scheduleDestinationLockSweep, scheduleScheduledAutoLockSweep } from "./
 import { scheduleAdminHistoryBackfillOnStartup } from "./lib/chatHistoryBackfill";
 import { scheduleAdminHistoryAutoAnalysisSweep } from "./lib/adminHistoryAutoAnalysis";
 import { scheduleKnowledgeUrlSyncSweep } from "./lib/kb-url-sync";
+import { telegramBotsEnabled } from "./config/runtime-flags";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { createClient, type RedisClientType } from "redis";
@@ -557,15 +558,20 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
     log("SPAM_PROTECTION_GLOBAL_DISABLED");
-    
-    // Initialize any active Telegram bots
-    initializeAllTelegramBots()
-      .then(() => log('Initialized active Telegram bots'))
-      .catch(err => log(`Error initializing Telegram bots: ${err.message}`));
 
-    startTelegramAppOwnedBot()
-      .then((result) => log(result.success ? result.message : `Telegram app-owned bot: ${result.message}`))
-      .catch(err => log(`Error starting Telegram app-owned bot: ${err.message}`));
+    if (telegramBotsEnabled) {
+      // Initialize any active Telegram BYOB bots.
+      initializeAllTelegramBots()
+        .then(() => log('Initialized active Telegram bots'))
+        .catch(err => log(`Error initializing Telegram bots: ${err.message}`));
+
+      // Initialize shared app-owned Telegram bot (if configured).
+      startTelegramAppOwnedBot()
+        .then((result) => log(result.success ? result.message : `Telegram app-owned bot: ${result.message}`))
+        .catch(err => log(`Error starting Telegram app-owned bot: ${err.message}`));
+    } else {
+      log('Telegram bot runtime disabled (TELEGRAM_BOTS_ENABLED=0).');
+    }
       
     // Initialize any active Discord bots
     initializeAllDiscordBots()

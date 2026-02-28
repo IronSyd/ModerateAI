@@ -14,6 +14,7 @@ import {
   botTimedLocksEnabled,
   integrationClaimDestinationLockEnabled,
   integrationSafetyHardeningEnabled,
+  telegramBotsEnabled,
 } from '../config/runtime-flags';
 import {
   canUseAdvancedModerationAutomation,
@@ -1036,6 +1037,13 @@ async function handleAppOwnedTelegramMessage(bot: any, msg: any, platformId: num
 }
 
 export async function startAppOwnedBot(): Promise<{ success: boolean; message: string }> {
+  if (!telegramBotsEnabled) {
+    return {
+      success: true,
+      message: 'Telegram bots are disabled by TELEGRAM_BOTS_ENABLED=0.',
+    };
+  }
+
   const token = String(process.env.TELEGRAM_APP_BOT_TOKEN ?? '').trim();
   if (!token) {
     return {
@@ -1129,6 +1137,13 @@ export async function startAppOwnedBot(): Promise<{ success: boolean; message: s
  * Initialize a Telegram bot with the given token 
  */
 export async function initializeBot(platformId: number, token: string): Promise<{ success: boolean; message: string; botInfo?: { botName: string; botUsername: string; botId: number } }> {
+  if (!telegramBotsEnabled) {
+    return {
+      success: false,
+      message: 'Telegram bots are disabled by TELEGRAM_BOTS_ENABLED=0.',
+    };
+  }
+
   try {
     // Validate token by creating a bot instance and getting bot info
     const bot = new TelegramBot(token, { polling: false });
@@ -1698,10 +1713,20 @@ export function getAppOwnedBotPublicInfo(): AppOwnedTelegramBotPublicInfo | null
  * Initialize all active bots from database
  */
 export async function initializeAllBots(): Promise<void> {
+  if (!telegramBotsEnabled) {
+    console.log('Skipping Telegram bot initialization (TELEGRAM_BOTS_ENABLED=0).');
+    return;
+  }
+
   try {
     // Get all platforms with type 'telegram' and status 'active'
     const telegramPlatforms = await storage.getPlatformsByType('telegram');
-    const activePlatforms = telegramPlatforms.filter(p => p.status === 'active' && p.authToken);
+    const activePlatforms = telegramPlatforms.filter(
+      (platform) =>
+        platform.status === 'active' &&
+        platform.botOwnershipMode === 'byob' &&
+        Boolean(platform.authToken),
+    );
     
     console.log(`Initializing ${activePlatforms.length} Telegram bots...`);
     
