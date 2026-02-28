@@ -28,18 +28,19 @@ const WelcomeBanner = ({
   
   return (
     <div className="rounded-2xl shadow-sm mb-6 surface-glow glass-surface overflow-hidden">
-      <div className="px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between">
+      <div className="px-4 py-4 sm:px-6 sm:py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
         </div>
-        <div className="mt-4 md:mt-0 flex-shrink-0">
+        <div className="w-full md:w-auto md:mt-0 md:flex-shrink-0">
           <Button 
             variant="ghost" 
-            className="px-3 py-1 h-auto rounded-full bg-yellow-600/20 hover:bg-yellow-600/30 text-sm font-medium text-yellow-500 flex items-center gap-1 glass-chip"
+            className="w-full md:w-auto px-3 py-1 h-auto rounded-full bg-yellow-600/20 hover:bg-yellow-600/30 text-xs sm:text-sm font-medium text-yellow-500 flex items-center justify-center gap-1 glass-chip"
             onClick={() => setShowSetupSteps(!showSetupSteps)}
           >
-            {completedSteps}/{totalSteps} Setup Steps Completed
+            <span className="sm:hidden">{completedSteps}/{totalSteps} Steps</span>
+            <span className="hidden sm:inline">{completedSteps}/{totalSteps} Setup Steps Completed</span>
             {showSetupSteps ? (
               <ChevronUp className="h-4 w-4 ml-1" />
             ) : (

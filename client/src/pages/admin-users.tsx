@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
       <PageHeroShell>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">User Management</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">User Management</h1>
             <p className="text-sm text-muted-foreground">
               Manage account access, billing state, plans, and workspace destination usage.
             </p>
@@ -367,13 +367,13 @@ export default function AdminUsersPage() {
 
       <PageSectionCard className="glass-surface">
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
+          <CardTitle className="ui-static-heading">All Users</CardTitle>
           <CardDescription>View every signed-up user account (admin only).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <FilterBarShell>
-            <div className="flex items-center gap-3">
-              <div className="relative w-full max-w-md">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:max-w-md">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={query}
@@ -386,7 +386,7 @@ export default function AdminUsersPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="glass-chip"
+                className="glass-chip w-full sm:w-auto"
                 disabled={isFetching}
                 onClick={async () => {
                   const result = await refetch();
@@ -720,12 +720,12 @@ export default function AdminUsersPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <FilterBarShell>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="glass-chip"
+                className="glass-chip w-full sm:w-auto"
                 disabled={isFetchingWorkspaceIntegrations}
                 onClick={async () => {
                   const result = await refetchWorkspaceIntegrations();

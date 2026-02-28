@@ -1,4 +1,13 @@
 @layer components {
+  .ui-static-heading {
+    animation: none !important;
+    transform: none !important;
+    text-shadow: none !important;
+    font-variation-settings: "wght" 700 !important;
+    letter-spacing: -0.02em !important;
+    filter: none !important;
+  }
+
   .global-cursor-aura {
     position: fixed;
     left: 0;

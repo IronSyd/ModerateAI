@@ -111,7 +111,7 @@ const DeepAnalyticsPage = () => {
       <div className="space-y-6 wave-v2-page wave-v2-analytics">
         <PageHeroShell>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">Deep Analytics</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Deep Analytics</h1>
             <p className="text-sm text-muted-foreground">
               Analyze response quality, moderation activity, and channel performance.
             </p>
@@ -137,7 +137,7 @@ const DeepAnalyticsPage = () => {
       <div className="space-y-6 wave-v2-page wave-v2-analytics">
         <PageHeroShell>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">Deep Analytics</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Deep Analytics</h1>
             <p className="text-sm text-muted-foreground">
               Analyze response quality, moderation activity, and channel performance.
             </p>
@@ -170,7 +170,7 @@ const DeepAnalyticsPage = () => {
     <div className="space-y-6 wave-v2-page wave-v2-analytics">
       <PageHeroShell>
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground">Deep Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Deep Analytics</h1>
           <p className="text-sm text-muted-foreground">
             Pro-level message intelligence and moderation telemetry across your workspace.
           </p>

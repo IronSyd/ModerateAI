@@ -313,7 +313,7 @@ export default function WebsiteIntegrationPage() {
       <section className="wave-v2-hero rounded-2xl border p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">Website Integration</h1>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Website Integration</h1>
             <p className="text-sm text-muted-foreground">
               Configure the widget, route domains to knowledge bases, and manage captured leads.
             </p>
